@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -23,8 +26,24 @@ public class Viaje
     private String destino;
 
     @Column(nullable = false)
-    private int distanciaEnMetros;
+    private Integer distanciaEnMetros;
 
     @Column(nullable = false)
-    private int tiempoEstimadoMinutos;
+    private Integer tiempoEstimadoMin;
+
+    @Column(nullable = false)
+    private BigDecimal precioTaxi;
+
+    @Column(nullable = false)
+    private BigDecimal precioMinApp;
+
+    @Column(nullable = false)
+    private BigDecimal precioMaxApp;
+
+    @Column(nullable = false)
+    private LocalDateTime fechaHora = LocalDateTime.now();
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 }
