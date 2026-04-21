@@ -26,7 +26,7 @@ public class Viaje
     private String destino;
 
     @Column(nullable = false)
-    private Integer distanciaEnMetros;
+    private Long distanciaEnMetros;
 
     @Column(nullable = false)
     private Integer tiempoEstimadoMin;
