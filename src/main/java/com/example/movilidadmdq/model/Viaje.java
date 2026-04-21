@@ -40,7 +40,7 @@ public class Viaje
     @Column(nullable = false)
     private BigDecimal precioMaxApp;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime fechaHora = LocalDateTime.now();
 
     @ManyToOne
