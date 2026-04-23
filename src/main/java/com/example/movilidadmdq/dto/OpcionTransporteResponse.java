@@ -17,4 +17,5 @@ public class OpcionTransporteResponse
     private BigDecimal precioMin;
     private BigDecimal precioMax;
     private int tiempoMinutos;
+    private String url;
 }
