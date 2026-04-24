@@ -42,7 +42,7 @@ public class ViajeService
 
     private BigDecimal calcularTaxi(double distanciaKm)
     {
-        Boolean esNocturno = esHorarioNocturno();
+        boolean esNocturno = esHorarioNocturno();
 
         BigDecimal bajadaBandera;
         BigDecimal valorFicha;
@@ -76,7 +76,7 @@ public class ViajeService
         return bajadaBandera.add(precioFichas); //suma la bajada de bandera + las fichas calculadas
     }
 
-    private Boolean esHorarioNocturno()
+    private boolean esHorarioNocturno()
     {
         int hora = LocalTime.now().getHour();
         return (hora >= 22 || hora < 6); //mayor o igual a 22hrs o antes de las 6
