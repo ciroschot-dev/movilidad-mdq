@@ -107,11 +107,13 @@ http://localhost:8080
 
 ▶️ Ejecutar Frontend
 
-Desde la carpeta del frontend:
+Desde la carpeta del frontend(Ejecutar comandos en la terminal):
 
+```
 cd frontend
 npm install
 npm run dev
+```
 
 👉 Abrir en el navegador:
 http://localhost:5173
