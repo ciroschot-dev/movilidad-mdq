@@ -4,17 +4,29 @@ import { Car, Smartphone, CreditCard } from 'lucide-react';
 import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
+interface OpcionTransporteApi {
+  tipo: 'TAXI' | 'UBER' | 'DIDI';
+  precioMin: number;
+  precioMax: number;
+  tiempoMinutos: number;
+  url: string;
+}
+
 interface Opcion {
   tipo: string;
   precio: string;
   tiempo: string;
   color: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   url: string;
 }
 
 function App() {
   const [resultados, setResultados] = useState<Opcion[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSelectOption = (url: string) => {
     if (!url) return;
@@ -28,10 +40,19 @@ function App() {
     }
   };
 
+  const formatPrecio = (precio: number) =>
+    new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 0,
+    }).format(precio);
+
   const handleCalculate = async (origen: string, destino: string) => {
-    console.log("🚀 Fetch resultados", { origen, destino });
+    setLoading(true);
+    setError(null);
+
     try {
-      const response = await fetch('http://localhost:8080/viajes/calcular', {
+      const response = await fetch(`${API_URL}/viajes/calcular`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,15 +60,15 @@ function App() {
         body: JSON.stringify({ origen, destino }),
       });
 
-      if (!response.ok) throw new Error('Error en la petición');
+      if (!response.ok) throw new Error('No se pudieron calcular las opciones.');
 
-      const data = await response.json();
+      const data: OpcionTransporteApi[] = await response.json();
 
-      const mappedData: Opcion[] = data.map((item: any) => {
+      const mappedData: Opcion[] = data.map((item) => {
         const isSamePrice = item.precioMin === item.precioMax;
-        const precio = isSamePrice 
-          ? `${item.precioMin}` 
-          : `${item.precioMin} - ${item.precioMax}`;
+        const precio = isSamePrice
+          ? formatPrecio(item.precioMin)
+          : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
 
         let config = {
           tipo: 'Taxi',
@@ -72,6 +93,10 @@ function App() {
       setResultados(mappedData);
     } catch (error) {
       console.error("Error al calcular viaje:", error);
+      setError(error instanceof Error ? error.message : 'Ocurrió un error inesperado.');
+      setResultados(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,13 +116,28 @@ function App() {
 
         {/* Input Form Section */}
         <section className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 mb-8">
-          <InputForm onCalculate={handleCalculate} />
+          <InputForm onCalculate={handleCalculate} loading={loading} onInputChange={() => setError(null)} />
         </section>
 
         {/* Results Section */}
         <div className="space-y-4">
+          {error && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              {error}
+            </div>
+          )}
+
           <AnimatePresence>
-            {resultados ? (
+            {loading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-12 border-2 border-dashed border-gray-200 rounded-3xl"
+              >
+                <p className="text-gray-400 font-medium">Calculando opciones...</p>
+              </motion.div>
+            ) : resultados ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
