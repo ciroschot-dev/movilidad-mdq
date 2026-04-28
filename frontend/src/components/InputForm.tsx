@@ -2,30 +2,25 @@ import React, { useState } from 'react';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
 
 interface InputFormProps {
-  onCalculate: (origen: string, destino: string) => void;
+  onCalculate: (origen: string, destino: string) => Promise<void>;
+  loading: boolean;
   onInputChange?: () => void;
 }
 
-const InputForm: React.FC<InputFormProps> = ({ onCalculate, onInputChange }) => {
+const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChange }) => {
   const [origen, setOrigen] = useState('');
   const [destino, setDestino] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (setter: (val: string) => void, value: string) => {
     setter(value);
     if (onInputChange) onInputChange();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!origen || !destino) return;
-    
-    setLoading(true);
-    // Simular carga visual del botón interno
-    setTimeout(() => {
-      onCalculate(origen, destino);
-      setLoading(false);
-    }, 1200);
+
+    await onCalculate(origen, destino);
   };
 
   return (
