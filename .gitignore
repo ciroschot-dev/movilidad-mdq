@@ -1,10 +1,21 @@
 HELP.md
+
+# MAVEN
 target/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# MAVEN WRAPPER
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea
+*.iws
+*.iml
+*.ipr
+.vscode/
+
+# STS
 .apt_generated
 .classpath
 .factorypath
@@ -13,13 +24,7 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
+# NETBEANS
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,8 +34,11 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# FRONTEND
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
 
-### Contraseñas ###
+# VARIABLES / SECRETOS
 .env
