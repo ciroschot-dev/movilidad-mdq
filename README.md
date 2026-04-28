@@ -53,7 +53,7 @@ cd movilidadmdq
 
 ⸻
 
-⚠️ Configuración de Base de Datos (OBLIGATORIO)
+⚠️ Configuración de Backend (OBLIGATORIO)
 
 Antes de ejecutar el backend, debes configurar tu base de datos.
 
@@ -66,7 +66,7 @@ Spring Boot NO carga automáticamente el archivo .env, por lo que debes cargarla
 
 ⸻
 
-1) Crear archivo .env
+1) Crear archivo .env del backend
 
 Crear un archivo .env en la raíz del proyecto usando .env.example como base.
 
@@ -106,6 +106,18 @@ http://localhost:8080
 ⸻
 
 ▶️ Ejecutar Frontend
+
+1) Crear archivo .env del frontend
+
+Desde la carpeta `frontend`, crear un archivo `.env` usando `.env.example` como base:
+
+```
+VITE_API_URL=http://localhost:8080
+```
+
+Si el backend corre en otro puerto o URL, cambiar `VITE_API_URL`.
+
+2) Instalar dependencias y ejecutar
 
 Desde la carpeta del frontend(Ejecutar comandos en la terminal):
 
