@@ -70,7 +70,7 @@ public class ViajeService
 
         // 💸 ordenar por precio más bajo
         return opciones.stream()
-                .sorted(Comparator.comparing(OpcionTransporteResponse::getPrecioMin))
+                .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
                 .toList();
     }
 
