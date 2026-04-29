@@ -53,7 +53,7 @@ cd movilidadmdq
 
 ⸻
 
-⚠️ Configuración de Base de Datos (OBLIGATORIO)
+⚠️ Configuración de Backend (OBLIGATORIO)
 
 Antes de ejecutar el backend, debes configurar tu base de datos.
 
@@ -66,7 +66,7 @@ Spring Boot NO carga automáticamente el archivo .env, por lo que debes cargarla
 
 ⸻
 
-1) Crear archivo .env
+1) Crear archivo .env del backend
 
 Crear un archivo .env en la raíz del proyecto usando .env.example como base.
 
