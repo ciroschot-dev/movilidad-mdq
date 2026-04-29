@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.math.RoundingMode;
 
 @Service
 @RequiredArgsConstructor
@@ -155,8 +156,8 @@ public class ViajeService
 
         return new OpcionTransporteResponse(
                 TipoTransporte.UBER,
-                precioMin.setScale(2, BigDecimal.ROUND_HALF_UP),
-                precioMax.setScale(2, BigDecimal.ROUND_HALF_UP),
+                precioMin.setScale(2, RoundingMode.HALF_UP),
+                precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 generarUrlUber(origen, destino)
         );
@@ -179,8 +180,8 @@ public class ViajeService
 
         return new OpcionTransporteResponse(
                 TipoTransporte.DIDI,
-                precioMin.setScale(2, BigDecimal.ROUND_HALF_UP),
-                precioMax.setScale(2, BigDecimal.ROUND_HALF_UP),
+                precioMin.setScale(2, RoundingMode.HALF_UP),
+                precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 generarUrlDidi()
         );
