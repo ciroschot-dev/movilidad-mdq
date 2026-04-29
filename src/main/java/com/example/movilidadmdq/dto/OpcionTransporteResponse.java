@@ -11,7 +11,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class OpcionTransporteResponse
+public class
+OpcionTransporteResponse
 {
     private TipoTransporte tipo;
     private BigDecimal precioMin;
