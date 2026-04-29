@@ -4,7 +4,7 @@ import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,14 +15,14 @@ import java.util.Comparator;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+
 public class ViajeService
 {
     // === NUEVO: Inyección de GoogleMapsService ===
-    @Autowired
-    private GoogleMapsService googleMapsService;
+    private final GoogleMapsService googleMapsService;
 
-    @Autowired
-    private WeatherService weatherService;
+    private final WeatherService weatherService;
     // =============================================
 
     public List<OpcionTransporteResponse> calcularViaje(String origen, String destino)
@@ -38,23 +38,30 @@ public class ViajeService
         System.out.println("Solicitando viaje: [" + origenFinal + "] -> [" + destinoFinal + "]");
 
         // === NUEVO: Intento de obtener datos reales de Google Maps ===
-        try {
+        try
+        {
             DistanceMatrix matrix = googleMapsService.obtenerDatosViaje(origenFinal, destinoFinal);
-            
-            if (matrix.rows.length > 0 && matrix.rows[0].elements.length > 0) {
+
+            if (matrix.rows.length > 0 && matrix.rows[0].elements.length > 0)
+            {
                 DistanceMatrixElement element = matrix.rows[0].elements[0];
-                
-                if (element.status.toString().equals("OK") && element.distance != null && element.duration != null) {
+
+                if (element.status.toString().equals("OK") && element.distance != null && element.duration != null)
+                {
                     // Convertir metros a Kilómetros y segundos a Minutos
                     distanciaKm = element.distance.inMeters / 1000.0;
                     tiempoMin = (int) Math.ceil(element.duration.inSeconds / 60.0);
-                    
+
                     System.out.println("✅ Datos REALES obtenidos: " + distanciaKm + "km, " + tiempoMin + "min");
-                } else {
+                }
+                else
+                {
                     System.out.println("⚠️ Google Maps no encontró la ruta (Status: " + element.status + "). Usando simulación.");
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             System.err.println("❌ Error Google Maps API: " + e.getMessage());
         }
         // ==========================================================
