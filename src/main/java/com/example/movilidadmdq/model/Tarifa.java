@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -13,28 +14,31 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class Tarifa {
+public class Tarifa
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank @Size(max = 50)
+    @NotBlank
+    @Size(max = 50)
     @Column(unique = true, nullable = false)
     private String tipoTransporte;
 
-    @NotNull @DecimalMin("0.0")
+    @NotNull
+    @DecimalMin("0.0")
     private BigDecimal precioBase;
 
-    @NotNull @DecimalMin("0.0")
+    @NotNull
+    @DecimalMin("0.0")
     private BigDecimal precioPorKm;
-
-    @NotNull @DecimalMin("0.0")
-    private BigDecimal precioPorMinutoEspera;
 
     private LocalDateTime ultimaActualizacion;
 
-    @PrePersist @PreUpdate
-    public void preUpdate() {
+    @PrePersist
+    @PreUpdate
+    public void preUpdate()
+    {
         this.ultimaActualizacion = LocalDateTime.now();
     }
 }
