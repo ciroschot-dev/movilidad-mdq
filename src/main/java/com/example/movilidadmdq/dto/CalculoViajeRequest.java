@@ -1,15 +1,7 @@
 package com.example.movilidadmdq.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 
-@Data
-
-public class CalculoViajeRequest
+public record CalculoViajeRequest(@NotBlank String origen, @NotBlank String destino)
 {
-    @NotBlank
-    private String origen;
-
-    @NotBlank
-    private String destino;
 }
