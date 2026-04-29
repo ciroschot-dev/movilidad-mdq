@@ -107,18 +107,6 @@ http://localhost:8080
 
 ▶️ Ejecutar Frontend
 
-1) Crear archivo .env del frontend
-
-Desde la carpeta `frontend`, crear un archivo `.env` usando `.env.example` como base:
-
-```
-VITE_API_URL=http://localhost:8080
-```
-
-Si el backend corre en otro puerto o URL, cambiar `VITE_API_URL`.
-
-2) Instalar dependencias y ejecutar
-
 Desde la carpeta del frontend(Ejecutar comandos en la terminal):
 
 ```
