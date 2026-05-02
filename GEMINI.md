@@ -12,6 +12,7 @@ Aplicación para comparar precios de transporte (Taxi, Uber, Didi) en Mar del Pl
 ## 📝 Resumen de la Sesión (2 de Mayo, 2026)
 - **Factores Dinámicos:** Verificados y activos en el backend.
 - **Frontend Autocomplete:** ¡IMPLEMENTADO! Se integró `use-places-autocomplete` y Google Maps API en el frontend para búsqueda de direcciones en Mar del Plata.
+- **Versión Demo (Vanilla JS):** Se creó la carpeta `frontend-demo/` con una versión simplificada en HTML, CSS y JS puro, ideal para presentaciones y explicaciones rápidas del flujo de datos sin frameworks.
 - **Refactorización:** Se eliminaron valores harcodeados en `ViajeService.java` (tarifas, teléfono) moviéndolos a constantes y configuraciones.
 
 ## 🔧 Configuración Actual

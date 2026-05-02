@@ -12,8 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/viajes")
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
-
+@CrossOrigin(origins = "*")
 public class ViajeController
 {
     private final ViajeService viajeService;
