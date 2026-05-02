@@ -12,4 +12,6 @@ public class CalculoViajeRequest
 
     @NotBlank
     private String destino;
+
+
 }

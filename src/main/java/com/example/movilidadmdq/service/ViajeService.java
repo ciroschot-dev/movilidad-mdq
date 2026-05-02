@@ -22,6 +22,7 @@ public class ViajeService
         int tiempoMin = 15;
 
         BigDecimal precioTaxi = calcularTaxi(distanciaKm);
+        System.out.println("URL Uber: " + generarUrlUber(origen, destino));
 
         List<OpcionTransporteResponse> opciones = List.of
                 (
@@ -138,14 +139,10 @@ public class ViajeService
         return "tel:+5492233126129"; // num de Ciro para pruebas. Despues cambiar al de TAXI
     }
 
-    private String generarUrlUber(String origen, String destino)
-    {
+    private String generarUrlUber(String origen, String destino) {
         return "https://m.uber.com/ul/?action=setPickup" +
-
                 "&pickup[formatted_address]=" + encode(origen) +
-
                 "&dropoff[formatted_address]=" + encode(destino);
-
     }
 
     private String generarUrlDidi()
