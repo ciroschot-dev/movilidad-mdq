@@ -1,26 +1,21 @@
 # =========================
 # 1) STAGE BUILD (Maven)
 # =========================
-FROM maven:3.9-eclipse-temurin-25 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
+# (Nota: Usamos imagen 21 para compilar ya que es la más estable en Docker Hub, 
+# pero el runtime será Java 25 para tu código)
 
 WORKDIR /app
-
-# Copiamos todo el proyecto
 COPY . .
-
-# Compilamos el jar (sin tests para acelerar)
 RUN mvn clean package -DskipTests
 
 # =========================
-# 2) STAGE RUNTIME (Java)
+# 2) STAGE RUNTIME (Java 25)
 # =========================
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:25-jdk
 
 WORKDIR /app
-
-# Traemos SOLO el jar generado en el stage anterior
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
