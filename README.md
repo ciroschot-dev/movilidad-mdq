@@ -1,173 +1,162 @@
-🚕 MovilidadMDQ
+# Movilidad MDQ
 
-Aplicación web para comparar opciones de transporte (Taxi, Uber y Didi) en Mar del Plata 🇦🇷 en una sola pantalla.
+Backend-focused full-stack application for comparing transport options in Mar del Plata, Argentina. The app exposes a Spring Boot REST API that estimates Taxi, Uber and DiDi options, then returns prices, estimated time and external app links to a React/Vite interface.
 
-⸻
+## Why this project matters
 
-🎯 ¿Qué hace?
+Users usually need to open multiple apps to compare transport options. Movilidad MDQ centralizes that decision in one flow: origin, destination, estimated prices and a direct action link.
 
-MovilidadMDQ permite al usuario:
+## Backend highlights
 
-* Ingresar un origen y un destino
-* Ver precios estimados de distintos transportes
-* Comparar tiempo y costo
-* Elegir una opción y ser redirigido directamente a la app correspondiente
+- REST endpoint for trip calculation using Spring Boot.
+- Layered structure with controller, service, DTO, model and repository packages.
+- Request validation with Jakarta Validation.
+- MySQL configuration through environment variables.
+- Google Maps Distance Matrix integration for real distance and duration when an API key is available.
+- OpenWeather integration to apply weather-based price factors.
+- Fallback behavior when external APIs are unavailable.
+- Transport result sorting by lowest estimated price.
 
-⸻
+## Tech stack
 
-🧠 Problema que resuelve
+### Backend
 
-Hoy, para saber cuál es la mejor forma de viajar, el usuario debe:
+- Java 25
+- Spring Boot 4
+- Spring MVC
+- Spring Data JPA
+- Hibernate Validator
+- MySQL
+- Maven
+- Google Maps Services
+- OpenWeather API
 
-* Abrir Uber
-* Abrir Didi
-* Estimar el taxi manualmente
+### Frontend
 
-👉 MovilidadMDQ centraliza todo en un solo lugar, ahorrando tiempo y esfuerzo.
+- React
+- TypeScript
+- Vite
+- CSS
 
-⸻
+## API
 
-⚙️ Tecnologías utilizadas
+Base URL:
 
-🧱 Backend
-
-* Java
-* Spring Boot
-* API REST
-
-🎨 Frontend
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-
-⸻
-
-🚀 Cómo ejecutar el proyecto
-
-1. Clonar el repositorio
-
-git clone
-cd movilidadmdq
-
-⸻
-
-⚠️ Configuración de Backend (OBLIGATORIO)
-
-Antes de ejecutar el backend, debes configurar tu base de datos.
-
-Variables de entorno (.env)
-
-La app usa variables de entorno definidas en:
-src/main/resources/application.properties
-
-Spring Boot NO carga automáticamente el archivo .env, por lo que debes cargarlas manualmente.
-
-⸻
-
-1) Crear archivo .env del backend
-
-Crear un archivo .env en la raíz del proyecto usando .env.example como base.
-
-⸻
-
-2) Completar variables
-
-Variables necesarias:
-
-* SPRING_DATASOURCE_URL → URL JDBC de MySQL
-  Ej: jdbc:mysql://localhost:3306/movilidadmdq
-* DB_USER → Usuario de la base de datos
-* DB_PASSWORD → Contraseña de la base de datos
-
-⸻
-
-3) Cargar variables en IntelliJ
-
-Opción recomendada: plugin .env
-
-1. Ir a Run/Debug Configurations
-2. Activar el plugin .env (EnvFile)
-3. Seleccionar el archivo .env
-4. Ejecutar la app normalmente
-
-⸻
-
-▶️ Ejecutar Backend
-
-Abrir el proyecto en IntelliJ y correr:
-
-MovilidadMdqApplication.java
-
-👉 El backend correrá en:
+```text
 http://localhost:8080
-
-⸻
-
-▶️ Ejecutar Frontend
-
-Desde la carpeta del frontend(Ejecutar comandos en la terminal):
-
 ```
+
+### Calculate transport options
+
+```http
+POST /viajes/calcular
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "origen": "Plaza Colon",
+  "destino": "Terminal de Omnibus"
+}
+```
+
+Response:
+
+```json
+[
+  {
+    "tipo": "DIDI",
+    "precioMin": 2500.00,
+    "precioMax": 3100.00,
+    "tiempoMinutos": 15,
+    "url": "https://www.didiglobal.com/"
+  }
+]
+```
+
+## Project structure
+
+```text
+src/main/java/com/example/movilidadmdq
+|-- controller   # REST endpoints
+|-- dto          # API request/response objects
+|-- enums        # Transport types
+|-- model        # JPA entities
+|-- repository   # Spring Data repositories
+`-- service      # Business logic and external API integrations
+```
+
+## Local setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/ciroschot-dev/movilidadMDQ.git
+cd movilidadMDQ
+```
+
+### 2. Configure environment variables
+
+Create a `.env` file from `.env.example` and set your local values:
+
+```bash
+cp .env.example .env
+```
+
+Required backend variables:
+
+```env
+SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/movilidadmdq
+DB_USER=root
+DB_PASSWORD=your_password
+GOOGLE_MAPS_KEY=your_google_maps_key
+WEATHER_API_KEY=your_openweather_key
+```
+
+Spring Boot does not load `.env` files automatically. Load the variables through your IDE run configuration, terminal session or an env-file plugin.
+
+### 3. Run the backend
+
+```bash
+./mvnw spring-boot:run
+```
+
+The API will run at:
+
+```text
+http://localhost:8080
+```
+
+### 4. Run the frontend
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-👉 Abrir en el navegador:
+The frontend will run at:
+
+```text
 http://localhost:5173
+```
 
-⸻
+## Current status
 
-🧪 Cómo usar la app
+Functional MVP:
 
-1. Ingresar:
-   📍 Origen
-   📍 Destino
-2. Presionar:
-   CALCULAR 🚀
-3. Ver resultados:
-   🚕 Taxi
-   🚗 Uber
-   🚙 Didi
-4. Presionar:
-   Elegir
+- Backend REST API connected to the frontend.
+- Taxi, Uber and DiDi price estimation.
+- Google Maps distance/duration integration with fallback.
+- Weather factor integration with fallback.
+- External app links for transport selection.
 
-👉 Se abrirá la app correspondiente o se iniciará una llamada (Taxi).
+## Next improvements
 
-⸻
-
-🔗 Integraciones
-
-* API propia (Spring Boot)
-* Deep linking a Uber y Didi
-* Llamada telefónica para Taxi (tel:)
-
-⸻
-
-⚠️ Notas importantes
-
-* Los precios son estimativos
-* Uber y Didi se calculan mediante lógica aproximada
-* Taxi utiliza tarifa real (bajada de bandera + fichas)
-
-⸻
-
-📌 Estado del proyecto
-
-🟢 MVP funcional completo:
-
-* Backend conectado
-* Frontend funcional
-* Comparación de precios
-* Redirección a apps externas
-
-⸻
-
-🚀 Próximas mejoras
-
-* Integración con Google Maps (distancia real)
-* Autocompletado de direcciones
-* Mejor estimación de precios (clima, horario)
-* Deploy en producción
+- Move all transport fare configuration fully into database records.
+- Add backend tests for fare calculation, sorting and URL generation.
+- Add global error responses with `@RestControllerAdvice`.
+- Add production deployment with Docker.
+- Improve address autocomplete through Google Places.
