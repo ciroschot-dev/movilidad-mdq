@@ -21,6 +21,6 @@ public class ViajeController
 
     public List<OpcionTransporteResponse> calcular(@Valid @RequestBody CalculoViajeRequest request)
     {
-        return viajeService.calcularViaje(request.origen(), request.destino());
+        return viajeService.calcularViaje(request.origen(), request.destino(), request.usuarioId());
     }
 }

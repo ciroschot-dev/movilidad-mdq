@@ -33,8 +33,10 @@ public class ViajeService {
     // === Inyecciones ===
     private final GoogleMapsService googleMapsService;
     private final WeatherService weatherService;
+    private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
+    private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
 
-    public List<OpcionTransporteResponse> calcularViaje(String origen, String destino) {
+    public List<OpcionTransporteResponse> calcularViaje(String origen, String destino, Long usuarioId) {
         // 🔵 VALORES POR DEFECTO (Simulación / Fallback)
         double distanciaKm = 5.0;
         int tiempoMin = 15;
@@ -59,6 +61,9 @@ public class ViajeService {
 
         BigDecimal precioTaxi = calcularTaxi(distanciaKm);
 
+        // --- GUARDAR EN BASE DE DATOS ---
+        guardarHistorial(origenFinal, destinoFinal, (long)(distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId);
+
         List<OpcionTransporteResponse> opciones = List.of(
                 construirTaxi(precioTaxi, tiempoMin),
                 construirUber(precioTaxi, tiempoMin, origen, destino),
@@ -68,6 +73,30 @@ public class ViajeService {
         return opciones.stream()
                 .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
                 .toList();
+    }
+
+    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId) {
+        try {
+            usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+                com.example.movilidadmdq.model.Viaje nuevoViaje = new com.example.movilidadmdq.model.Viaje();
+                nuevoViaje.setOrigen(origen);
+                nuevoViaje.setDestino(destino);
+                nuevoViaje.setDistanciaEnMetros(distanciaMetros);
+                nuevoViaje.setTiempoEstimadoMin(tiempoMin);
+                nuevoViaje.setPrecioTaxi(precioTaxi);
+                
+                // Valores estimados para historial
+                nuevoViaje.setPrecioMinApp(precioTaxi.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP));
+                nuevoViaje.setPrecioMaxApp(precioTaxi.multiply(BigDecimal.valueOf(1.2)).setScale(2, RoundingMode.HALF_UP));
+                
+                nuevoViaje.setUsuario(usuario);
+                
+                viajeRepository.save(nuevoViaje);
+                System.out.println("💾 Viaje guardado automáticamente en AWS para el usuario: " + usuario.getUsername());
+            });
+        } catch (Exception e) {
+            System.err.println("❌ Error al guardar historial: " + e.getMessage());
+        }
     }
 
     private String normalizarDireccion(String direccion) {
