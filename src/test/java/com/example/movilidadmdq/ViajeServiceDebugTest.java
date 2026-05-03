@@ -24,7 +24,8 @@ class ViajeServiceDebugTest
         String destino = "Colon 3132, Mar del Plata";
 
         System.out.println("--- INICIANDO TEST DE DEPURACIÓN ---");
-        List<OpcionTransporteResponse> resultados = viajeService.calcularViaje(origen, destino);
+        // Agregamos 1L como usuarioId para que el test sea válido con la nueva firma del método
+        List<OpcionTransporteResponse> resultados = viajeService.calcularViaje(origen, destino, 1L);
 
         assertNotNull(resultados);
         for (OpcionTransporteResponse opcion : resultados)
