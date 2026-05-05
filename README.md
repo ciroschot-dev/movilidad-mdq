@@ -30,6 +30,14 @@ DB_PASSWORD=tu_contraseña
 # APIs
 google.maps.api.key=TU_API_KEY_AQUI
 openweather.api.key=TU_API_KEY_AQUI
+
+# JWT
+JWT_SECRET=tu_clave_secreta_super_segura_para_jwt_aqui_generala_con_base64
+JWT_EXPIRATION=86400000
+
+# Google OAuth2
+GOOGLE_OAUTH_CLIENT_ID=tu_client_id_de_google_console
+GOOGLE_OAUTH_CLIENT_SECRET=tu_client_secret_de_google_console
 ```
 
 > **Nota:** Para el frontend, asegúrate de configurar también las variables necesarias en `frontend/.env` (como
