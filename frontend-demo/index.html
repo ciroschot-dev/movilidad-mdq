@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovilidadMDQ - Demo</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Cargamos la configuración primero -->
+    <script src="env.js"></script>
+</head>
+<body>
+    <!-- SECCIÓN DE LOGIN -->
+    <div id="loginSection" class="app-container">
+        <header>
+            <div class="header-info">
+                <h1>MovilidadMDQ</h1>
+                <p>Inicia sesión para comparar</p>
+            </div>
+        </header>
+        <section class="form-section">
+            <form id="loginForm">
+                <div class="input-group">
+                    <i data-lucide="user"></i>
+                    <input type="text" id="username" placeholder="Usuario" required>
+                </div>
+                <div class="input-group">
+                    <i data-lucide="lock"></i>
+                    <input type="password" id="password" placeholder="Contraseña" required>
+                </div>
+                <button type="submit" id="btnLogin">ENTRAR</button>
+            </form>
+            <p id="loginError" style="color: #ef4444; font-size: 14px; margin-top: 15px; display: none; text-align: center; font-weight: 600;">
+                Usuario o contraseña incorrectos
+            </p>
+        </section>
+        <footer>
+            <p>Admin: admin / admin123</p>
+        </footer>
+    </div>
+
+    <!-- SECCIÓN PRINCIPAL (Oculta al inicio) -->
+    <div id="appSection" class="app-container" style="display: none;">
+        <header>
+            <div class="header-info">
+                <h1>MovilidadMDQ</h1>
+                <p>Hola, <span id="userNameDisplay">Usuario</span> 👋</p>
+            </div>
+            <div class="header-actions">
+                <button id="btnNavHome" class="icon-btn" title="Inicio"><i data-lucide="home"></i></button>
+                <button id="btnNavHistory" class="icon-btn" title="Historial"><i data-lucide="history"></i></button>
+                <button id="btnNavProfile" class="icon-btn" title="Perfil"><i data-lucide="user"></i></button>
+                <button id="btnLogout" class="icon-btn" title="Salir"><i data-lucide="log-out"></i></button>
+            </div>
+        </header>
+
+        <!-- VISTA: CALCULADORA (INICIO) -->
+        <div id="viewHome" class="view">
+            <section class="form-section">
+                <form id="viajeForm">
+                    <div class="input-group">
+                        <i data-lucide="map-pin"></i>
+                        <input type="text" id="origen" placeholder="¿De dónde sales?" required>
+                    </div>
+                    <div class="input-group">
+                        <i data-lucide="navigation"></i>
+                        <input type="text" id="destino" placeholder="¿A dónde vas?" required>
+                    </div>
+                    <button type="submit" id="btnCalcular">CALCULAR</button>
+                </form>
+            </section>
+
+            <div id="resultadosContainer">
+                <div class="placeholder-text" id="mensajeEstado">
+                    Ingresa tu ruta para ver opciones
+                </div>
+                <div id="listaResultados"></div>
+            </div>
+        </div>
+
+        <!-- VISTA: HISTORIAL -->
+        <div id="viewHistory" class="view" style="display: none;">
+            <h2 class="view-title">Tu Historial</h2>
+            <div id="listaHistorial">
+                <!-- Se cargará dinámicamente -->
+            </div>
+        </div>
+
+        <!-- VISTA: PERFIL -->
+        <div id="viewProfile" class="view" style="display: none;">
+            <h2 class="view-title">Tu Perfil</h2>
+            <section class="form-section">
+                <form id="profileForm">
+                    <div class="input-group">
+                        <i data-lucide="user"></i>
+                        <input type="text" id="profileUsername" placeholder="Nombre de usuario" required>
+                    </div>
+                    <div class="input-group">
+                        <i data-lucide="mail"></i>
+                        <input type="email" id="profileEmail" placeholder="Email" required>
+                    </div>
+                    <div class="input-group">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="profilePassword" placeholder="Nueva contraseña (opcional)">
+                    </div>
+                    <button type="submit" id="btnSaveProfile">GUARDAR CAMBIOS</button>
+                </form>
+            </section>
+        </div>
+
+        <footer>
+            <p>Precios estimados basados en la tarifa actual.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
