@@ -1,173 +1,111 @@
-🚕 MovilidadMDQ
+# MovilidadMDQ 🚗💨
 
-Aplicación web para comparar opciones de transporte (Taxi, Uber y Didi) en Mar del Plata 🇦🇷 en una sola pantalla.
+**MovilidadMDQ** es una aplicación diseñada para comparar precios de diferentes servicios de transporte (Taxi, Uber,
+Didi) en la ciudad de Mar del Plata. Utiliza factores dinámicos como el clima, el horario y la demanda para ofrecer
+estimaciones precisas y actualizadas.
 
-⸻
+---
 
-🎯 ¿Qué hace?
+## 🚀 Tecnologías Utilizadas
 
-MovilidadMDQ permite al usuario:
+- **Backend:** Java 25, Spring Boot 4.x, Spring Data JPA.
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS.
+- **APIs Externas:** Google Maps (Distance Matrix, Places Autocomplete), OpenWeather API.
+- **Infraestructura:** Docker & Docker Compose.
 
-* Ingresar un origen y un destino
-* Ver precios estimados de distintos transportes
-* Comparar tiempo y costo
-* Elegir una opción y ser redirigido directamente a la app correspondiente
+---
 
-⸻
+## 🛠️ Configuración Inicial
 
-🧠 Problema que resuelve
+### 1. Variables de Entorno
 
-Hoy, para saber cuál es la mejor forma de viajar, el usuario debe:
+Crea un archivo `.env` en la raíz del proyecto basado en `.env.example`:
 
-* Abrir Uber
-* Abrir Didi
-* Estimar el taxi manualmente
+```env
+# Base de Datos
+SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/movilidadmdq
+DB_USER=root
+DB_PASSWORD=tu_contraseña
 
-👉 MovilidadMDQ centraliza todo en un solo lugar, ahorrando tiempo y esfuerzo.
-
-⸻
-
-⚙️ Tecnologías utilizadas
-
-🧱 Backend
-
-* Java
-* Spring Boot
-* API REST
-
-🎨 Frontend
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-
-⸻
-
-🚀 Cómo ejecutar el proyecto
-
-1. Clonar el repositorio
-
-git clone
-cd movilidadmdq
-
-⸻
-
-⚠️ Configuración de Backend (OBLIGATORIO)
-
-Antes de ejecutar el backend, debes configurar tu base de datos.
-
-Variables de entorno (.env)
-
-La app usa variables de entorno definidas en:
-src/main/resources/application.properties
-
-Spring Boot NO carga automáticamente el archivo .env, por lo que debes cargarlas manualmente.
-
-⸻
-
-1) Crear archivo .env del backend
-
-Crear un archivo .env en la raíz del proyecto usando .env.example como base.
-
-⸻
-
-2) Completar variables
-
-Variables necesarias:
-
-* SPRING_DATASOURCE_URL → URL JDBC de MySQL
-  Ej: jdbc:mysql://localhost:3306/movilidadmdq
-* DB_USER → Usuario de la base de datos
-* DB_PASSWORD → Contraseña de la base de datos
-
-⸻
-
-3) Cargar variables en IntelliJ
-
-Opción recomendada: plugin .env
-
-1. Ir a Run/Debug Configurations
-2. Activar el plugin .env (EnvFile)
-3. Seleccionar el archivo .env
-4. Ejecutar la app normalmente
-
-⸻
-
-▶️ Ejecutar Backend
-
-Abrir el proyecto en IntelliJ y correr:
-
-MovilidadMdqApplication.java
-
-👉 El backend correrá en:
-http://localhost:8080
-
-⸻
-
-▶️ Ejecutar Frontend
-
-Desde la carpeta del frontend(Ejecutar comandos en la terminal):
-
-```
-cd frontend
-npm install
-npm run dev
+# APIs
+google.maps.api.key=TU_API_KEY_AQUI
+openweather.api.key=TU_API_KEY_AQUI
 ```
 
-👉 Abrir en el navegador:
-http://localhost:5173
+> **Nota:** Para el frontend, asegúrate de configurar también las variables necesarias en `frontend/.env` (como
+`VITE_GOOGLE_MAPS_API_KEY`).
 
-⸻
+---
 
-🧪 Cómo usar la app
+## 🐳 Despliegue con Docker
 
-1. Ingresar:
-   📍 Origen
-   📍 Destino
-2. Presionar:
-   CALCULAR 🚀
-3. Ver resultados:
-   🚕 Taxi
-   🚗 Uber
-   🚙 Didi
-4. Presionar:
-   Elegir
+El proyecto incluye soporte para Docker, lo que facilita la ejecución del backend en un entorno aislado.
 
-👉 Se abrirá la app correspondiente o se iniciará una llamada (Taxi).
+### Requisitos Previos
 
-⸻
+- Docker y Docker Compose instalados.
+- Tener generado el archivo `.jar` del backend.
 
-🔗 Integraciones
+### Pasos para Ejecutar
 
-* API propia (Spring Boot)
-* Deep linking a Uber y Didi
-* Llamada telefónica para Taxi (tel:)
+1. **Compilar el proyecto (Generar el JAR):**
+   Desde la raíz del proyecto, ejecuta:
+   ```bash
+   ./mvnw clean package -DskipTests
+   ```
+   Esto generará el archivo ejecutable en la carpeta `target/`.
 
-⸻
+2. **Levantar el contenedor:**
+   ```bash
+   docker compose up --build
+   ```
 
-⚠️ Notas importantes
+### Detalles del Dockerfile
 
-* Los precios son estimativos
-* Uber y Didi se calculan mediante lógica aproximada
-* Taxi utiliza tarifa real (bajada de bandera + fichas)
+- **Imagen Base:** `eclipse-temurin:21-jdk` (Java 21).
+- **Puerto expuesto:** `8080`.
+- **Funcionamiento:** Toma cualquier archivo `.jar` dentro de `target/` y lo ejecuta al iniciar el contenedor.
 
-⸻
+---
 
-📌 Estado del proyecto
+## 💻 Ejecución Local (Desarrollo)
 
-🟢 MVP funcional completo:
+### Backend
 
-* Backend conectado
-* Frontend funcional
-* Comparación de precios
-* Redirección a apps externas
+1. Asegúrate de tener instalado JDK 21.
+2. Ejecuta:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
-⸻
+### Frontend
 
-🚀 Próximas mejoras
+1. Navega a la carpeta del frontend:
+   ```bash
+   cd frontend
+   ```
+2. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+3. Inicia el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
 
-* Integración con Google Maps (distancia real)
-* Autocompletado de direcciones
-* Mejor estimación de precios (clima, horario)
-* Deploy en producción
+---
+
+## 📊 Estado del Proyecto
+
+Actualmente, el sistema cuenta con:
+
+- ✅ Cálculo de tarifas de Taxi (Diurna/Nocturna).
+- ✅ Estimación dinámica para Uber y Didi (basada en clima y factores temporales).
+- ✅ Autocompletado de direcciones en Mar del Plata.
+- 🚧 Integración persistente con MySQL (En proceso).
+
+---
+
+## 📄 Licencia
+
+Este proyecto es de uso académico para la materia Programación 3 (UTN).

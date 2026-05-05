@@ -12,8 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/viajes")
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
-
+@CrossOrigin(origins = "*")
 public class ViajeController
 {
     private final ViajeService viajeService;
@@ -22,6 +21,6 @@ public class ViajeController
 
     public List<OpcionTransporteResponse> calcular(@Valid @RequestBody CalculoViajeRequest request)
     {
-        return viajeService.calcularViaje(request.origen(), request.destino());
+        return viajeService.calcularViaje(request.origen(), request.destino(), request.usuarioId());
     }
 }

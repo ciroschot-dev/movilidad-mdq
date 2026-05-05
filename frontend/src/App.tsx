@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Car, Smartphone, CreditCard } from 'lucide-react';
+import { useJsApiLoader } from '@react-google-maps/api';
 import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
 interface OpcionTransporteApi {
   tipo: 'TAXI' | 'UBER' | 'DIDI';
@@ -23,7 +25,16 @@ interface Opcion {
   url: string;
 }
 
+const LIBRARIES: ("drawing" | "geometry" | "localContext" | "visualization" | "marker")[] = ["marker"];
+
 function App() {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    version: "beta",
+    libraries: LIBRARIES,
+  });
+
   const [resultados, setResultados] = useState<Opcion[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +110,14 @@ function App() {
       setLoading(false);
     }
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center font-sans">
+        <p className="text-gray-400 font-medium">Cargando aplicación...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex justify-center p-4 sm:p-8 font-sans">

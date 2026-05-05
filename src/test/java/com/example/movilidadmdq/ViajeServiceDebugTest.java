@@ -11,24 +11,28 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
-class ViajeServiceDebugTest {
+class ViajeServiceDebugTest
+{
 
     @Autowired
     private ViajeService viajeService;
 
     @Test
-    void testCalcularViajeReal() {
+    void testCalcularViajeReal()
+    {
         String origen = "Colon 2090, Mar del Plata";
         String destino = "Colon 3132, Mar del Plata";
-        
+
         System.out.println("--- INICIANDO TEST DE DEPURACIÓN ---");
-        List<OpcionTransporteResponse> resultados = viajeService.calcularViaje(origen, destino);
-        
+        // Agregamos 1L como usuarioId para que el test sea válido con la nueva firma del método
+        List<OpcionTransporteResponse> resultados = viajeService.calcularViaje(origen, destino, 1L);
+
         assertNotNull(resultados);
-        for (OpcionTransporteResponse opcion : resultados) {
-            System.out.println("Tipo: " + opcion.getTipo() + 
-                               " | Precio: " + opcion.getPrecioMin() + " - " + opcion.getPrecioMax() + 
-                               " | Tiempo: " + opcion.getTiempoMinutos() + " min");
+        for (OpcionTransporteResponse opcion : resultados)
+        {
+            System.out.println("Tipo: " + opcion.tipo() +
+                    " | Precio: " + opcion.precioMin() + " - " + opcion.precioMax() +
+                    " | Tiempo: " + opcion.tiempoMinutos() + " min");
         }
         System.out.println("--- FIN TEST DE DEPURACIÓN ---");
     }
