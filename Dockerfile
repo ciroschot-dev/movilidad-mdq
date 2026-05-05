@@ -10,7 +10,7 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # =========================
-# 2) STAGE RUNTIME (Java 25)
+# 2) STAGE RUNTIME (Java 21)
 # =========================
 FROM eclipse-temurin:21-jdk
 

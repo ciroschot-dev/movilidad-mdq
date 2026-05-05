@@ -1,6 +1,8 @@
 # MovilidadMDQ 🚗💨
 
-**MovilidadMDQ** es una aplicación diseñada para comparar precios de diferentes servicios de transporte (Taxi, Uber, Didi) en la ciudad de Mar del Plata. Utiliza factores dinámicos como el clima, el horario y la demanda para ofrecer estimaciones precisas y actualizadas.
+**MovilidadMDQ** es una aplicación diseñada para comparar precios de diferentes servicios de transporte (Taxi, Uber,
+Didi) en la ciudad de Mar del Plata. Utiliza factores dinámicos como el clima, el horario y la demanda para ofrecer
+estimaciones precisas y actualizadas.
 
 ---
 
@@ -16,6 +18,7 @@
 ## 🛠️ Configuración Inicial
 
 ### 1. Variables de Entorno
+
 Crea un archivo `.env` en la raíz del proyecto basado en `.env.example`:
 
 ```env
@@ -29,7 +32,8 @@ google.maps.api.key=TU_API_KEY_AQUI
 openweather.api.key=TU_API_KEY_AQUI
 ```
 
-> **Nota:** Para el frontend, asegúrate de configurar también las variables necesarias en `frontend/.env` (como `VITE_GOOGLE_MAPS_API_KEY`).
+> **Nota:** Para el frontend, asegúrate de configurar también las variables necesarias en `frontend/.env` (como
+`VITE_GOOGLE_MAPS_API_KEY`).
 
 ---
 
@@ -38,10 +42,12 @@ openweather.api.key=TU_API_KEY_AQUI
 El proyecto incluye soporte para Docker, lo que facilita la ejecución del backend en un entorno aislado.
 
 ### Requisitos Previos
+
 - Docker y Docker Compose instalados.
 - Tener generado el archivo `.jar` del backend.
 
 ### Pasos para Ejecutar
+
 1. **Compilar el proyecto (Generar el JAR):**
    Desde la raíz del proyecto, ejecuta:
    ```bash
@@ -55,7 +61,8 @@ El proyecto incluye soporte para Docker, lo que facilita la ejecución del backe
    ```
 
 ### Detalles del Dockerfile
-- **Imagen Base:** `eclipse-temurin:25-jdk` (Java 25).
+
+- **Imagen Base:** `eclipse-temurin:21-jdk` (Java 21).
 - **Puerto expuesto:** `8080`.
 - **Funcionamiento:** Toma cualquier archivo `.jar` dentro de `target/` y lo ejecuta al iniciar el contenedor.
 
@@ -64,13 +71,15 @@ El proyecto incluye soporte para Docker, lo que facilita la ejecución del backe
 ## 💻 Ejecución Local (Desarrollo)
 
 ### Backend
-1. Asegúrate de tener instalado JDK 25.
+
+1. Asegúrate de tener instalado JDK 21.
 2. Ejecuta:
    ```bash
    ./mvnw spring-boot:run
    ```
 
 ### Frontend
+
 1. Navega a la carpeta del frontend:
    ```bash
    cd frontend
@@ -87,7 +96,9 @@ El proyecto incluye soporte para Docker, lo que facilita la ejecución del backe
 ---
 
 ## 📊 Estado del Proyecto
+
 Actualmente, el sistema cuenta con:
+
 - ✅ Cálculo de tarifas de Taxi (Diurna/Nocturna).
 - ✅ Estimación dinámica para Uber y Didi (basada en clima y factores temporales).
 - ✅ Autocompletado de direcciones en Mar del Plata.
@@ -96,4 +107,5 @@ Actualmente, el sistema cuenta con:
 ---
 
 ## 📄 Licencia
+
 Este proyecto es de uso académico para la materia Programación 3 (UTN).
