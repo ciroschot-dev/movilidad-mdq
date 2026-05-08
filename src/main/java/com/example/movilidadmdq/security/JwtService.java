@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +87,20 @@ public class JwtService
 
     private Key getSignInKey()
     {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = decodeBase64SecretOrUseRawText();
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private byte[] decodeBase64SecretOrUseRawText()
+    {
+        try
+        {
+            Base64.getDecoder().decode(secretKey);
+            return Decoders.BASE64.decode(secretKey);
+        }
+        catch (IllegalArgumentException exception)
+        {
+            return secretKey.getBytes(StandardCharsets.UTF_8);
+        }
     }
 }
