@@ -1,173 +1,182 @@
-🚕 MovilidadMDQ
+# 🚗 MovilidadMDQ
 
-Aplicación web para comparar opciones de transporte (Taxi, Uber y Didi) en Mar del Plata 🇦🇷 en una sola pantalla.
+App academica para comparar opciones de transporte en Mar del Plata. Calcula alternativas de **Taxi**, **Uber** y **Didi**, guarda historial de viajes por usuario en **AWS RDS** y usa **Spring Security con JWT + Google OAuth2**.
 
-⸻
+> 📘 Para entender que se cambio y como funciona la app por dentro, leer `docs/EXPLICACION_CAMBIOS.md`.
 
-🎯 ¿Qué hace?
+## 🧭 Mapa Rapido
 
-MovilidadMDQ permite al usuario:
+| Parte | Tecnologia | Carpeta |
+| --- | --- | --- |
+| Backend | Java 21, Spring Boot 4, Security, JPA | `src/main/java` |
+| Frontend actual | React 19, TypeScript, Vite | `frontend/` |
+| Frontend viejo | HTML/JS demo legado | `frontend-demo/` |
+| Base de datos | MySQL en AWS RDS | Configurada por `.env` |
+| APIs externas | Google Maps, Google Places, OpenWeather | Configuradas por `.env` |
 
-* Ingresar un origen y un destino
-* Ver precios estimados de distintos transportes
-* Comparar tiempo y costo
-* Elegir una opción y ser redirigido directamente a la app correspondiente
+✅ Usar `frontend/` para ejecutar la app actual.
 
-⸻
+⚠️ `frontend-demo/` queda solo como referencia historica.
 
-🧠 Problema que resuelve
+## ✅ Antes De Empezar
 
-Hoy, para saber cuál es la mejor forma de viajar, el usuario debe:
+Necesitas tener:
 
-* Abrir Uber
-* Abrir Didi
-* Estimar el taxi manualmente
+- Java 21.
+- Node.js y npm.
+- Acceso a la base MySQL de AWS RDS.
+- API key de Google Maps.
+- API key de OpenWeather.
+- OAuth Client de Google si vas a probar `Continuar con Google`.
 
-👉 MovilidadMDQ centraliza todo en un solo lugar, ahorrando tiempo y esfuerzo.
+## 🔐 1. Configurar Backend
 
-⸻
+Crea un archivo `.env` en la raiz del proyecto usando `.env.example` como guia.
 
-⚙️ Tecnologías utilizadas
+```env
+GOOGLE_MAPS_KEY=tu_google_maps_key
+WEATHER_API_KEY=tu_openweather_key
 
-🧱 Backend
+SPRING_DATASOURCE_URL=jdbc:mysql://tu-rds.amazonaws.com:3306/movilidadmdq
+DB_USER=tu_usuario
+DB_PASSWORD=tu_password
 
-* Java
-* Spring Boot
-* API REST
+JWT_SECRET=clave_base64_de_32_bytes_o_mas
+JWT_EXPIRATION=86400000
 
-🎨 Frontend
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-
-⸻
-
-🚀 Cómo ejecutar el proyecto
-
-1. Clonar el repositorio
-
-git clone
-cd movilidadmdq
-
-⸻
-
-⚠️ Configuración de Backend (OBLIGATORIO)
-
-Antes de ejecutar el backend, debes configurar tu base de datos.
-
-Variables de entorno (.env)
-
-La app usa variables de entorno definidas en:
-src/main/resources/application.properties
-
-Spring Boot NO carga automáticamente el archivo .env, por lo que debes cargarlas manualmente.
-
-⸻
-
-1) Crear archivo .env del backend
-
-Crear un archivo .env en la raíz del proyecto usando .env.example como base.
-
-⸻
-
-2) Completar variables
-
-Variables necesarias:
-
-* SPRING_DATASOURCE_URL → URL JDBC de MySQL
-  Ej: jdbc:mysql://localhost:3306/movilidadmdq
-* DB_USER → Usuario de la base de datos
-* DB_PASSWORD → Contraseña de la base de datos
-
-⸻
-
-3) Cargar variables en IntelliJ
-
-Opción recomendada: plugin .env
-
-1. Ir a Run/Debug Configurations
-2. Activar el plugin .env (EnvFile)
-3. Seleccionar el archivo .env
-4. Ejecutar la app normalmente
-
-⸻
-
-▶️ Ejecutar Backend
-
-Abrir el proyecto en IntelliJ y correr:
-
-MovilidadMdqApplication.java
-
-👉 El backend correrá en:
-http://localhost:8080
-
-⸻
-
-▶️ Ejecutar Frontend
-
-Desde la carpeta del frontend(Ejecutar comandos en la terminal):
-
-```
-cd frontend
-npm install
-npm run dev
+GOOGLE_OAUTH_CLIENT_ID=tu_client_id_google
+GOOGLE_OAUTH_CLIENT_SECRET=tu_client_secret_google
+APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-👉 Abrir en el navegador:
+Para generar `JWT_SECRET`:
+
+```bash
+openssl rand -base64 32
+```
+
+📌 El backend lee `.env` automaticamente desde `application.properties`.
+
+## 🖥️ 2. Configurar Frontend
+
+Crea `frontend/.env` usando `frontend/.env.example` como guia.
+
+```env
+VITE_API_URL=http://localhost:8080
+VITE_GOOGLE_MAPS_API_KEY=tu_google_maps_key_para_browser
+```
+
+📌 La key del frontend necesita **Maps JavaScript API** y **Places API**.
+
+📌 En Google Cloud conviene restringirla a:
+
+```text
+http://localhost:5173/*
+```
+
+## 🔵 3. Configurar Google OAuth2
+
+En Google Cloud Console, dentro del OAuth Client Web, agregar:
+
+**Authorized redirect URI**
+
+```text
+http://localhost:8080/login/oauth2/code/google
+```
+
+**Authorized JavaScript origins**
+
+```text
 http://localhost:5173
+http://localhost:8080
+```
 
-⸻
+⚠️ Los origins no llevan path. Solo protocolo, host y puerto.
 
-🧪 Cómo usar la app
+Luego el flujo vuelve al frontend en:
 
-1. Ingresar:
-   📍 Origen
-   📍 Destino
-2. Presionar:
-   CALCULAR 🚀
-3. Ver resultados:
-   🚕 Taxi
-   🚗 Uber
-   🚙 Didi
-4. Presionar:
-   Elegir
+```text
+http://localhost:5173/oauth2/redirect?token=...
+```
 
-👉 Se abrirá la app correspondiente o se iniciará una llamada (Taxi).
+## ▶️ 4. Ejecutar La App
 
-⸻
+Terminal 1, backend:
 
-🔗 Integraciones
+```bash
+./mvnw spring-boot:run
+```
 
-* API propia (Spring Boot)
-* Deep linking a Uber y Didi
-* Llamada telefónica para Taxi (tel:)
+Terminal 2, frontend:
 
-⸻
+```bash
+cd frontend && npm install && npm run dev
+```
 
-⚠️ Notas importantes
+Abrir en el navegador:
 
-* Los precios son estimativos
-* Uber y Didi se calculan mediante lógica aproximada
-* Taxi utiliza tarifa real (bajada de bandera + fichas)
+```text
+http://localhost:5173
+```
 
-⸻
+## 🧪 5. Probar La App
 
-📌 Estado del proyecto
+Checklist recomendado:
 
-🟢 MVP funcional completo:
+- ✅ Abrir `http://localhost:5173`.
+- ✅ Registrarse con usuario, email y contrasena.
+- ✅ Cerrar sesion y volver a iniciar sesion.
+- ✅ Probar `Continuar con Google`.
+- ✅ Calcular un viaje en Mar del Plata.
+- ✅ Ver opciones de Taxi, Uber y Didi.
+- ✅ Entrar a `Historial` y confirmar que se guardo el viaje.
 
-* Backend conectado
-* Frontend funcional
-* Comparación de precios
-* Redirección a apps externas
+## 🔌 Endpoints Principales
 
-⸻
+| Metodo | Endpoint | Para que sirve |
+| --- | --- | --- |
+| `POST` | `/usuarios/registro` | Crear usuario y devolver JWT |
+| `POST` | `/usuarios/login` | Login clasico y devolver JWT |
+| `GET` | `/usuarios/me` | Obtener usuario actual desde JWT |
+| `POST` | `/viajes/calcular` | Calcular viaje y guardar historial |
+| `GET` | `/usuarios/{id}/historial` | Ver historial del usuario autenticado |
+| `PUT` | `/usuarios/{id}` | Actualizar perfil propio |
 
-🚀 Próximas mejoras
+Los endpoints protegidos necesitan:
 
-* Integración con Google Maps (distancia real)
-* Autocompletado de direcciones
-* Mejor estimación de precios (clima, horario)
-* Deploy en producción
+```text
+Authorization: Bearer TU_TOKEN
+```
+
+## 🛠️ 6. Verificar Que Todo Compile
+
+Backend:
+
+```bash
+./mvnw test
+```
+
+Frontend:
+
+```bash
+cd frontend && npm run build
+```
+
+## 🧯 Problemas Comunes
+
+| Problema | Que revisar |
+| --- | --- |
+| No encuentra Java | Instalar Java 21 |
+| Error 401 al calcular | Falta iniciar sesion o vencio el token |
+| Google Maps no carga | `VITE_GOOGLE_MAPS_API_KEY` en `frontend/.env` |
+| Distance Matrix falla | `GOOGLE_MAPS_KEY` en `.env` raiz |
+| OAuth2 falla | Redirect URI y JavaScript origins en Google Cloud |
+| No conecta a AWS | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y seguridad de RDS |
+
+## 🧠 Notas Para El Equipo
+
+- 🔒 No commitear `.env` ni claves reales.
+- ✅ `frontend/` es la app vigente.
+- 🕰️ `frontend-demo/` es legado y no se usa para ejecutar la app actual.
+- 🚀 En produccion, restringir CORS y API keys al dominio real.
+- 📚 Si queres entender todo el cambio, leer `docs/EXPLICACION_CAMBIOS.md`.

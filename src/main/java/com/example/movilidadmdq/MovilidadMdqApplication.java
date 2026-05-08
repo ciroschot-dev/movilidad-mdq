@@ -2,9 +2,8 @@ package com.example.movilidadmdq;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@SpringBootApplication
 public class MovilidadMdqApplication
 {
 
@@ -12,5 +11,4 @@ public class MovilidadMdqApplication
     {
         SpringApplication.run(MovilidadMdqApplication.class, args);
     }
-
 }
