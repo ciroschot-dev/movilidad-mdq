@@ -4,7 +4,8 @@ import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,121 +14,131 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.math.RoundingMode;
 
 @Service
-public class ViajeService
-{
-    // === NUEVO: Inyección de GoogleMapsService ===
-    @Autowired
-    private GoogleMapsService googleMapsService;
+@RequiredArgsConstructor
+public class ViajeService {
 
-    @Autowired
-    private WeatherService weatherService;
-    // =============================================
+    // === Configuración ===
+    @Value("${taxi.telefono:+5492233126129}")
+    private String telefonoTaxi;
 
-    public List<OpcionTransporteResponse> calcularViaje(String origen, String destino)
-    {
+    private static final BigDecimal TAXI_BAJADA_DIURNA = BigDecimal.valueOf(2250);
+    private static final BigDecimal TAXI_FICHA_DIURNA = BigDecimal.valueOf(150);
+    private static final BigDecimal TAXI_BAJADA_NOCTURNA = BigDecimal.valueOf(2700);
+    private static final BigDecimal TAXI_FICHA_NOCTURNA = BigDecimal.valueOf(180);
+    private static final double METROS_POR_FICHA = 160;
+
+    // === Inyecciones ===
+    private final GoogleMapsService googleMapsService;
+    private final WeatherService weatherService;
+    private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
+    private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
+
+    public List<OpcionTransporteResponse> calcularViaje(String origen, String destino, Long usuarioId) {
         // 🔵 VALORES POR DEFECTO (Simulación / Fallback)
         double distanciaKm = 5.0;
         int tiempoMin = 15;
 
         // Asegurar que la búsqueda sea en Mar del Plata si no se especificó
-        String origenFinal = origen.toLowerCase().contains("mar del plata") ? origen : origen + ", Mar del Plata, Argentina";
-        String destinoFinal = destino.toLowerCase().contains("mar del plata") ? destino : destino + ", Mar del Plata, Argentina";
+        String origenFinal = normalizarDireccion(origen);
+        String destinoFinal = normalizarDireccion(destino);
 
         System.out.println("Solicitando viaje: [" + origenFinal + "] -> [" + destinoFinal + "]");
 
-        // === NUEVO: Intento de obtener datos reales de Google Maps ===
         try {
             DistanceMatrix matrix = googleMapsService.obtenerDatosViaje(origenFinal, destinoFinal);
-            
-            if (matrix.rows.length > 0 && matrix.rows[0].elements.length > 0) {
+            if (esRespuestaValida(matrix)) {
                 DistanceMatrixElement element = matrix.rows[0].elements[0];
-                
-                if (element.status.toString().equals("OK") && element.distance != null && element.duration != null) {
-                    // Convertir metros a Kilómetros y segundos a Minutos
-                    distanciaKm = element.distance.inMeters / 1000.0;
-                    tiempoMin = (int) Math.ceil(element.duration.inSeconds / 60.0);
-                    
-                    System.out.println("✅ Datos REALES obtenidos: " + distanciaKm + "km, " + tiempoMin + "min");
-                } else {
-                    System.out.println("⚠️ Google Maps no encontró la ruta (Status: " + element.status + "). Usando simulación.");
-                }
+                distanciaKm = element.distance.inMeters / 1000.0;
+                tiempoMin = (int) Math.ceil(element.duration.inSeconds / 60.0);
+                System.out.println("✅ Datos REALES obtenidos: " + distanciaKm + "km, " + tiempoMin + "min");
             }
         } catch (Exception e) {
             System.err.println("❌ Error Google Maps API: " + e.getMessage());
         }
-        // ==========================================================
 
         BigDecimal precioTaxi = calcularTaxi(distanciaKm);
+        double factorClima = obtenerFactorClima();
 
-        List<OpcionTransporteResponse> opciones = List.of
-                (
-                        construirTaxi(precioTaxi, tiempoMin),
-                        construirUber(precioTaxi, tiempoMin, origen, destino),
-                        construirDidi(precioTaxi, tiempoMin)
-                );
+        // --- GUARDAR EN BASE DE DATOS ---
+        guardarHistorial(origenFinal, destinoFinal, (long)(distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId);
 
-        // 💸 ordenar por precio más bajo
+        List<OpcionTransporteResponse> opciones = List.of(
+                construirTaxi(precioTaxi, tiempoMin),
+                construirUber(precioTaxi, tiempoMin, origen, destino, factorClima),
+                construirDidi(precioTaxi, tiempoMin, factorClima)
+        );
+
         return opciones.stream()
                 .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
                 .toList();
     }
 
+    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId) {
+        try {
+            usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+                com.example.movilidadmdq.model.Viaje nuevoViaje = new com.example.movilidadmdq.model.Viaje();
+                nuevoViaje.setOrigen(origen);
+                nuevoViaje.setDestino(destino);
+                nuevoViaje.setDistanciaEnMetros(distanciaMetros);
+                nuevoViaje.setTiempoEstimadoMin(tiempoMin);
+                nuevoViaje.setPrecioTaxi(precioTaxi);
+                
+                // Valores estimados para historial
+                nuevoViaje.setPrecioMinApp(precioTaxi.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP));
+                nuevoViaje.setPrecioMaxApp(precioTaxi.multiply(BigDecimal.valueOf(1.2)).setScale(2, RoundingMode.HALF_UP));
+                
+                nuevoViaje.setUsuario(usuario);
+                
+                viajeRepository.save(nuevoViaje);
+                System.out.println("💾 Viaje guardado automáticamente en AWS para el usuario: " + usuario.getUsername());
+            });
+        } catch (Exception e) {
+            System.err.println("❌ Error al guardar historial: " + e.getMessage());
+        }
+    }
+
+    private String normalizarDireccion(String direccion) {
+        if (direccion.toLowerCase().contains("mar del plata")) return direccion;
+        return direccion + ", Mar del Plata, Argentina";
+    }
+
+    private boolean esRespuestaValida(DistanceMatrix matrix) {
+        return matrix != null && matrix.rows.length > 0 && 
+               matrix.rows[0].elements.length > 0 && 
+               matrix.rows[0].elements[0].status.toString().equals("OK");
+    }
+
     // =========================
-    // 🚕 TAXI (tarifa real)
+    // 🚕 TAXI
     // =========================
 
-    private BigDecimal calcularTaxi(double distanciaKm)
-    {
+    private BigDecimal calcularTaxi(double distanciaKm) {
         boolean esNocturno = esHorarioNocturno();
+        BigDecimal bajada = esNocturno ? TAXI_BAJADA_NOCTURNA : TAXI_BAJADA_DIURNA;
+        BigDecimal valorFicha = esNocturno ? TAXI_FICHA_NOCTURNA : TAXI_FICHA_DIURNA;
 
-        BigDecimal bajadaBandera;
-        BigDecimal valorFicha;
-        double metrosPorFicha = 160;
         double distanciaMetros = distanciaKm * 1000;
-
-        if (esNocturno)
-        {
-            bajadaBandera = BigDecimal.valueOf(2700);
-            valorFicha = BigDecimal.valueOf(180);
-        }
-        else //valores de diurno
-        {
-            bajadaBandera = BigDecimal.valueOf(2250);
-            valorFicha = BigDecimal.valueOf(150);
-        }
-
-
-        // calcular fichas
-
-        double fichasExactas = distanciaMetros / metrosPorFicha;
-
-        int fichas = (int) Math.ceil(fichasExactas); //redondea para arriba
-
-        // calcular precio por fichas
-
-        //multiplica la cant de fichas por el valor de cada ficha (según horario)
+        int fichas = (int) Math.ceil(distanciaMetros / METROS_POR_FICHA);
+        
         BigDecimal precioFichas = valorFicha.multiply(BigDecimal.valueOf(fichas));
-
-        // precio final
-        return bajadaBandera.add(precioFichas); //suma la bajada de bandera + las fichas calculadas
+        return bajada.add(precioFichas);
     }
 
-    private boolean esHorarioNocturno()
-    {
+    private boolean esHorarioNocturno() {
         int hora = LocalTime.now().getHour();
-        return (hora >= 22 || hora < 6); //mayor o igual a 22hrs o antes de las 6
+        return (hora >= 22 || hora < 6);
     }
 
-    private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin)
-    {
+    private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin) {
         return new OpcionTransporteResponse(
                 TipoTransporte.TAXI,
                 precioTaxi,
                 precioTaxi,
                 tiempoMin,
-                generarUrlTaxi()
+                "tel:" + telefonoTaxi
         );
     }
 
@@ -135,21 +146,19 @@ public class ViajeService
     // 🚗 UBER
     // =========================
 
-    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, String origen, String destino)
-    {
-        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85)); // base más barato que taxi
+    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, String origen, String destino, double factorClima) {
+        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85));
+        
+        double fH = obtenerFactorHorario();
+        double fD = obtenerFactorDemanda();
 
-        double factorHorario = obtenerFactorHorario();
-        double factorClima = obtenerFactorClima();
-        double factorDemanda = obtenerFactorDemanda();
-
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorHorario * factorClima));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorHorario * factorClima * factorDemanda));
+        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(fH * factorClima));
+        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * factorClima * fD));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.UBER,
-                precioMin.setScale(2, BigDecimal.ROUND_HALF_UP),
-                precioMax.setScale(2, BigDecimal.ROUND_HALF_UP),
+                precioMin.setScale(2, RoundingMode.HALF_UP),
+                precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 generarUrlUber(origen, destino)
         );
@@ -159,52 +168,31 @@ public class ViajeService
     // 🚙 DIDI
     // =========================
 
-    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin)
-    {
+    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima) {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
 
-        double factorHorario = obtenerFactorHorario();
-        double factorClima = obtenerFactorClima();
-        double factorDemanda = obtenerFactorDemanda();
+        double fH = obtenerFactorHorario();
+        double fD = obtenerFactorDemanda();
 
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorHorario));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorHorario * factorClima * factorDemanda));
+        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(fH));
+        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * factorClima * fD));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.DIDI,
-                precioMin.setScale(2, BigDecimal.ROUND_HALF_UP),
-                precioMax.setScale(2, BigDecimal.ROUND_HALF_UP),
+                precioMin.setScale(2, RoundingMode.HALF_UP),
+                precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
-                generarUrlDidi()
+                "https://www.didiglobal.com/"
         );
     }
 
-    // =========================
-    // 🔗 URLs
-    // =========================
-
-    private String generarUrlTaxi()
-    {
-        return "tel:+5492233126129"; // num de Ciro para pruebas. Despues cambiar al de TAXI
-    }
-
-    private String generarUrlUber(String origen, String destino)
-    {
+    private String generarUrlUber(String origen, String destino) {
         return "https://m.uber.com/ul/?action=setPickup" +
-
                 "&pickup[formatted_address]=" + encode(origen) +
-
                 "&dropoff[formatted_address]=" + encode(destino);
-
     }
 
-    private String generarUrlDidi()
-    {
-        return "https://www.didiglobal.com/";
-    }
-
-    private String encode(String value)
-    {
+    private String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
@@ -212,31 +200,24 @@ public class ViajeService
     // 📊 FACTORES DINÁMICOS
     // =========================
 
-    private double obtenerFactorHorario()
-    {
+    private double obtenerFactorHorario() {
         int hora = LocalTime.now().getHour();
-
-        if (hora >= 7 && hora <= 9) return 1.3; // hora pico mañana
-        if (hora >= 17 && hora <= 20) return 1.4; // hora pico tarde
-        if (hora >= 22 || hora < 6) return 1.2; // noche
-
+        if (hora >= 7 && hora <= 9) return 1.3;
+        if (hora >= 17 && hora <= 20) return 1.4;
+        if (hora >= 22 || hora < 6) return 1.2;
         return 1.0;
     }
 
-    private double obtenerFactorClima()
-    {
+    private double obtenerFactorClima() {
         return weatherService.obtenerFactorClima();
     }
 
-    private double obtenerFactorDemanda()
-    {
+    private double obtenerFactorDemanda() {
+        // Simulación de demanda basada en aleatoriedad (Pendiente: Integración con API real si existe)
         int autosDisponibles = (int) (Math.random() * 10);
-
         if (autosDisponibles < 3) return 1.5;
         if (autosDisponibles < 6) return 1.2;
-
         return 1.0;
     }
 }
-
 

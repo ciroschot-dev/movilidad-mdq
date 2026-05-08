@@ -1,5 +1,6 @@
 package com.example.movilidadmdq.model;
 
+import com.example.movilidadmdq.enums.TipoTransporte;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "tarifas")
 
 public class Tarifa
 {
@@ -20,10 +22,9 @@ public class Tarifa
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Size(max = 50)
+    @Enumerated(EnumType.STRING)
     @Column(unique = true, nullable = false)
-    private String tipoTransporte;
+    private TipoTransporte tipoTransporte;
 
     @NotNull
     @DecimalMin("0.0")
