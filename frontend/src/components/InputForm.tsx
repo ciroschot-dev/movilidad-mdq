@@ -13,6 +13,11 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
   
   const origenRef = useRef<HTMLInputElement>(null);
   const destinoRef = useRef<HTMLInputElement>(null);
+  const onInputChangeRef = useRef(onInputChange);
+
+  useEffect(() => {
+    onInputChangeRef.current = onInputChange;
+  }, [onInputChange]);
 
   useEffect(() => {
     const initAutocomplete = async () => {
@@ -24,7 +29,12 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
       const options: google.maps.places.AutocompleteOptions = {
         componentRestrictions: { country: "ar" },
         fields: ["formatted_address", "geometry"],
-        locationBias: { lat: -38.0055, lng: -57.5426 }, // Mar del Plata
+        bounds: {
+          north: -37.85,
+          south: -38.15,
+          east: -57.45,
+          west: -57.75,
+        },
       };
 
       const autocompleteOrigen = new Autocomplete(origenRef.current, options);
@@ -35,7 +45,7 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         const place = autocompleteOrigen.getPlace();
         if (place.formatted_address) {
           setOrigen(place.formatted_address);
-          if (onInputChange) onInputChange();
+          if (onInputChangeRef.current) onInputChangeRef.current();
         }
       });
 
@@ -43,13 +53,13 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         const place = autocompleteDestino.getPlace();
         if (place.formatted_address) {
           setDestino(place.formatted_address);
-          if (onInputChange) onInputChange();
+          if (onInputChangeRef.current) onInputChangeRef.current();
         }
       });
     };
 
     initAutocomplete();
-  }, [onInputChange]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +80,10 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
           placeholder="¿De dónde sales?"
           className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
           value={origen}
-          onChange={(e) => setOrigen(e.target.value)}
+          onChange={(e) => {
+            setOrigen(e.target.value);
+            if (onInputChangeRef.current) onInputChangeRef.current();
+          }}
           required
         />
       </div>
@@ -86,7 +99,10 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
           placeholder="¿A dónde vas?"
           className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
           value={destino}
-          onChange={(e) => setDestino(e.target.value)}
+          onChange={(e) => {
+            setDestino(e.target.value);
+            if (onInputChangeRef.current) onInputChangeRef.current();
+          }}
           required
         />
       </div>
