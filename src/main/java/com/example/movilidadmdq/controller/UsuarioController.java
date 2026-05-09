@@ -1,12 +1,19 @@
 package com.example.movilidadmdq.controller;
 
+import com.example.movilidadmdq.dto.ActualizarUsuarioRequest;
+import com.example.movilidadmdq.dto.AuthResponse;
+import com.example.movilidadmdq.dto.LoginRequest;
+import com.example.movilidadmdq.dto.RegistroRequest;
 import com.example.movilidadmdq.dto.UsuarioResponse;
-import com.example.movilidadmdq.model.Usuario;
+import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
 import com.example.movilidadmdq.model.Viaje;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,35 +21,86 @@ import java.util.List;
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class UsuarioController {
     private final com.example.movilidadmdq.service.UsuarioService usuarioService;
     private final UsuarioRepository usuarioRepository;
     private final ViajeRepository viajeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponse> login(@RequestBody com.example.movilidadmdq.dto.LoginRequest request) {
-        return usuarioService.login(request)
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        try {
+            return ResponseEntity.ok(usuarioService.login(request));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(401).build();
+        }
+    }
+
+    @PostMapping("/registro")
+    public ResponseEntity<AuthResponse> registrar(@Valid @RequestBody RegistroRequest request) {
+        try {
+            return ResponseEntity.ok(usuarioService.registrar(request));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponse> obtenerUsuarioActual(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuarioService::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(401).build());
     }
 
     @GetMapping("/{id}/historial")
-    public List<Viaje> obtenerHistorial(@PathVariable Long id) {
-        // En una app real filtraríamos por ID en el repo, para demo mostramos todos
-        return viajeRepository.findAll(); 
+    public ResponseEntity<List<ViajeHistorialResponse>> obtenerHistorial(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .filter(usuario -> usuario.getId().equals(id))
+                .map(usuario -> viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
+                        .map(this::toHistorialResponse)
+                        .toList())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(403).build());
+    }
+
+    private ViajeHistorialResponse toHistorialResponse(Viaje viaje) {
+        return new ViajeHistorialResponse(
+                viaje.getId(),
+                viaje.getOrigen(),
+                viaje.getDestino(),
+                viaje.getDistanciaEnMetros(),
+                viaje.getTiempoEstimadoMin(),
+                viaje.getPrecioTaxi(),
+                viaje.getPrecioMinApp(),
+                viaje.getPrecioMaxApp(),
+                viaje.getFechaHora()
+        );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponse> actualizarPerfil(@PathVariable Long id, @RequestBody Usuario datosNuevos) {
-        return usuarioRepository.findById(id).map(usuario -> {
-            usuario.setUsername(datosNuevos.getUsername());
-            usuario.setEmail(datosNuevos.getEmail());
-            if (datosNuevos.getPassword() != null && !datosNuevos.getPassword().isBlank()) {
-                usuario.setPassword(datosNuevos.getPassword());
-            }
-            Usuario actualizado = usuarioRepository.save(usuario);
-            return ResponseEntity.ok(new UsuarioResponse(actualizado.getId(), actualizado.getUsername(), actualizado.getEmail()));
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<UsuarioResponse> actualizarPerfil(@PathVariable Long id, @Valid @RequestBody ActualizarUsuarioRequest datosNuevos, Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .filter(usuario -> usuario.getId().equals(id))
+                .map(usuario -> {
+                    usuario.setUsername(datosNuevos.username());
+                    usuario.setEmail(datosNuevos.email());
+                    if (datosNuevos.password() != null && !datosNuevos.password().isBlank()) {
+                        usuario.setPassword(passwordEncoder.encode(datosNuevos.password()));
+                    }
+                    return ResponseEntity.ok(usuarioService.toResponse(usuarioRepository.save(usuario)));
+                }).orElse(ResponseEntity.status(403).build());
     }
 }
