@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
 
+// Necesario para la vista del Mapa en la pantalla Principal
+import MapView from './MapView';
+
 interface InputFormProps {
   onCalculate: (origen: string, destino: string) => Promise<void>;
   loading: boolean;
@@ -10,7 +13,11 @@ interface InputFormProps {
 const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChange }) => {
   const [origen, setOrigen] = React.useState('');
   const [destino, setDestino] = React.useState('');
-  
+
+  // Const necesarias para el uso del ViewMap
+  const [origenCoords, setOrigenCoords] = React.useState<{ lat: number; lng: number } | null>(null);
+  const [destinoCoords, setDestinoCoords] = React.useState<{ lat: number; lng: number } | null>(null);
+
   const origenRef = useRef<HTMLInputElement>(null);
   const destinoRef = useRef<HTMLInputElement>(null);
   const onInputChangeRef = useRef(onInputChange);
@@ -40,22 +47,41 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
       const autocompleteOrigen = new Autocomplete(origenRef.current, options);
       const autocompleteDestino = new Autocomplete(destinoRef.current, options);
 
-      // Listeners para capturar la dirección seleccionada
+      // Listeners para capturar la dirección seleccionada y Settea las latitud y longitud para el Mapa de la pantalla principal
       autocompleteOrigen.addListener("place_changed", () => {
         const place = autocompleteOrigen.getPlace();
+
         if (place.formatted_address) {
           setOrigen(place.formatted_address);
+
+          if (place.geometry?.location) {
+            setOrigenCoords({
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            });
+          }
+
           if (onInputChangeRef.current) onInputChangeRef.current();
         }
       });
-
+      // Guardar Coordenadas Del Destino
       autocompleteDestino.addListener("place_changed", () => {
         const place = autocompleteDestino.getPlace();
+
         if (place.formatted_address) {
           setDestino(place.formatted_address);
+
+          if (place.geometry?.location) {
+            setDestinoCoords({
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            });
+          }
+
           if (onInputChangeRef.current) onInputChangeRef.current();
         }
       });
+      //-----------------------------------------------
     };
 
     initAutocomplete();
@@ -106,6 +132,12 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
           required
         />
       </div>
+
+      {/* Renderiza el Mapa */}
+      <MapView
+        origen={origenCoords ?? undefined}
+        destino={destinoCoords ?? undefined}
+      />
 
       <button
         type="submit"
