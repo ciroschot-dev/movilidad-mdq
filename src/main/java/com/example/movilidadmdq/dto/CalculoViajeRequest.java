@@ -6,7 +6,11 @@ import jakarta.validation.constraints.NotNull;
 public record CalculoViajeRequest(
     @NotBlank String origen, 
     @NotBlank String destino,
-    @NotNull Long usuarioId
+    Long usuarioId,
+    Double origenLat,
+    Double origenLng,
+    Double destinoLat,
+    Double destinoLng
 )
 {
 }

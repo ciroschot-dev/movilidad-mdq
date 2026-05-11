@@ -18,9 +18,12 @@ public class ViajeController
     private final ViajeService viajeService;
 
     @PostMapping("/calcular")
-
     public List<OpcionTransporteResponse> calcular(@Valid @RequestBody CalculoViajeRequest request)
     {
-        return viajeService.calcularViaje(request.origen(), request.destino(), request.usuarioId());
+        return viajeService.calcularViaje(
+            request.origen(), request.destino(), request.usuarioId(),
+            request.origenLat(), request.origenLng(),
+            request.destinoLat(), request.destinoLng()
+        );
     }
 }
