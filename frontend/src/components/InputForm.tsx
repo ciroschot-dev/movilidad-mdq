@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
 
 interface InputFormProps {
-  onCalculate: (origen: string, destino: string) => Promise<void>;
+  onCalculate: (origen: string, destino: string, origenLat?: number, origenLng?: number, destinoLat?: number, destinoLng?: number) => Promise<void>;
   loading: boolean;
   onInputChange?: () => void;
 }
@@ -10,6 +10,10 @@ interface InputFormProps {
 const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChange }) => {
   const [origen, setOrigen] = React.useState('');
   const [destino, setDestino] = React.useState('');
+  const origenLatRef = useRef<number | undefined>(undefined);
+  const origenLngRef = useRef<number | undefined>(undefined);
+  const destinoLatRef = useRef<number | undefined>(undefined);
+  const destinoLngRef = useRef<number | undefined>(undefined);
   
   const origenRef = useRef<HTMLInputElement>(null);
   const destinoRef = useRef<HTMLInputElement>(null);
@@ -18,23 +22,22 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
     const initAutocomplete = async () => {
       if (!window.google || !origenRef.current || !destinoRef.current) return;
 
-      // Importar la librería necesaria
       const { Autocomplete } = (await google.maps.importLibrary("places")) as google.maps.PlacesLibrary;
 
       const options: google.maps.places.AutocompleteOptions = {
         componentRestrictions: { country: "ar" },
         fields: ["formatted_address", "geometry"],
-        locationBias: { lat: -38.0055, lng: -57.5426 }, // Mar del Plata
       };
 
       const autocompleteOrigen = new Autocomplete(origenRef.current, options);
       const autocompleteDestino = new Autocomplete(destinoRef.current, options);
 
-      // Listeners para capturar la dirección seleccionada
       autocompleteOrigen.addListener("place_changed", () => {
         const place = autocompleteOrigen.getPlace();
         if (place.formatted_address) {
           setOrigen(place.formatted_address);
+          origenLatRef.current = place.geometry?.location?.lat();
+          origenLngRef.current = place.geometry?.location?.lng();
           if (onInputChange) onInputChange();
         }
       });
@@ -43,6 +46,8 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         const place = autocompleteDestino.getPlace();
         if (place.formatted_address) {
           setDestino(place.formatted_address);
+          destinoLatRef.current = place.geometry?.location?.lat();
+          destinoLngRef.current = place.geometry?.location?.lng();
           if (onInputChange) onInputChange();
         }
       });
@@ -54,12 +59,11 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!origen || !destino) return;
-    await onCalculate(origen, destino);
+    await onCalculate(origen, destino, origenLatRef.current, origenLngRef.current, destinoLatRef.current, destinoLngRef.current);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Input Origen */}
       <div className="relative">
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
           <MapPin size={20} />
@@ -75,7 +79,6 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         />
       </div>
 
-      {/* Input Destino */}
       <div className="relative">
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
           <Navigation size={20} />

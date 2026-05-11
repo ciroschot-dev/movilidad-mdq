@@ -25,7 +25,7 @@ interface Opcion {
   url: string;
 }
 
-const LIBRARIES: ("drawing" | "geometry" | "localContext" | "visualization" | "marker")[] = ["marker"];
+const LIBRARIES: ("drawing" | "geometry" | "visualization" | "marker" | "places")[] = ["marker", "places"];
 
 function App() {
   const { isLoaded } = useJsApiLoader({
@@ -42,12 +42,20 @@ function App() {
   const handleSelectOption = (url: string) => {
     if (!url) return;
 
-    if (
-      url.startsWith("http://") ||
-      url.startsWith("https://") ||
-      url.startsWith("tel:")
-    ) {
-      window.open(url, "_blank", "noopener,noreferrer");
+    if (url.startsWith("uber://")) {
+      window.location.href = url;
+      return;
+    }
+
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("tel:")) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener,noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
@@ -58,7 +66,7 @@ function App() {
       maximumFractionDigits: 0,
     }).format(precio);
 
-  const handleCalculate = async (origen: string, destino: string) => {
+  const handleCalculate = async (origen: string, destino: string, origenLat?: number, origenLng?: number, destinoLat?: number, destinoLng?: number) => {
     setLoading(true);
     setError(null);
 
@@ -68,7 +76,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ origen, destino }),
+        body: JSON.stringify({ origen, destino, origenLat, origenLng, destinoLat, destinoLng }),
       });
 
       if (!response.ok) throw new Error('No se pudieron calcular las opciones.');
