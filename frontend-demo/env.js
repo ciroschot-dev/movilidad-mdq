@@ -1,5 +1,5 @@
 // Configuración de la Demo
 const ENV = {
-    GOOGLE_MAPS_KEY: "AIzaSyAEE2PByHc_jvuxcnD4RG05qY4By0v9_tg",
+    GOOGLE_MAPS_KEY: GOOGLE_MAPS_KEY,
     API_URL: "http://localhost:8080/viajes/calcular"
 };
