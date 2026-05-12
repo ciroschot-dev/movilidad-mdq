@@ -58,7 +58,13 @@ public class SecurityConfig
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/usuarios/login", "/usuarios/registro", "/oauth2/**", "/login/**", "/error").permitAll()
+                        .requestMatchers("/usuarios/login",
+                                "/usuarios/registro",
+                                "/oauth2/**",
+                                "/login/**",
+                                "/error",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
