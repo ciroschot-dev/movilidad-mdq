@@ -66,6 +66,7 @@ public class ViajeService {
         }
 
         BigDecimal precioTaxi = calcularTaxi(distanciaKm);
+        double factorClima = obtenerFactorClima();
 
         // Coordenadas recibidas desde el frontend (autocomplete) para deep links
         LatLng origenCoords = (origenLat != null && origenLng != null) ? new LatLng(origenLat, origenLng) : null;
@@ -76,9 +77,10 @@ public class ViajeService {
 
         List<OpcionTransporteResponse> opciones = List.of(
                 construirTaxi(precioTaxi, tiempoMin),
-                construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords),
-                construirDidi(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords)
-        );
+
+  construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima),
+construirDidi(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima)
+
 
         return opciones.stream()
                 .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
@@ -156,15 +158,14 @@ public class ViajeService {
     // 🚗 UBER
     // =========================
 
-    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, String origen, LatLng origenCoords, String destino, LatLng destinoCoords) {
+private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, String origen, LatLng origenCoords, String destino, LatLng destinoCoords, double factorClima) {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85));
         
         double fH = obtenerFactorHorario();
-        double fC = obtenerFactorClima();
         double fD = obtenerFactorDemanda();
 
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(fH * fC));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * fC * fD));
+        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(fH * factorClima));
+        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * factorClima * fD));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.UBER,
@@ -179,15 +180,14 @@ public class ViajeService {
     // 🚙 DIDI
     // =========================
 
-    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, String origen, LatLng origenCoords, String destino, LatLng destinoCoords) {
+private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, String origen, LatLng origenCoords, String destino, LatLng destinoCoords, double factorClima) {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
 
         double fH = obtenerFactorHorario();
-        double fC = obtenerFactorClima();
         double fD = obtenerFactorDemanda();
 
         BigDecimal precioMin = base.multiply(BigDecimal.valueOf(fH));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * fC * fD));
+        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * factorClima * fD));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.DIDI,
@@ -248,5 +248,4 @@ public class ViajeService {
         return 1.0;
     }
 }
-
 
