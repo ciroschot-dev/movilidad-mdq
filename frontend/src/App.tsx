@@ -218,8 +218,20 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const handleSelectOption = (url: string) => {
     if (!url) return;
 
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('tel:')) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+    if (url.startsWith("uber://")) {
+      window.location.href = url;
+      return;
+    }
+
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("tel:")) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener,noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
@@ -229,11 +241,13 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       timeStyle: 'short',
     }).format(new Date(fechaHora));
 
-  const handleCalculate = async (origen: string, destino: string) => {
+
+ const handleCalculate = async (origen: string, destino: string, origenLat?: number, origenLng?: number, destinoLat?: number, destinoLng?: number) => {
     if (!session) {
       setError('Inicia sesion para calcular y guardar tu viaje.');
       return;
     }
+
 
     setLoading(true);
     setError(null);
@@ -245,7 +259,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.token}`,
         },
-        body: JSON.stringify({ origen, destino }),
+        body: JSON.stringify({ origen, destino, origenLat, origenLng, destinoLat, destinoLng }),
       });
 
       if (response.status === 401 || response.status === 403) {
