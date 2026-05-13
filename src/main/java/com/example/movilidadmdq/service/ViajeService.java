@@ -4,6 +4,7 @@ import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
+import com.google.maps.model.LatLng;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,8 +36,13 @@ public class ViajeService {
     private final WeatherService weatherService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
+    private final UberDeepLinkService uberDeepLinkService;
+    private final DidiDeepLinkService didiDeepLinkService;
 
-    public List<OpcionTransporteResponse> calcularViaje(String origen, String destino, Long usuarioId) {
+    public List<OpcionTransporteResponse> calcularViaje(
+        String origen, String destino, Long usuarioId,
+        Double origenLat, Double origenLng, Double destinoLat, Double destinoLng
+    ) {
         // 🔵 VALORES POR DEFECTO (Simulación / Fallback)
         double distanciaKm = 5.0;
         int tiempoMin = 15;
@@ -62,14 +68,19 @@ public class ViajeService {
         BigDecimal precioTaxi = calcularTaxi(distanciaKm);
         double factorClima = obtenerFactorClima();
 
+        // Coordenadas recibidas desde el frontend (autocomplete) para deep links
+        LatLng origenCoords = (origenLat != null && origenLng != null) ? new LatLng(origenLat, origenLng) : null;
+        LatLng destinoCoords = (destinoLat != null && destinoLng != null) ? new LatLng(destinoLat, destinoLng) : null;
+
         // --- GUARDAR EN BASE DE DATOS ---
         guardarHistorial(origenFinal, destinoFinal, (long)(distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId);
 
         List<OpcionTransporteResponse> opciones = List.of(
                 construirTaxi(precioTaxi, tiempoMin),
-                construirUber(precioTaxi, tiempoMin, origen, destino, factorClima),
-                construirDidi(precioTaxi, tiempoMin, factorClima)
-        );
+
+  construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima),
+construirDidi(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima)
+
 
         return opciones.stream()
                 .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
@@ -77,6 +88,7 @@ public class ViajeService {
     }
 
     private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId) {
+        if (usuarioId == null) return;
         try {
             usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
                 com.example.movilidadmdq.model.Viaje nuevoViaje = new com.example.movilidadmdq.model.Viaje();
@@ -146,7 +158,7 @@ public class ViajeService {
     // 🚗 UBER
     // =========================
 
-    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, String origen, String destino, double factorClima) {
+private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, String origen, LatLng origenCoords, String destino, LatLng destinoCoords, double factorClima) {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85));
         
         double fH = obtenerFactorHorario();
@@ -160,7 +172,7 @@ public class ViajeService {
                 precioMin.setScale(2, RoundingMode.HALF_UP),
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
-                generarUrlUber(origen, destino)
+                generarUrlUber(origen, origenCoords, destino, destinoCoords)
         );
     }
 
@@ -168,7 +180,7 @@ public class ViajeService {
     // 🚙 DIDI
     // =========================
 
-    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima) {
+private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, String origen, LatLng origenCoords, String destino, LatLng destinoCoords, double factorClima) {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
 
         double fH = obtenerFactorHorario();
@@ -182,14 +194,30 @@ public class ViajeService {
                 precioMin.setScale(2, RoundingMode.HALF_UP),
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
-                "https://www.didiglobal.com/"
+                generarUrlDidi(origen, origenCoords, destino, destinoCoords)
         );
     }
 
-    private String generarUrlUber(String origen, String destino) {
-        return "https://m.uber.com/ul/?action=setPickup" +
+    private String generarUrlUber(String origen, LatLng origenCoords, String destino, LatLng destinoCoords) {
+        if (origenCoords != null && destinoCoords != null) {
+            return uberDeepLinkService.generarDeepLink(
+                    origen, origenCoords.lat, origenCoords.lng,
+                    destino, destinoCoords.lat, destinoCoords.lng
+            );
+        }
+        return "uber://?action=setPickup" +
                 "&pickup[formatted_address]=" + encode(origen) +
                 "&dropoff[formatted_address]=" + encode(destino);
+    }
+
+    private String generarUrlDidi(String origen, LatLng origenCoords, String destino, LatLng destinoCoords) {
+        if (origenCoords != null && destinoCoords != null) {
+            return didiDeepLinkService.generarDeepLink(
+                    origen, origenCoords.lat, origenCoords.lng,
+                    destino, destinoCoords.lat, destinoCoords.lng
+            );
+        }
+        return "https://www.didiglobal.com/";
     }
 
     private String encode(String value) {
