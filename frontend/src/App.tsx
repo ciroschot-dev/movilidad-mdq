@@ -4,6 +4,7 @@ import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, 
 import { useJsApiLoader } from '@react-google-maps/api';
 import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
+import ProfileView from './components/ProfileView';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
@@ -53,7 +54,7 @@ interface ViajeHistorial {
 }
 
 type AuthMode = 'login' | 'registro';
-type AppView = 'calculo' | 'historial';
+type AppView = 'calculo' | 'historial' | 'perfil';
 
 interface AppContentProps {
   isLoaded: boolean;
@@ -406,7 +407,12 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">MovilidadMDQ</h1>
-            <p className="text-gray-500 font-medium">Hola, {session.username}</p>
+            <button
+              onClick={() => setActiveView('perfil')}
+              className="text-gray-500 font-medium hover:text-black flex items-center gap-1 transition-colors"
+            >
+              Hola, {session.username} <User size={14} />
+            </button>
           </div>
           <button
             type="button"
@@ -441,7 +447,14 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           </div>
         ) : null}
 
-        {activeView === 'calculo' ? (
+        {activeView === 'perfil' ? (
+          <ProfileView
+            session={session}
+            onUpdate={setSession}
+            onBack={() => setActiveView('calculo')}
+            apiUrl={API_URL}
+          />
+        ) : activeView === 'calculo' ? (
           <>
             <section className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 mb-8">
               <InputForm onCalculate={handleCalculate} loading={loading} onInputChange={() => setError(null)} />
