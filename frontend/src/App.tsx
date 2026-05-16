@@ -219,8 +219,20 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const handleSelectOption = (url: string) => {
     if (!url) return;
 
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('tel:')) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+    if (url.startsWith("uber://")) {
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        window.location.href = url;
+      } else {
+        // Fallback desktop
+        window.open("https://m.uber.com/", "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("tel:")) {
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -230,7 +242,14 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       timeStyle: 'short',
     }).format(new Date(fechaHora));
 
-  const handleCalculate = async (origen: string, destino: string) => {
+  const handleCalculate = async (
+      origen: string,
+      destino: string,
+      origenLat?: number,
+      origenLng?: number,
+      destinoLat?: number,
+      destinoLng?: number
+  ) => {
     if (!session) {
       setError('Inicia sesion para calcular y guardar tu viaje.');
       return;
@@ -246,7 +265,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.token}`,
         },
-        body: JSON.stringify({ origen, destino }),
+        body: JSON.stringify({ origen, destino, origenLat, origenLng, destinoLat, destinoLng }),
       });
 
       if (response.status === 401 || response.status === 403) {
@@ -261,8 +280,8 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       const mappedData: Opcion[] = data.map((item) => {
         const isSamePrice = item.precioMin === item.precioMax;
         const precio = isSamePrice
-          ? formatPrecio(item.precioMin)
-          : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
+            ? formatPrecio(item.precioMin)
+            : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
 
         let config = {
           tipo: 'Taxi',

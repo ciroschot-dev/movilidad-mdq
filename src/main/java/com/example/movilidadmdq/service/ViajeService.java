@@ -3,6 +3,7 @@ package com.example.movilidadmdq.service;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
 import com.google.maps.model.DistanceMatrix;
+import com.google.maps.model.LatLng;
 import com.google.maps.model.DistanceMatrixElement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,12 +36,15 @@ public class ViajeService {
     private final WeatherService weatherService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
+    private final UberDeepLinkService uberDeepLinkService;
 
-    public List<OpcionTransporteResponse> calcularViaje(String origen, String destino, Long usuarioId) {
+    public List<OpcionTransporteResponse> calcularViaje(String origen, String destino, Long usuarioId, Double origenLat, Double origenLng, Double destinoLat, Double destinoLng) {
         // 🔵 VALORES POR DEFECTO (Simulación / Fallback)
         double distanciaKm = 5.0;
         int tiempoMin = 15;
 
+        LatLng origenCoords = (origenLat != null && origenLng != null) ? new LatLng(origenLat, origenLng) : null;
+        LatLng destinoCoords = (destinoLat != null && destinoLng != null) ? new LatLng(destinoLat, destinoLng) : null;
         // Asegurar que la búsqueda sea en Mar del Plata si no se especificó
         String origenFinal = normalizarDireccion(origen);
         String destinoFinal = normalizarDireccion(destino);
@@ -63,11 +67,11 @@ public class ViajeService {
         double factorClima = obtenerFactorClima();
 
         // --- GUARDAR EN BASE DE DATOS ---
-        guardarHistorial(origenFinal, destinoFinal, (long)(distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId);
+        guardarHistorial(origenFinal, destinoFinal, (long) (distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId);
 
         List<OpcionTransporteResponse> opciones = List.of(
                 construirTaxi(precioTaxi, tiempoMin),
-                construirUber(precioTaxi, tiempoMin, origen, destino, factorClima),
+                construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima),
                 construirDidi(precioTaxi, tiempoMin, factorClima)
         );
 
@@ -75,6 +79,8 @@ public class ViajeService {
                 .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
                 .toList();
     }
+
+
 
     private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId) {
         try {
@@ -146,9 +152,13 @@ public class ViajeService {
     // 🚗 UBER
     // =========================
 
-    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, String origen, String destino, double factorClima) {
+    private OpcionTransporteResponse construirUber(
+            BigDecimal precioTaxi, int tiempoMin,
+            String origen, LatLng origenCoords,
+            String destino, LatLng destinoCoords,
+            double factorClima
+    ) {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85));
-        
         double fH = obtenerFactorHorario();
         double fD = obtenerFactorDemanda();
 
@@ -160,10 +170,9 @@ public class ViajeService {
                 precioMin.setScale(2, RoundingMode.HALF_UP),
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
-                generarUrlUber(origen, destino)
+                generarUrlUber(origen, origenCoords, destino, destinoCoords)
         );
     }
-
     // =========================
     // 🚙 DIDI
     // =========================
@@ -218,6 +227,19 @@ public class ViajeService {
         if (autosDisponibles < 3) return 1.5;
         if (autosDisponibles < 6) return 1.2;
         return 1.0;
+    }
+
+    private String generarUrlUber(String origen, LatLng origenCoords, String destino, LatLng destinoCoords) {
+        if (origenCoords != null && destinoCoords != null) {
+            return uberDeepLinkService.generarDeepLink(
+                    origen, origenCoords.lat, origenCoords.lng,
+                    destino, destinoCoords.lat, destinoCoords.lng
+            );
+        }
+
+        return "uber://?action=setPickup" +
+                "&pickup[formatted_address]=" + encode(origen) +
+                "&dropoff[formatted_address]=" + encode(destino);
     }
 }
 

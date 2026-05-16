@@ -1,11 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
-
-// Necesario para la vista del Mapa en la pantalla Principal
 import MapView from './MapView';
 
 interface InputFormProps {
-  onCalculate: (origen: string, destino: string) => Promise<void>;
+  onCalculate: (
+      origen: string,
+      destino: string,
+      origenLat?: number,
+      origenLng?: number,
+      destinoLat?: number,
+      destinoLng?: number
+  ) => Promise<void>;
   loading: boolean;
   onInputChange?: () => void;
 }
@@ -14,7 +19,6 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
   const [origen, setOrigen] = React.useState('');
   const [destino, setDestino] = React.useState('');
 
-  // Const necesarias para el uso del ViewMap
   const [origenCoords, setOrigenCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [destinoCoords, setDestinoCoords] = React.useState<{ lat: number; lng: number } | null>(null);
 
@@ -30,7 +34,6 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
     const initAutocomplete = async () => {
       if (!window.google || !origenRef.current || !destinoRef.current) return;
 
-      // Importar la librería necesaria
       const { Autocomplete } = (await google.maps.importLibrary("places")) as google.maps.PlacesLibrary;
 
       const options: google.maps.places.AutocompleteOptions = {
@@ -47,7 +50,6 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
       const autocompleteOrigen = new Autocomplete(origenRef.current, options);
       const autocompleteDestino = new Autocomplete(destinoRef.current, options);
 
-      // Listeners para capturar la dirección seleccionada y Settea las latitud y longitud para el Mapa de la pantalla principal
       autocompleteOrigen.addListener("place_changed", () => {
         const place = autocompleteOrigen.getPlace();
 
@@ -61,10 +63,10 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
             });
           }
 
-          if (onInputChangeRef.current) onInputChangeRef.current();
+          onInputChangeRef.current?.();
         }
       });
-      // Guardar Coordenadas Del Destino
+
       autocompleteDestino.addListener("place_changed", () => {
         const place = autocompleteDestino.getPlace();
 
@@ -78,82 +80,83 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
             });
           }
 
-          if (onInputChangeRef.current) onInputChangeRef.current();
+          onInputChangeRef.current?.();
         }
       });
-      //-----------------------------------------------
     };
 
-    initAutocomplete();
+    void initAutocomplete();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!origen || !destino) return;
-    await onCalculate(origen, destino);
+
+    await onCalculate(
+        origen,
+        destino,
+        origenCoords?.lat,
+        origenCoords?.lng,
+        destinoCoords?.lat,
+        destinoCoords?.lng
+    );
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Input Origen */}
-      <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
-          <MapPin size={20} />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="relative">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+            <MapPin size={20} />
+          </div>
+          <input
+              ref={origenRef}
+              type="text"
+              placeholder="¿De dónde sales?"
+              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
+              value={origen}
+              onChange={(e) => {
+                setOrigen(e.target.value);
+                onInputChangeRef.current?.();
+              }}
+              required
+          />
         </div>
-        <input
-          ref={origenRef}
-          type="text"
-          placeholder="¿De dónde sales?"
-          className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
-          value={origen}
-          onChange={(e) => {
-            setOrigen(e.target.value);
-            if (onInputChangeRef.current) onInputChangeRef.current();
-          }}
-          required
-        />
-      </div>
 
-      {/* Input Destino */}
-      <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
-          <Navigation size={20} />
+        <div className="relative">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+            <Navigation size={20} />
+          </div>
+          <input
+              ref={destinoRef}
+              type="text"
+              placeholder="¿A dónde vas?"
+              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
+              value={destino}
+              onChange={(e) => {
+                setDestino(e.target.value);
+                onInputChangeRef.current?.();
+              }}
+              required
+          />
         </div>
-        <input
-          ref={destinoRef}
-          type="text"
-          placeholder="¿A dónde vas?"
-          className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
-          value={destino}
-          onChange={(e) => {
-            setDestino(e.target.value);
-            if (onInputChangeRef.current) onInputChangeRef.current();
-          }}
-          required
-        />
-      </div>
 
-      {/* Renderiza el Mapa */}
-      <MapView
-        origen={origenCoords ?? undefined}
-        destino={destinoCoords ?? undefined}
-      />
+        <MapView origen={origenCoords ?? undefined} destino={destinoCoords ?? undefined} />
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-black text-white font-bold py-4 rounded-2xl text-xl shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 mt-2"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="animate-spin" />
-            CALCULANDO...
-          </>
-        ) : (
-          'CALCULAR'
-        )}
-      </button>
-    </form>
+        <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black text-white font-bold py-4 rounded-2xl text-xl shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 mt-2"
+        >
+          {loading ? (
+              <>
+                <Loader2 className="animate-spin" />
+                CALCULANDO...
+              </>
+          ) : (
+              'CALCULAR'
+          )}
+        </button>
+      </form>
   );
 };
 
