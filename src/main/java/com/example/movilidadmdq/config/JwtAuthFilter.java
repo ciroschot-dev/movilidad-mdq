@@ -47,24 +47,27 @@ public class JwtAuthFilter extends OncePerRequestFilter
         {
             username = jwtService.extractUsername(jwtToken);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null)
+            var currentAuth = SecurityContextHolder.getContext().getAuthentication();
+            if (username != null && (currentAuth == null || currentAuth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken))
             {
-                UserDetails userDetails = usuarioRepository.findByUsername(username)
-                        .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-                if (jwtService.isTokenValid(jwtToken, userDetails))
+                var userOpt = usuarioRepository.findByUsername(username);
+                if (userOpt.isPresent())
                 {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    UserDetails userDetails = userOpt.get();
+                    if (jwtService.isTokenValid(jwtToken, userDetails))
+                    {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
             }
         }
-        catch (RuntimeException ignored)
+        catch (Exception e)
         {
             SecurityContextHolder.clearContext();
         }
