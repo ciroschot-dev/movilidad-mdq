@@ -35,7 +35,7 @@ public class SecurityConfig
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final UsuarioRepository usuarioRepository;
 
-    @Value("${app.cors.allowed-origins:http://localhost:5173}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080}")
     private List<String> allowedOrigins;
 
     @Bean
@@ -58,12 +58,22 @@ public class SecurityConfig
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/usuarios/login", "/usuarios/registro", "/oauth2/**", "/login/**", "/error").permitAll()
+                        .requestMatchers(
+                                "/usuarios/login",
+                                "/usuarios/registro",
+                                "/oauth2/**",
+                                "/login/**",
+                                "/error",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api-docs/**",
+                                "/api-docs"
+                        ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))

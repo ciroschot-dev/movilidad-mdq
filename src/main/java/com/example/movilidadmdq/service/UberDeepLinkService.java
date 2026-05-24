@@ -2,6 +2,9 @@ package com.example.movilidadmdq.service;
 
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 @Service
 public class UberDeepLinkService {
 
@@ -10,15 +13,15 @@ public class UberDeepLinkService {
             String destinoNombre, double destinoLat, double destinoLng
     ) {
         return String.format(
-            "uber://?action=setPickup" +
-            "&pickup[latitude]=%s&pickup[longitude]=%s&pickup[formatted_address]=%s" +
-            "&dropoff[latitude]=%s&dropoff[longitude]=%s&dropoff[formatted_address]=%s",
-            origenLat, origenLng, encode(origenNombre),
-            destinoLat, destinoLng, encode(destinoNombre)
+                "uber://?action=setPickup" +
+                        "&pickup[latitude]=%s&pickup[longitude]=%s&pickup[formatted_address]=%s" +
+                        "&dropoff[latitude]=%s&dropoff[longitude]=%s&dropoff[formatted_address]=%s",
+                origenLat, origenLng, encode(origenNombre),
+                destinoLat, destinoLng, encode(destinoNombre)
         );
     }
 
     private String encode(String value) {
-        return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

@@ -4,6 +4,7 @@ import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, 
 import { useJsApiLoader } from '@react-google-maps/api';
 import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
+import ProfileView from './components/ProfileView';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
@@ -53,7 +54,7 @@ interface ViajeHistorial {
 }
 
 type AuthMode = 'login' | 'registro';
-type AppView = 'calculo' | 'historial';
+type AppView = 'calculo' | 'historial' | 'perfil';
 
 interface AppContentProps {
   isLoaded: boolean;
@@ -219,19 +220,19 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     if (!url) return;
 
     if (url.startsWith("uber://")) {
-      window.location.href = url;
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        window.location.href = url;
+      } else {
+        // Fallback desktop
+        window.open("https://m.uber.com/", "_blank", "noopener,noreferrer");
+      }
       return;
     }
 
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("tel:")) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener,noreferrer";
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -241,13 +242,18 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       timeStyle: 'short',
     }).format(new Date(fechaHora));
 
-
- const handleCalculate = async (origen: string, destino: string, origenLat?: number, origenLng?: number, destinoLat?: number, destinoLng?: number) => {
+  const handleCalculate = async (
+      origen: string,
+      destino: string,
+      origenLat?: number,
+      origenLng?: number,
+      destinoLat?: number,
+      destinoLng?: number
+  ) => {
     if (!session) {
       setError('Inicia sesion para calcular y guardar tu viaje.');
       return;
     }
-
 
     setLoading(true);
     setError(null);
@@ -274,8 +280,8 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       const mappedData: Opcion[] = data.map((item) => {
         const isSamePrice = item.precioMin === item.precioMax;
         const precio = isSamePrice
-          ? formatPrecio(item.precioMin)
-          : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
+            ? formatPrecio(item.precioMin)
+            : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
 
         let config = {
           tipo: 'Taxi',
@@ -420,7 +426,12 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">MovilidadMDQ</h1>
-            <p className="text-gray-500 font-medium">Hola, {session.username}</p>
+            <button
+              onClick={() => setActiveView('perfil')}
+              className="text-gray-500 font-medium hover:text-black flex items-center gap-1 transition-colors"
+            >
+              Hola, {session.username} <User size={14} />
+            </button>
           </div>
           <button
             type="button"
@@ -455,7 +466,14 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           </div>
         ) : null}
 
-        {activeView === 'calculo' ? (
+        {activeView === 'perfil' ? (
+          <ProfileView
+            session={session}
+            onUpdate={setSession}
+            onBack={() => setActiveView('calculo')}
+            apiUrl={API_URL}
+          />
+        ) : activeView === 'calculo' ? (
           <>
             <section className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 mb-8">
               <InputForm onCalculate={handleCalculate} loading={loading} onInputChange={() => setError(null)} />
