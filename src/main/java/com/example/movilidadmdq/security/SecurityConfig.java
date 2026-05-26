@@ -1,5 +1,6 @@
 package com.example.movilidadmdq.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import com.example.movilidadmdq.config.JwtAuthFilter;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,11 @@ public class SecurityConfig
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                        )
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/usuarios/login",
