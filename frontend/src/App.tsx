@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw } from 'lucide-react';
-import { useJsApiLoader } from '@react-google-maps/api';
+import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat } from 'lucide-react';import { useJsApiLoader } from '@react-google-maps/api';
 import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
@@ -53,6 +52,11 @@ interface ViajeHistorial {
   fechaHora: string;
 }
 
+interface ViajeFrecuente {
+    origen: string;
+    destino: string;
+    cantidad: number;
+}
 type AuthMode = 'login' | 'registro';
 type AppView = 'calculo' | 'historial' | 'perfil';
 
@@ -89,6 +93,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [resultados, setResultados] = useState<Opcion[] | null>(null);
   const [historial, setHistorial] = useState<ViajeHistorial[] | null>(null);
+  const [viajeFrecuente, setViajeFrecuente] = useState<ViajeFrecuente | null>(null);
   const [historialLoading, setHistorialLoading] = useState(false);
   const [historialError, setHistorialError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -174,11 +179,76 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     }
   };
 
+    const cargarViajeFrecuente = async () => {
+        if (!session) return;
+
+        try {
+            const response = await fetch(`${API_URL}/usuarios/${session.id}/viaje-frecuente`, {
+                headers: {
+                    Authorization: `Bearer ${session.token}`,
+                },
+            });
+
+            if (response.status === 204) {
+                setViajeFrecuente(null);
+                return;
+            }
+
+            if (response.status === 401 || response.status === 403) {
+                cerrarSesion();
+                return;
+            }
+
+            if (!response.ok) return;
+
+            const data: ViajeFrecuente = await response.json();
+            setViajeFrecuente(data);
+        } catch {
+            setViajeFrecuente(null);
+        }
+    };
+
+    const borrarViaje = async (viajeId: number) => {
+        if (!session) return;
+
+        try {
+            const response = await fetch(`${API_URL}/usuarios/${session.id}/historial/${viajeId}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${session.token}`,
+                },
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                cerrarSesion();
+                throw new Error('Tu sesion vencio. Inicia sesion otra vez.');
+            }
+
+            if (!response.ok) throw new Error('No se pudo borrar el viaje.');
+
+            setHistorial((current) => current?.filter((viaje) => viaje.id !== viajeId) ?? []);
+            void cargarViajeFrecuente();
+        } catch (deleteError) {
+            setHistorialError(deleteError instanceof Error ? deleteError.message : 'Error al borrar viaje.');
+        }
+    };
+
+    const repetirViaje = (origen: string, destino: string) => {
+        setActiveView('calculo');
+        void handleCalculate(origen, destino);
+    };
+
   useEffect(() => {
     if (session && activeView === 'historial') {
       void cargarHistorial();
     }
   }, [activeView, session?.id]);
+
+  useEffect(() => {
+      if (session && activeView === 'calculo') {
+          void cargarViajeFrecuente();
+        }
+    }, [activeView, session?.id]);
 
   const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -475,9 +545,27 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           />
         ) : activeView === 'calculo' ? (
           <>
-            <section className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 mb-8">
-              <InputForm onCalculate={handleCalculate} loading={loading} onInputChange={() => setError(null)} />
-            </section>
+              {viajeFrecuente ? (
+                  <button
+                      type="button"
+                      onClick={() => repetirViaje(viajeFrecuente.origen, viajeFrecuente.destino)}
+                      className="mb-4 w-full rounded-3xl border border-blue-100 bg-blue-50 p-4 text-left shadow-sm transition-all hover:bg-blue-100"
+                  >
+                      <p className="text-xs font-black uppercase tracking-widest text-blue-500">
+                          Viaje frecuente
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-gray-900">
+                          {viajeFrecuente.origen} → {viajeFrecuente.destino}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-gray-500">
+                          Lo hiciste {viajeFrecuente.cantidad} veces. Toca para repetirlo.
+                      </p>
+                  </button>
+              ) : null}
+
+              <section className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 mb-8">
+                  <InputForm onCalculate={handleCalculate} loading={loading} onInputChange={() => setError(null)} />
+              </section>
 
             <div className="space-y-4">
               {error ? (
@@ -542,6 +630,25 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                 <RefreshCw size={18} className={historialLoading ? 'animate-spin' : ''} />
               </button>
             </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                  <button
+                      type="button"
+                      onClick={() => repetirViaje(viaje.origen, viaje.destino)}
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-black px-3 py-3 text-sm font-black text-white transition-all hover:bg-gray-800"
+                  >
+                      <Repeat size={16} />
+                      Repetir
+                  </button>
+
+                  <button
+                      type="button"
+                      onClick={() => borrarViaje(viaje.id)}
+                      className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-black text-red-600 transition-all hover:bg-red-100"
+                  >
+                      <Trash2 size={16} />
+                      Borrar
+                  </button>
+              </div>
 
             {historialError ? (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -556,35 +663,62 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
             ) : historial && historial.length > 0 ? (
               <div className="space-y-3">
                 {historial.map((viaje) => (
-                  <motion.article
-                    key={viaje.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-200/60"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex gap-3 text-sm font-semibold text-gray-700">
-                        <MapPin size={18} className="mt-0.5 shrink-0 text-gray-400" />
-                        <span>{viaje.origen}</span>
-                      </div>
-                      <div className="flex gap-3 text-sm font-semibold text-gray-700">
-                        <Navigation size={18} className="mt-0.5 shrink-0 text-gray-400" />
-                        <span>{viaje.destino}</span>
-                      </div>
-                    </div>
+                        <motion.article
+                            key={viaje.id}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-200/60"
+                        >
+                            <div className="space-y-3">
+                                <div className="flex gap-3 text-sm font-semibold text-gray-700">
+                                    <MapPin size={18} className="mt-0.5 shrink-0 text-gray-400" />
+                                    <span>{viaje.origen}</span>
+                                </div>
+                                <div className="flex gap-3 text-sm font-semibold text-gray-700">
+                                    <Navigation size={18} className="mt-0.5 shrink-0 text-gray-400" />
+                                    <span>{viaje.destino}</span>
+                                </div>
+                            </div>
 
-                    <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-4">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{formatFecha(viaje.fechaHora)}</p>
-                        <p className="mt-1 text-sm font-bold text-gray-500">{viaje.tiempoEstimadoMin} min · {(viaje.distanciaEnMetros / 1000).toFixed(1)} km</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Taxi</p>
-                        <p className="text-lg font-black text-gray-900">{formatPrecio(viaje.precioTaxi)}</p>
-                      </div>
-                    </div>
-                  </motion.article>
-                ))}
+                            <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-4">
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                                        {formatFecha(viaje.fechaHora)}
+                                    </p>
+                                    <p className="mt-1 text-sm font-bold text-gray-500">
+                                        {viaje.tiempoEstimadoMin} min · {(viaje.distanciaEnMetros / 1000).toFixed(1)} km
+                                    </p>
+                                </div>
+
+                                <div className="text-right">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Taxi</p>
+                                    <p className="text-lg font-black text-gray-900">
+                                        {formatPrecio(viaje.precioTaxi)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => repetirViaje(viaje.origen, viaje.destino)}
+                                    className="flex items-center justify-center gap-2 rounded-2xl bg-black px-3 py-3 text-sm font-black text-white transition-all hover:bg-gray-800"
+                                >
+                                    <Repeat size={16} />
+                                    Repetir
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => borrarViaje(viaje.id)}
+                                    className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-black text-red-600 transition-all hover:bg-red-100"
+                                >
+                                    <Trash2 size={16} />
+                                    Borrar
+                                </button>
+                            </div>
+                        </motion.article>
+                    ))}
               </div>
             ) : (
               <div className="rounded-3xl border-2 border-dashed border-gray-200 py-12 text-center">
