@@ -23,13 +23,16 @@ public class ViajeController
     @PostMapping("/calcular")
     public ResponseEntity<List<OpcionTransporteResponse>> calcular(@Valid @RequestBody CalculoViajeRequest request, Authentication authentication)
     {
-        if (authentication == null || authentication.getName() == null)
-        {
-            return ResponseEntity.status(401).build();
-        }
-
         return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(request.origen(), request.destino(), usuario.getId())))
+                .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(
+                        request.origen(),
+                        request.destino(),
+                        usuario.getId(),
+                        request.origenLat(),
+                        request.origenLng(),
+                        request.destinoLat(),
+                        request.destinoLng()
+                )))
                 .orElse(ResponseEntity.status(401).build());
     }
 }

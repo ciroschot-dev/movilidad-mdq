@@ -1,5 +1,6 @@
 package com.example.movilidadmdq.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import com.example.movilidadmdq.config.JwtAuthFilter;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,17 +47,22 @@ public class SecurityConfig
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
     {
         return config.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
     {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                        )
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/usuarios/login",
