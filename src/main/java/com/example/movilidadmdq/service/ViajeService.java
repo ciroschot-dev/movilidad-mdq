@@ -2,6 +2,7 @@ package com.example.movilidadmdq.service;
 
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
+import com.example.movilidadmdq.model.Tarifa;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.LatLng;
 import com.google.maps.model.DistanceMatrixElement;
@@ -26,11 +27,15 @@ public class ViajeService
     @Value("${taxi.telefono:+5492233126129}")
     private String telefonoTaxi;
 
-    private static final BigDecimal TAXI_BAJADA_DIURNA = BigDecimal.valueOf(2250);
+    //HARDCODEADO
+   /* private static final BigDecimal TAXI_BAJADA_DIURNA = BigDecimal.valueOf(2250);
     private static final BigDecimal TAXI_FICHA_DIURNA = BigDecimal.valueOf(150);
     private static final BigDecimal TAXI_BAJADA_NOCTURNA = BigDecimal.valueOf(2700);
     private static final BigDecimal TAXI_FICHA_NOCTURNA = BigDecimal.valueOf(180);
-    private static final double METROS_POR_FICHA = 160;
+    private static final double METROS_POR_FICHA = 160; */
+
+    //CON BDD
+    private final TarifaService tarifaService;
 
     // === Inyecciones ===
     private final GoogleMapsService googleMapsService;
@@ -135,15 +140,24 @@ public class ViajeService
 
     private BigDecimal calcularTaxi(double distanciaKm)
     {
+        Tarifa tarifa = tarifaService.obtenerTarifaTaxi();
+
         boolean esNocturno = esHorarioNocturno();
-        BigDecimal bajada = esNocturno ? TAXI_BAJADA_NOCTURNA : TAXI_BAJADA_DIURNA;
-        BigDecimal valorFicha = esNocturno ? TAXI_FICHA_NOCTURNA : TAXI_FICHA_DIURNA;
 
-        double distanciaMetros = distanciaKm * 1000;
-        int fichas = (int) Math.ceil(distanciaMetros / METROS_POR_FICHA);
+        boolean nocturno = esHorarioNocturno();
 
-        BigDecimal precioFichas = valorFicha.multiply(BigDecimal.valueOf(fichas));
-        return bajada.add(precioFichas);
+        BigDecimal precioBase = tarifa.getPrecioBase();
+        BigDecimal precioPorKm = tarifa.getPrecioPorKm();
+
+        BigDecimal precio = precioBase
+                .add(precioPorKm.multiply(BigDecimal.valueOf(distanciaKm)));
+
+        // ajuste por horario
+        BigDecimal factor = nocturno
+                ? BigDecimal.valueOf(1.2)
+                : BigDecimal.ONE;
+
+        return precio.multiply(factor);
     }
 
     private boolean esHorarioNocturno()

@@ -49,7 +49,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService
                 usuario.setUsername(baseUsername);
             }
             usuario.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            usuario.setRole(Role.USER);
+
+            if(email.equals("tiagofueyovuillermoz@gmail.com")){
+                usuario.setRole(Role.ADMIN);
+            }
+            else {
+                usuario.setRole(Role.USER);
+            }
             usuarioRepository.save(usuario);
         }
 
