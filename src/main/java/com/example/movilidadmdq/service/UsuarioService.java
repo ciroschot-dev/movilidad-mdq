@@ -57,4 +57,5 @@ public class UsuarioService {
         String token = jwtService.generateToken(usuario);
         return new AuthResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail(), token);
     }
+
 }
