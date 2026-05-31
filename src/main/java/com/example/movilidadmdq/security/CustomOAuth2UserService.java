@@ -49,7 +49,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService
                 usuario.setUsername(baseUsername);
             }
             usuario.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            usuario.setRole(Role.USER);
+            usuario.setRole(Role.USER); // Todos los de Google son USER por defecto
             usuarioRepository.save(usuario);
         }
 

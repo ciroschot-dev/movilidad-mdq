@@ -1,7 +1,10 @@
 package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.ViajeFrecuenteResponse;
+
+import java.math.BigDecimal;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import com.example.movilidadmdq.dto.ActualizarUsuarioRequest;
 import com.example.movilidadmdq.dto.AuthResponse;
@@ -9,12 +12,15 @@ import com.example.movilidadmdq.dto.LoginRequest;
 import com.example.movilidadmdq.dto.RegistroRequest;
 import com.example.movilidadmdq.dto.UsuarioResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
+import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
 import com.example.movilidadmdq.model.Viaje;
+import com.example.movilidadmdq.service.TarifaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -154,4 +160,6 @@ public class UsuarioController {
                     return ResponseEntity.ok(usuarioService.toResponse(usuarioRepository.save(usuario)));
                 }).orElse(ResponseEntity.status(403).build());
     }
+
+
 }
