@@ -17,11 +17,11 @@ public class TarifaService {
     }
 
     public Tarifa obtenerTarifaTaxi(){
-        return tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI.name())
+        return tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
                 .orElseThrow(()-> new RuntimeException("No se encontro la tarifa del taxi"));
     }
     public Tarifa actualizarTarifaTaxi(BigDecimal precioBase, BigDecimal precioPorKm){
-        Tarifa tarifaTaxi = tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI.name())
+        Tarifa tarifaTaxi = tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
                 .orElseThrow(() -> new RuntimeException("No se encontro la tarifa de taxi"));
 
         tarifaTaxi.setPrecioBase(precioBase);

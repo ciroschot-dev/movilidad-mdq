@@ -19,6 +19,6 @@ public class TarifaController {
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Tarifa actualizarTarifaTaxi(@RequestBody TarifaRequest request){
-        return tarifaService.actualizarTarifaTaxi(request.getPreciobase(), request.getPrecioPorKm());
+        return tarifaService.actualizarTarifaTaxi(request.getPrecioBase(), request.getPrecioPorKm());
     }
 }

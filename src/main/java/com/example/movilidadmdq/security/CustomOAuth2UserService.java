@@ -49,13 +49,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService
                 usuario.setUsername(baseUsername);
             }
             usuario.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-
-            if(email.equals("tiagofueyovuillermoz@gmail.com")){
-                usuario.setRole(Role.ADMIN);
-            }
-            else {
-                usuario.setRole(Role.USER);
-            }
+            usuario.setRole(Role.USER); // Todos los de Google son USER por defecto
             usuarioRepository.save(usuario);
         }
 

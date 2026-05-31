@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 
 @Data
 public class TarifaRequest {
-    BigDecimal preciobase;
+    BigDecimal precioBase;
     BigDecimal precioPorKm;
-
 }
