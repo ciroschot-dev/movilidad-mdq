@@ -5,7 +5,7 @@ import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 const SESSION_STORAGE_KEY = 'movilidadmdq.auth.v1';
 const LIBRARIES: ('places')[] = ['places'];
@@ -212,7 +212,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         if (!session) return;
 
         try {
-            const response = await fetch(`${API_URL}/usuarios/${session.id}/historial/${viajeId}`, {
+            const response = await fetch(getApiUrl(`/usuarios/${session.id}/historial/${viajeId}`), {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${session.token}`,
@@ -329,7 +329,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/viajes/calcular`, {
+      const response = await fetch(getApiUrl('/viajes/calcular'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -630,25 +630,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                 <RefreshCw size={18} className={historialLoading ? 'animate-spin' : ''} />
               </button>
             </div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button
-                      type="button"
-                      onClick={() => repetirViaje(viaje.origen, viaje.destino)}
-                      className="flex items-center justify-center gap-2 rounded-2xl bg-black px-3 py-3 text-sm font-black text-white transition-all hover:bg-gray-800"
-                  >
-                      <Repeat size={16} />
-                      Repetir
-                  </button>
 
-                  <button
-                      type="button"
-                      onClick={() => borrarViaje(viaje.id)}
-                      className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-black text-red-600 transition-all hover:bg-red-100"
-                  >
-                      <Trash2 size={16} />
-                      Borrar
-                  </button>
-              </div>
 
             {historialError ? (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -757,3 +739,11 @@ function App() {
 }
 
 export default App;
+ed={true} loadError={new Error('Google Maps API key missing')} />;
+  }
+
+  return <MapEnabledApp />;
+}
+
+export default App;
+

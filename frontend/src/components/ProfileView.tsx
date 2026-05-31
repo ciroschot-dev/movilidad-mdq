@@ -33,7 +33,7 @@ export default function ProfileView({ session, onUpdate, onBack, apiUrl }: Profi
     setSuccess(false);
 
     try {
-      const response = await fetch(`${apiUrl}/usuarios/${session.id}`, {
+      const response = await fetch(`${apiUrl.replace(/\/+$/, "")}/usuarios/${session.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
