@@ -42,3 +42,5 @@ dist/
 
 # VARIABLES / SECRETOS
 .env
+.pem
+movilidad-key.pem
