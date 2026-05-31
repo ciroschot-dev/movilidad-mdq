@@ -212,7 +212,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         if (!session) return;
 
         try {
-            const response = await fetch(`${API_URL}/usuarios/${session.id}/historial/${viajeId}`, {
+            const response = await fetch(getApiUrl(`/usuarios/${session.id}/historial/${viajeId}`), {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${session.token}`,
@@ -329,7 +329,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/viajes/calcular`, {
+      const response = await fetch(getApiUrl('/viajes/calcular'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -739,3 +739,11 @@ function App() {
 }
 
 export default App;
+ed={true} loadError={new Error('Google Maps API key missing')} />;
+  }
+
+  return <MapEnabledApp />;
+}
+
+export default App;
+
