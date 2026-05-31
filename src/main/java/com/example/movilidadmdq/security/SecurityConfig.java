@@ -36,7 +36,7 @@ public class SecurityConfig
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final UsuarioRepository usuarioRepository;
 
-    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080,https://movilidad-mdq.vercel.app,https://movilidad-mb6kktce3-mdp-tech.vercel.app}")
     private List<String> allowedOrigins;
 
     @Bean
