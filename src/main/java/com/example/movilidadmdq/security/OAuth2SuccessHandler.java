@@ -23,7 +23,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
 
-    @Value("${app.oauth2.redirectUri:http://localhost:5173/oauth2/redirect}")
+    @Value("${app.oauth2.redirect-uri:http://localhost:5173/oauth2/redirect}")
     private String redirectUri;
 
     @Override
@@ -36,7 +36,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
 
         String token = jwtService.generateToken(usuario);
 
-        String targetUrl = redirectUri + "?token=" + token;
+        // Si la URI configurada no termina en ?, el token se agrega como query param
+        String targetUrl = redirectUri.contains("?") ? redirectUri + "&token=" + token : redirectUri + "?token=" + token;
+        
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }
