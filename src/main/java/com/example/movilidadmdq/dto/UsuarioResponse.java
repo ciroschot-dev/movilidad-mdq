@@ -1,3 +1,5 @@
 package com.example.movilidadmdq.dto;
 
-public record UsuarioResponse(Long id, String username, String email) {}
+import com.example.movilidadmdq.enums.Role;
+
+public record UsuarioResponse(Long id, String username, String email, Role role) {}
