@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Tabla de Tarifas (Para parametrizar precios sin tocar código)
-CREATE TABLE IF NOT EXISTS tarifa (
+CREATE TABLE IF NOT EXISTS tarifas (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     tipo_transporte VARCHAR(50) NOT NULL UNIQUE, -- TAXI, UBER, DIDI
     precio_base DECIMAL(10, 2) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS tarifa (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Tabla de Historial de Viajes
-CREATE TABLE IF NOT EXISTS viaje (
+CREATE TABLE IF NOT EXISTS viajes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     origen VARCHAR(255) NOT NULL,
     destino VARCHAR(255) NOT NULL,
@@ -49,12 +49,11 @@ INSERT INTO usuarios (username, password, email, role) VALUES
 ('anibal', '$2a$10$vI8meR.C7VvX1yU6b/vNQuoM6F9N6Q8M9Q8M9Q8M9Q8M9Q8M9Q8M9', 'anibal@example.com', 'USER');
 
 -- Tarifas base iniciales (Valores de Mar del Plata Mayo 2026)
-INSERT INTO tarifa (tipo_transporte, precio_base, precio_por_km) VALUES 
-('TAXI_DIURNO', 2250.00, 937.50),  -- 150 por ficha (160m) -> ~937.50 por km
-('TAXI_NOCTURNO', 2700.00, 1125.00), -- 180 por ficha (160m) -> ~1125 por km
-('UBER_BASE', 0.00, 0.00),          -- Calculado dinámicamente sobre taxi
-('DIDI_BASE', 0.00, 0.00);          -- Calculado dinámicamente sobre taxi
+INSERT INTO tarifas (tipo_transporte, precio_base, precio_por_km) VALUES 
+('TAXI', 2250.00, 937.50),  
+('UBER', 0.00, 0.00),         
+('DIDI', 0.00, 0.00);         
 
 -- Ejemplo de un viaje guardado
-INSERT INTO viaje (origen, destino, distancia_en_metros, tiempo_estimado_min, precio_taxi, precio_min_app, precio_max_app, usuario_id) 
+INSERT INTO viajes (origen, destino, distancia_en_metros, tiempo_estimado_min, precio_taxi, precio_min_app, precio_max_app, usuario_id) 
 VALUES ('Luro y Mitre, Mar del Plata', 'Juan B. Justo 1500, Mar del Plata', 5200, 15, 7125.50, 6050.00, 8500.00, 2);
