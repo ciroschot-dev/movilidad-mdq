@@ -21,7 +21,6 @@ interface Props {
   origen?: LatLng;
   destino?: LatLng;
 }
-
 export default function MapView({ origen, destino }: Props) {
   const [directions, setDirections] = useState<any>(null);
 
@@ -38,6 +37,8 @@ export default function MapView({ origen, destino }: Props) {
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
+        console.log("Directions status:", status);
+
         if (status === "OK" && result) {
           setDirections(result);
         }

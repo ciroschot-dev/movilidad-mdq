@@ -629,27 +629,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
               >
                 <RefreshCw size={18} className={historialLoading ? 'animate-spin' : ''} />
               </button>
-            </div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button
-                      type="button"
-                      onClick={() => repetirViaje(viaje.origen, viaje.destino)}
-                      className="flex items-center justify-center gap-2 rounded-2xl bg-black px-3 py-3 text-sm font-black text-white transition-all hover:bg-gray-800"
-                  >
-                      <Repeat size={16} />
-                      Repetir
-                  </button>
-
-                  <button
-                      type="button"
-                      onClick={() => borrarViaje(viaje.id)}
-                      className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-black text-red-600 transition-all hover:bg-red-100"
-                  >
-                      <Trash2 size={16} />
-                      Borrar
-                  </button>
-              </div>
-
+                </div>
             {historialError ? (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                 {historialError}
@@ -698,25 +678,25 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                 </div>
                             </div>
 
-                            <div className="mt-4 grid grid-cols-2 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => repetirViaje(viaje.origen, viaje.destino)}
-                                    className="flex items-center justify-center gap-2 rounded-2xl bg-black px-3 py-3 text-sm font-black text-white transition-all hover:bg-gray-800"
-                                >
-                                    <Repeat size={16} />
-                                    Repetir
-                                </button>
+                          <div className="mt-4 grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => repetirViaje(viaje.origen, viaje.destino)}
+                                className="flex items-center justify-center gap-2 rounded-2xl bg-black px-3 py-3 text-sm font-black text-white transition-all hover:bg-gray-800"
+                            >
+                                <Repeat size={16} />
+                                Repetir
+                            </button>
 
-                                <button
-                                    type="button"
-                                    onClick={() => borrarViaje(viaje.id)}
-                                    className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-black text-red-600 transition-all hover:bg-red-100"
-                                >
-                                    <Trash2 size={16} />
-                                    Borrar
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => borrarViaje(viaje.id)}
+                                className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-black text-red-600 transition-all hover:bg-red-100"
+                            >
+                                <Trash2 size={16} />
+                                Borrar
+                            </button>
+                          </div>
                         </motion.article>
                     ))}
               </div>
