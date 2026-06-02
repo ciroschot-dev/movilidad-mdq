@@ -1,3 +1,5 @@
 package com.example.movilidadmdq.dto;
 
-public record AuthResponse(Long id, String username, String email, String token) {}
+import com.example.movilidadmdq.enums.Role;
+
+public record AuthResponse(Long id, String username, String email, String token, Role role) {}
