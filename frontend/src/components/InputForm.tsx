@@ -100,7 +100,10 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         destinoCoords?.lat,
         destinoCoords?.lng
     );
+
   };
+    console.log("Origen:", origenCoords);
+    console.log("Destino:", destinoCoords);
 
   return (
       <form onSubmit={handleSubmit} className="space-y-4">
