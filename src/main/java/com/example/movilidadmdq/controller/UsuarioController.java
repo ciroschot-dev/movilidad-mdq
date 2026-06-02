@@ -34,6 +34,10 @@ public class UsuarioController
     private final ViajeRepository viajeRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Operation(summary = "Ingresar", description = "Se ingresan credenciales para iniciar sesion, devuelve token")
+    @ApiResponse(responseCode = "200", description = "Login exitoso, devuelve el token")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos o faltantes")
+    @ApiResponse(responseCode = "401", description = "Credenciales incorrectas")
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request)
     {
@@ -47,6 +51,10 @@ public class UsuarioController
         }
     }
 
+    @Operation(summary = "Registrarse", description = "Se ingresan credenciales para registrarse, devuelve token")
+    @ApiResponse(responseCode = "200", description = "Registro exitoso, devuelve el token")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos o usuario ya registrado")
+
     @PostMapping("/registro")
     public ResponseEntity<AuthResponse> registrar(@Valid @RequestBody RegistroRequest request)
     {
@@ -59,6 +67,11 @@ public class UsuarioController
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado ")
+    @ApiResponse(responseCode = "200", description = "Devuelve datos del usuario")
+    @ApiResponse(responseCode = "401", description = "No autenticado o token inválido")
+    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
 
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponse> obtenerUsuarioActual(Authentication authentication)
@@ -74,6 +87,11 @@ public class UsuarioController
                 .orElse(ResponseEntity.status(401).build());
     }
 
+    @Operation(summary = "Obtener el historial de un usuario segun ID", description = "Devuelve una lista como historial del usuario")
+    @ApiResponse(responseCode = "200", description = "Datos del usuario")
+    @ApiResponse(responseCode = "401", description = "No autenticado o token inválido")
+    @ApiResponse(responseCode = "403", description = "No tenés permiso para ver el historial de otro usuario")
+    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     @GetMapping("/{id}/historial")
     public ResponseEntity<List<ViajeHistorialResponse>> obtenerHistorial(@PathVariable Long id, Authentication authentication)
     {
@@ -90,6 +108,12 @@ public class UsuarioController
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(403).build());
     }
+
+    @Operation(summary = "Borrar el historial de un usuario segun ID", description = "Borra historial del usuario de la base de datos")
+    @ApiResponse(responseCode = "204", description = "Borrado historial del usuario con exito")
+    @ApiResponse(responseCode = "401", description = "No autenticado o token inválido")
+    @ApiResponse(responseCode = "403", description = "No tenés permiso para borrar el historial de otro usuario")
+    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
 
     @DeleteMapping("/{id}/historial/{viajeId}")
     public ResponseEntity<Void> borrarViaje(
@@ -114,6 +138,12 @@ public class UsuarioController
                 })
                 .orElse(ResponseEntity.status(403).build());
     }
+
+    @Operation(summary = "Borrar el historial de un usuario segun ID", description = "Borra historial del usuario de la base de datos")
+    @ApiResponse(responseCode = "200", description = "Borrado historial del usuario con exito")
+    @ApiResponse(responseCode = "401", description = "No autenticado o token inválido")
+    @ApiResponse(responseCode = "403", description = "No tenés permiso para ver el historial de otro usuario")
+    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
 
     @GetMapping("/{id}/viaje-frecuente")
     public ResponseEntity<ViajeFrecuenteResponse> obtenerViajeFrecuente(
