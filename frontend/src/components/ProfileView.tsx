@@ -1,13 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, LockKeyhole, Save, ArrowLeft } from 'lucide-react';
-
-interface AuthSession {
-  id: number;
-  username: string;
-  email: string;
-  token: string;
-}
+import type { AuthSession } from '../types';
 
 interface ProfileViewProps {
   session: AuthSession;
