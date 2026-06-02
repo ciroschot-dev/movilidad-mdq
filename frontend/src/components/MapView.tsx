@@ -22,10 +22,13 @@ interface Props {
   destino?: LatLng;
 }
 export default function MapView({ origen, destino }: Props) {
-  const [directions, setDirections] = useState<any>(null);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
-    if (!origen || !destino || !window.google) return;
+    if (!origen || !destino || !window.google) {
+      setDirections(null);
+      return;
+    }
 
     const directionsService =
       new window.google.maps.DirectionsService();
@@ -37,8 +40,6 @@ export default function MapView({ origen, destino }: Props) {
         travelMode: window.google.maps.TravelMode.DRIVING,
       },
       (result, status) => {
-        console.log("Directions status:", status);
-
         if (status === "OK" && result) {
           setDirections(result);
         }
@@ -57,7 +58,16 @@ export default function MapView({ origen, destino }: Props) {
       {destino && <Marker position={destino} />}
 
       {directions && (
-        <DirectionsRenderer directions={directions} />
+        <DirectionsRenderer 
+          directions={directions} 
+          options={{
+            suppressMarkers: true,
+            polylineOptions: {
+              strokeColor: "#000000",
+              strokeWeight: 5,
+            }
+          }}
+        />
       )}
     </GoogleMap>
   );
