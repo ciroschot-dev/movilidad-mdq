@@ -6,6 +6,7 @@ import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
 import AdminDashboard from './components/AdminDashboard';
+import type { AuthSession } from './types';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
@@ -13,14 +14,6 @@ const SESSION_STORAGE_KEY = 'movilidadmdq.auth.v1';
 const LIBRARIES: ('places')[] = ['places'];
 
 const getApiUrl = (path: string) => `${API_URL}${path}`;
-
-interface AuthSession {
-  id: number;
-  username: string;
-  email: string;
-  token: string;
-  role: 'USER' | 'ADMIN';
-}
 
 interface UsuarioResponse {
   id: number;
