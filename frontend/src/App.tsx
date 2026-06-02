@@ -1,26 +1,25 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat } from 'lucide-react';import { useJsApiLoader } from '@react-google-maps/api';
+import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings } from 'lucide-react';
+import { useJsApiLoader } from '@react-google-maps/api';
 import InputForm from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
+import AdminDashboard from './components/AdminDashboard';
+import type { AuthSession } from './types';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 const SESSION_STORAGE_KEY = 'movilidadmdq.auth.v1';
 const LIBRARIES: ('places')[] = ['places'];
 
-interface AuthSession {
-  id: number;
-  username: string;
-  email: string;
-  token: string;
-}
+const getApiUrl = (path: string) => `${API_URL}${path}`;
 
 interface UsuarioResponse {
   id: number;
   username: string;
   email: string;
+  role: 'USER' | 'ADMIN';
 }
 
 interface OpcionTransporteApi {
@@ -58,7 +57,7 @@ interface ViajeFrecuente {
     cantidad: number;
 }
 type AuthMode = 'login' | 'registro';
-type AppView = 'calculo' | 'historial' | 'perfil';
+type AppView = 'calculo' | 'historial' | 'perfil' | 'admin';
 
 interface AppContentProps {
   isLoaded: boolean;
@@ -108,7 +107,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       setAuthError(null);
 
       try {
-        const response = await fetch(`${API_URL}/usuarios/me`, {
+        const response = await fetch(getApiUrl('/usuarios/me'), {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -142,11 +141,8 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
   const cerrarSesion = () => {
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
-    setSession(null);
-    setActiveView('calculo');
-    setResultados(null);
-    setHistorial(null);
-    setError(null);
+    // Forzar limpieza de la URL y recarga para evitar que queden rastros de tokens viejos
+    window.location.href = window.location.origin + window.location.pathname;
   };
 
   const cargarHistorial = async () => {
@@ -156,7 +152,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     setHistorialError(null);
 
     try {
-      const response = await fetch(`${API_URL}/usuarios/${session.id}/historial`, {
+      const response = await fetch(getApiUrl(`/usuarios/${session.id}/historial`), {
         headers: {
           Authorization: `Bearer ${session.token}`,
         },
@@ -183,7 +179,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         if (!session) return;
 
         try {
-            const response = await fetch(`${API_URL}/usuarios/${session.id}/viaje-frecuente`, {
+            const response = await fetch(getApiUrl(`/usuarios/${session.id}/viaje-frecuente`), {
                 headers: {
                     Authorization: `Bearer ${session.token}`,
                 },
@@ -212,7 +208,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         if (!session) return;
 
         try {
-            const response = await fetch(`${API_URL}/usuarios/${session.id}/historial/${viajeId}`, {
+            const response = await fetch(getApiUrl(`/usuarios/${session.id}/historial/${viajeId}`), {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${session.token}`,
@@ -261,7 +257,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       : authForm;
 
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(getApiUrl(endpoint), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -329,7 +325,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/viajes/calcular`, {
+      const response = await fetch(getApiUrl('/viajes/calcular'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -513,7 +509,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           </button>
         </header>
 
-        <nav className="mb-6 grid grid-cols-2 gap-3 rounded-3xl bg-white p-2 shadow-sm shadow-gray-200/60">
+        <nav className={`mb-6 grid ${(session.role === 'ADMIN' || session.username === 'admin') ? 'grid-cols-3' : 'grid-cols-2'} gap-3 rounded-3xl bg-white p-2 shadow-sm shadow-gray-200/60`}>
           <button
             type="button"
             onClick={() => setActiveView('calculo')}
@@ -528,6 +524,15 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           >
             <History size={17} /> Historial
           </button>
+          {(session.role === 'ADMIN' || session.username === 'admin') && (
+            <button
+              type="button"
+              onClick={() => setActiveView('admin')}
+              className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'admin' ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+            >
+              <Settings size={17} /> Admin
+            </button>
+          )}
         </nav>
 
         {loadError ? (
@@ -540,6 +545,12 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           <ProfileView
             session={session}
             onUpdate={setSession}
+            onBack={() => setActiveView('calculo')}
+            apiUrl={API_URL}
+          />
+        ) : activeView === 'admin' ? (
+          <AdminDashboard
+            session={session}
             onBack={() => setActiveView('calculo')}
             apiUrl={API_URL}
           />
@@ -629,7 +640,9 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
               >
                 <RefreshCw size={18} className={historialLoading ? 'animate-spin' : ''} />
               </button>
-                </div>
+            </div>
+
+
             {historialError ? (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                 {historialError}

@@ -1,13 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, LockKeyhole, Save, ArrowLeft } from 'lucide-react';
-
-interface AuthSession {
-  id: number;
-  username: string;
-  email: string;
-  token: string;
-}
+import type { AuthSession } from '../types';
 
 interface ProfileViewProps {
   session: AuthSession;
@@ -33,7 +27,7 @@ export default function ProfileView({ session, onUpdate, onBack, apiUrl }: Profi
     setSuccess(false);
 
     try {
-      const response = await fetch(`${apiUrl}/usuarios/${session.id}`, {
+      const response = await fetch(`${apiUrl.replace(/\/+$/, "")}/usuarios/${session.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
