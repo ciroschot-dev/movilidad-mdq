@@ -24,6 +24,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import com.example.movilidadmdq.enums.Role;
+import com.example.movilidadmdq.enums.TipoTransporte;
+import com.example.movilidadmdq.model.Tarifa;
+import com.example.movilidadmdq.model.Usuario;
+import com.example.movilidadmdq.repository.TarifaRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import java.math.BigDecimal;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -36,7 +45,7 @@ public class SecurityConfig
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final UsuarioRepository usuarioRepository;
 
-    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080,https://movilidad-mdq.vercel.app,https://movilidad-mb6kktce3-mdp-tech.vercel.app}")
     private List<String> allowedOrigins;
 
     @Bean
@@ -53,11 +62,11 @@ public class SecurityConfig
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
         http
-                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
@@ -90,13 +99,43 @@ public class SecurityConfig
     }
 
     @Bean
+    CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder) {
+        return args -> {
+            // 1. Asegurar Admin: Si existe lo actualiza, si no lo crea
+            Usuario admin = userRepo.findByUsername("admin").orElse(null);
+            if (admin == null) {
+                admin = new Usuario();
+                admin.setUsername("admin");
+                admin.setPassword(encoder.encode("admin123"));
+                admin.setEmail("admin@movilidadmdq.com");
+                admin.setRole(Role.ADMIN);
+                userRepo.save(admin);
+                System.out.println("--- [SISTEMA] Usuario admin creado (admin/admin123) ---");
+            } else if (admin.getRole() != Role.ADMIN) {
+                admin.setRole(Role.ADMIN);
+                userRepo.save(admin);
+                System.out.println("--- [SISTEMA] Usuario admin actualizado a rol ADMIN ---");
+            }
+
+            // 2. Asegurar Tarifas
+            if (tarifaRepo.count() == 0) {
+                tarifaRepo.save(new Tarifa(null, TipoTransporte.TAXI, new BigDecimal("2250.00"), new BigDecimal("937.50"), null));
+                tarifaRepo.save(new Tarifa(null, TipoTransporte.UBER, BigDecimal.ZERO, BigDecimal.ZERO, null));
+                tarifaRepo.save(new Tarifa(null, TipoTransporte.DIDI, BigDecimal.ZERO, BigDecimal.ZERO, null));
+                System.out.println("--- [SISTEMA] Tarifas base cargadas ---");
+            }
+        };
+    }
+
+    @Bean
     CorsConfigurationSource corsConfigurationSource()
     {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Origin", "Accept", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

@@ -50,11 +50,12 @@ public class UsuarioService {
     }
 
     public UsuarioResponse toResponse(Usuario usuario) {
-        return new UsuarioResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail());
+        return new UsuarioResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail(), usuario.getRole());
     }
 
     private AuthResponse toAuthResponse(Usuario usuario) {
         String token = jwtService.generateToken(usuario);
-        return new AuthResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail(), token);
+        return new AuthResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail(), token, usuario.getRole());
     }
+
 }

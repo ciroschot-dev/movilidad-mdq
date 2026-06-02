@@ -2,7 +2,7 @@
 # 1) STAGE BUILD (Maven)
 # =========================
 FROM maven:3.9-eclipse-temurin-21 AS build
-# (Nota: Usamos imagen 21 para compilar ya que es la más estable en Docker Hub, 
+# (Nota: Usamos imagen 21 para compilar ya que es la más estable en Docker Hub,
 # pero el runtime será Java 25 para tu código)
 
 WORKDIR /app
