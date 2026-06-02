@@ -54,3 +54,5 @@ dist-ssr
 .vibe/
 .windsurf/
 .zencoder/
+git status --ignored
+.env
