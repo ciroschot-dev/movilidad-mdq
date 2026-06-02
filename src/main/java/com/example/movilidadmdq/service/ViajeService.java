@@ -24,7 +24,7 @@ public class ViajeService
 {
 
     // === Configuración ===
-    @Value("${taxi.telefono:+5492233126129}")
+    @Value("${taxi.telefono:+542234941010}")
     private String telefonoTaxi;
 
     //HARDCODEADO
