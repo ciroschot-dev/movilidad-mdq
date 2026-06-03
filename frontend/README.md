@@ -1,8 +1,10 @@
 # 🚗 MovilidadMDQ — Frontend
 
-App web de **MovilidadMDQ** construida con **React 19 + TypeScript + Vite**. Consume la API REST del backend Spring Boot.
+App web de **MovilidadMDQ** construida con **React 19 + TypeScript + Vite**. Consume la API REST del backend Spring
+Boot.
 
-> 📘 La documentación general del proyecto (descripción, integrantes, backend, deploy, endpoints, ejemplos) está en el [README raíz](../README.md).
+> 📘 La documentación general del proyecto (descripción, integrantes, backend, deploy, endpoints, ejemplos) está en
+> el [README raíz](/README.md).
 
 ---
 
@@ -83,7 +85,8 @@ frontend/
 
 ## 🚀 Deploy en Vercel
 
-Está configurado mediante `vercel.json`. En el dashboard de Vercel, las variables que hay que definir son las mismas del `.env`:
+Está configurado mediante `vercel.json`. En el dashboard de Vercel, las variables que hay que definir son las mismas del
+`.env`:
 
 - `VITE_API_URL` → `https://movilidadmdq.ddns.net`
 - `VITE_GOOGLE_MAPS_API_KEY` → la key de Google Maps (con el dominio de Vercel permitido)
@@ -92,9 +95,9 @@ Está configurado mediante `vercel.json`. En el dashboard de Vercel, las variabl
 
 ## 🧯 Problemas comunes
 
-| Problema | Qué revisar |
-| --- | --- |
-| Mapa no carga | `VITE_GOOGLE_MAPS_API_KEY` en `.env` y restricciones en Google Cloud |
-| Llamadas a la API fallan | `VITE_API_URL` correcto y backend levantado |
-| CORS bloqueado | `APP_CORS_ALLOWED_ORIGINS` en el `.env` del backend |
-| 401 al calcular viaje | Falta JWT o el token venció — iniciar sesión otra vez |
+| Problema                 | Qué revisar                                                          |
+|--------------------------|----------------------------------------------------------------------|
+| Mapa no carga            | `VITE_GOOGLE_MAPS_API_KEY` en `.env` y restricciones en Google Cloud |
+| Llamadas a la API fallan | `VITE_API_URL` correcto y backend levantado                          |
+| CORS bloqueado           | `APP_CORS_ALLOWED_ORIGINS` en el `.env` del backend                  |
+| 401 al calcular viaje    | Falta JWT o el token venció — iniciar sesión otra vez                |
