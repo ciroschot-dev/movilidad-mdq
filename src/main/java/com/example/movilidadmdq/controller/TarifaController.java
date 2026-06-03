@@ -19,13 +19,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class TarifaController {
     private final TarifaService tarifaService;
 
-    @Operation(
-            summary = "Actualizar tarifa taxi",
-            description = "Actualiza el precio base y el precio por km de servicio taxi. Solo accesible por dministradores"
-    )
-    @ApiResponse(responseCode = "200", description = "Tarifa actualizada correctamente")
-    @ApiResponse(responseCode = "400", description = "Datos invalidos")
-    @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
+    @Operation(summary = "Actualizar tarifa taxi", description = "Actualiza el precio base y el precio por km de servicio taxi. Solo accesible por dministradores")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tarifa actualizada correctamente")
+            @ApiResponse(responseCode = "400", description = "Datos invalidos")
+            @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
+    })
+
 
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")

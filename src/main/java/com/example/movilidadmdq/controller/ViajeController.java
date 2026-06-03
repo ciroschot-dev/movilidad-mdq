@@ -20,6 +20,15 @@ public class ViajeController
     private final ViajeService viajeService;
     private final UsuarioRepository usuarioRepository;
 
+    @Operation(summary = "Calcular viaje", description = "Obtiene y calcula el viaje solicitado por el usuario")
+    @ApiResponse{
+        value =
+        @ApiResponse(responseCode ="200", description = "El viaje se ha calculado con exito")
+        @ApiResponse(responseCode = "400", description = "El calculo del viaje fallo")
+        @ApiResponse=(responseCode= "401", description = "Los datos ingresados son incorrectos")
+
+    }
+
     @PostMapping("/calcular")
     public ResponseEntity<List<OpcionTransporteResponse>> calcular(@Valid @RequestBody CalculoViajeRequest request, Authentication authentication)
     {
