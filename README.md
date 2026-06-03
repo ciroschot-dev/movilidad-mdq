@@ -1,6 +1,7 @@
 # 🚗 MovilidadMDQ
 
-> Aplicación académica que compara opciones de transporte en Mar del Plata (Taxi, Uber y Didi), guarda el historial de viajes por usuario y permite iniciar sesión con email/contraseña o con Google.
+> Aplicación académica que compara opciones de transporte en Mar del Plata (Taxi, Uber y Didi), guarda el historial de
+> viajes por usuario y permite iniciar sesión con email/contraseña o con Google.
 
 ![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4-6DB33F?logo=springboot&logoColor=white)
@@ -33,27 +34,33 @@
 
 ## ✅ Cómo probar la app en 1 minuto
 
-| Recurso | Enlace |
-| --- | --- |
-| 🌐 **Frontend desplegado (Vercel)** | https://movilidad-mdq.vercel.app/ |
-| 🛰️ **Backend desplegado (AWS EC2)** | https://movilidadmdq.ddns.net *(ver nota abajo)* |
-| 📘 **Documentación de la API (Swagger UI)** | https://movilidadmdq.ddns.net/swagger-ui.html ← **punto de entrada del backend** |
-| 📄 **OpenAPI JSON** | https://movilidadmdq.ddns.net/api-docs |
-| 🧪 **Cómo crear un usuario de prueba** | `POST /usuarios/registro` con `{ "username": "...", "password": "...", "email": "..." }` o el botón **Registrarse** en la UI |
+| Recurso                                     | Enlace                                                                                                                       |
+|---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| 🌐 **Frontend desplegado (Vercel)**         | https://movilidad-mdq.vercel.app/                                                                                            |
+| 🛰️ **Backend desplegado (AWS EC2)**        | https://movilidadmdq.ddns.net *(ver nota abajo)*                                                                             |
+| 📘 **Documentación de la API (Swagger UI)** | https://movilidadmdq.ddns.net/swagger-ui.html ← **punto de entrada del backend**                                             |
+| 📄 **OpenAPI JSON**                         | https://movilidadmdq.ddns.net/api-docs                                                                                       |
+| 🧪 **Cómo crear un usuario de prueba**      | `POST /usuarios/registro` con `{ "username": "...", "password": "...", "email": "..." }` o el botón **Registrarse** en la UI |
 
 **Aclaraciones importantes**:
 
-- **No hace falta levantar nada local** para probar la app: el frontend (Vercel) ya está conectado al backend (EC2 con HTTPS). Solo entrá a https://movilidad-mdq.vercel.app/ y registrate.
-- ℹ️ Si abrís https://movilidadmdq.ddns.net en el navegador vas a ver una **"Whitelabel Error Page" con status 401** — eso es **esperado**: el backend no tiene mapeo en la ruta raíz y Spring Security la protege. Para explorar la API usá **Swagger UI** (link de arriba) o pegale directo a un endpoint específico (ej. `/usuarios/login`).
-- Si querés correr todo en local de todas formas, seguí los pasos de [Cómo ejecutar el proyecto](#-cómo-ejecutar-el-proyecto).
+- **No hace falta levantar nada local** para probar la app: el frontend (Vercel) ya está conectado al backend (EC2 con
+  HTTPS). Solo entrá a https://movilidad-mdq.vercel.app/ y registrate.
+- ℹ️ Si abrís https://movilidadmdq.ddns.net en el navegador vas a ver una **"Whitelabel Error Page" con status 401** —
+  eso es **esperado**: el backend no tiene mapeo en la ruta raíz y Spring Security la protege. Para explorar la API usá
+  **Swagger UI** (link de arriba) o pegale directo a un endpoint específico (ej. `/usuarios/login`).
+- Si querés correr todo en local de todas formas, seguí los pasos
+  de [Cómo ejecutar el proyecto](#-cómo-ejecutar-el-proyecto-en-local).
 - La carpeta `frontend/` es la app vigente; cualquier referencia a `frontend-demo/` es legado y no se usa.
-- No se incluyen credenciales hardcodeadas: el corrector puede registrar un usuario nuevo en segundos desde la UI o vía `curl`.
+- No se incluyen credenciales hardcodeadas: el corrector puede registrar un usuario nuevo en segundos desde la UI o vía
+  `curl`.
 
 ---
 
 ## 📖 Descripción general
 
-**MovilidadMDQ** es una aplicación web pensada para usuarios que necesitan moverse por **Mar del Plata** y quieren comparar de un vistazo cuánto les sale ir del punto A al B en **Taxi**, **Uber** o **Didi**.
+**MovilidadMDQ** es una aplicación web pensada para usuarios que necesitan moverse por **Mar del Plata** y quieren
+comparar de un vistazo cuánto les sale ir del punto A al B en **Taxi**, **Uber** o **Didi**.
 
 La app combina:
 
@@ -65,25 +72,27 @@ La app combina:
 - **Historial personal de viajes**, guardado por usuario en una base **MySQL en AWS RDS**.
 - **Autenticación dual**: registro/login clásico con JWT + opción **"Continuar con Google"** (OAuth2).
 
-Está pensada como proyecto académico para la materia **Programación 3 (UTN)**, pero el código sigue prácticas reales de un backend Spring Boot moderno y un frontend React + TypeScript.
+Está pensada como proyecto académico para la materia **Programación 3 (UTN)**, pero el código sigue prácticas reales de
+un backend Spring Boot moderno y un frontend React + TypeScript.
 
 ---
 
 ## 👥 Integrantes del grupo
 
-| Integrante | GitHub |
-| --- | --- |
-| Ciro Schot | [@ciroschot-dev](https://github.com/ciroschot-dev) |
-| Morena Hidalgo | [@morehidalgg0](https://github.com/morehidalgg0) |
-| Anibal Bustos | [@anibaldb](https://github.com/anibaldb) |
-| Franco Bavaresco | [@FrancoBavaresco](https://github.com/FrancoBavaresco) |
-| Tiago Fueyo | [@tiagofueyovuillermoz-beep](https://github.com/tiagofueyovuillermoz-beep) |
+| Integrante       | GitHub                                                                     |
+|------------------|----------------------------------------------------------------------------|
+| Ciro Schot       | [@ciroschot-dev](https://github.com/ciroschot-dev)                         |
+| Morena Hidalgo   | [@morehidalgg0](https://github.com/morehidalgg0)                           |
+| Anibal Bustos    | [@anibaldb](https://github.com/anibaldb)                                   |
+| Franco Bavaresco | [@FrancoBavaresco](https://github.com/FrancoBavaresco)                     |
+| Tiago Fueyo      | [@tiagofueyovuillermoz-beep](https://github.com/tiagofueyovuillermoz-beep) |
 
 ---
 
 ## 🛠️ Tecnologías utilizadas
 
 **Backend**
+
 - Java 21
 - Spring Boot 4 (Web, Data JPA, Validation)
 - Spring Security + JWT (`jjwt`)
@@ -92,20 +101,24 @@ Está pensada como proyecto académico para la materia **Programación 3 (UTN)**
 - Maven (con wrapper `./mvnw`)
 
 **Frontend**
+
 - React 19
 - TypeScript
 - Vite
 - React Router
 
 **Base de datos**
+
 - MySQL 8 (alojada en AWS RDS)
 
 **APIs externas**
+
 - Google Maps (Distance Matrix, Places, Maps JavaScript)
 - OpenWeather
 - Google OAuth2 (Identity)
 
 **Infraestructura / DevOps**
+
 - Docker + `docker-compose.yml` (opcional para correr el backend en contenedor)
 - Despliegue del frontend en **Vercel**
 
@@ -144,47 +157,51 @@ movilidadMDQ/
 ## 🗂️ Entidades principales
 
 ### `Usuario`
+
 Representa al usuario final de la app. Soporta registro local y vía Google.
 
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | Long | Identificador autoincremental |
-| `username` | String | Único, no nulo |
-| `password` | String | Hasheado con BCrypt (vacío para usuarios OAuth) |
-| `email` | String | Único, no nulo |
-| `role` | Enum (`USER` / `ADMIN`) | Define permisos |
+| Campo      | Tipo                    | Descripción                                     |
+|------------|-------------------------|-------------------------------------------------|
+| `id`       | Long                    | Identificador autoincremental                   |
+| `username` | String                  | Único, no nulo                                  |
+| `password` | String                  | Hasheado con BCrypt (vacío para usuarios OAuth) |
+| `email`    | String                  | Único, no nulo                                  |
+| `role`     | Enum (`USER` / `ADMIN`) | Define permisos                                 |
 
 ### `Viaje`
+
 Cada cálculo de viaje confirmado por un usuario se guarda como un registro.
 
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | Long | Identificador autoincremental |
-| `origen` | String | Dirección textual del origen |
-| `destino` | String | Dirección textual del destino |
-| `distanciaEnMetros` | Long | Distancia devuelta por Google |
-| `tiempoEstimadoMin` | Integer | Tiempo estimado en minutos |
-| `precioTaxi` | BigDecimal | Precio calculado para Taxi |
-| `precioMinApp` / `precioMaxApp` | BigDecimal | Rango estimado de Uber/Didi |
-| `fechaHora` | LocalDateTime | Timestamp del cálculo |
-| `usuario` | Usuario (FK) | Dueño del viaje |
+| Campo                           | Tipo          | Descripción                   |
+|---------------------------------|---------------|-------------------------------|
+| `id`                            | Long          | Identificador autoincremental |
+| `origen`                        | String        | Dirección textual del origen  |
+| `destino`                       | String        | Dirección textual del destino |
+| `distanciaEnMetros`             | Long          | Distancia devuelta por Google |
+| `tiempoEstimadoMin`             | Integer       | Tiempo estimado en minutos    |
+| `precioTaxi`                    | BigDecimal    | Precio calculado para Taxi    |
+| `precioMinApp` / `precioMaxApp` | BigDecimal    | Rango estimado de Uber/Didi   |
+| `fechaHora`                     | LocalDateTime | Timestamp del cálculo         |
+| `usuario`                       | Usuario (FK)  | Dueño del viaje               |
 
 ### `Tarifa`
+
 Permite parametrizar los precios sin tocar el código. Una fila por tipo de transporte.
 
-| Campo | Tipo | Descripción |
-| --- | --- | --- |
-| `id` | Long | Identificador autoincremental |
-| `tipoTransporte` | Enum (`TAXI`, `UBER`, `DIDI`) | Único |
-| `precioBase` | BigDecimal | Bajada de bandera / mínimo |
-| `precioPorKm` | BigDecimal | Costo adicional por kilómetro |
-| `ultimaActualizacion` | DateTime | Auto-actualizada por la DB |
+| Campo                 | Tipo                          | Descripción                   |
+|-----------------------|-------------------------------|-------------------------------|
+| `id`                  | Long                          | Identificador autoincremental |
+| `tipoTransporte`      | Enum (`TAXI`, `UBER`, `DIDI`) | Único                         |
+| `precioBase`          | BigDecimal                    | Bajada de bandera / mínimo    |
+| `precioPorKm`         | BigDecimal                    | Costo adicional por kilómetro |
+| `ultimaActualizacion` | DateTime                      | Auto-actualizada por la DB    |
 
 ---
 
 ## ▶️ Cómo ejecutar el proyecto en local
 
-> Si solo querés probar la app, no hace falta nada de esto — usá el [deploy](#-cómo-probar-la-app-en-1-minuto). Esta sección es para correrla localmente.
+> Si solo querés probar la app, no hace falta nada de esto — usá el [deploy](#-cómo-probar-la-app-en-1-minuto). Esta
+> sección es para correrla localmente.
 
 ### 1. Requisitos previos
 
@@ -240,18 +257,21 @@ VITE_API_URL=http://localhost:8080
 VITE_GOOGLE_MAPS_API_KEY=tu_google_maps_key_para_browser
 ```
 
-> 📌 La key del frontend necesita **Maps JavaScript API** y **Places API**. En Google Cloud conviene restringirla por referer a `http://localhost:5173/*`.
+> 📌 La key del frontend necesita **Maps JavaScript API** y **Places API**. En Google Cloud conviene restringirla por
+> referer a `http://localhost:5173/*`.
 
 ### 4. Google OAuth2 (solo si vas a probar "Continuar con Google")
 
 En **Google Cloud Console → APIs y servicios → Credenciales**, dentro del OAuth Client Web, agregar:
 
 **Authorized redirect URI**
+
 ```text
 http://localhost:8080/login/oauth2/code/google
 ```
 
 **Authorized JavaScript origins**
+
 ```text
 http://localhost:5173
 http://localhost:8080
@@ -260,6 +280,7 @@ http://localhost:8080
 > ⚠️ Los origins no llevan path. Solo protocolo, host y puerto.
 
 Después del login, el flujo vuelve al frontend en:
+
 ```text
 http://localhost:5173/oauth2/redirect?token=...
 ```
@@ -327,9 +348,9 @@ La API usa **JWT (JSON Web Tokens)** para autenticar las requests, con soporte a
 
 ### Roles
 
-| Rol | Permisos |
-| --- | --- |
-| `USER` | Calcular viajes, ver/modificar su propio perfil y su historial |
+| Rol     | Permisos                                                          |
+|---------|-------------------------------------------------------------------|
+| `USER`  | Calcular viajes, ver/modificar su propio perfil y su historial    |
 | `ADMIN` | Todo lo anterior + actualizar tarifas (`PUT /admin/tarifas/taxi`) |
 
 ---
@@ -338,19 +359,20 @@ La API usa **JWT (JSON Web Tokens)** para autenticar las requests, con soporte a
 
 Todos los endpoints están documentados (con schemas y ejemplos) en **Swagger UI**.
 
-| Método | Endpoint | Auth | Descripción |
-| --- | --- | --- | --- |
-| `POST` | `/usuarios/registro` | ❌ | Crear usuario y devolver JWT |
-| `POST` | `/usuarios/login` | ❌ | Login clásico y devolver JWT |
-| `GET` | `/usuarios/me` | ✅ | Datos del usuario autenticado |
-| `PUT` | `/usuarios/{id}` | ✅ | Actualizar perfil propio |
-| `GET` | `/usuarios/{id}/historial` | ✅ | Historial de viajes del usuario |
-| `DELETE` | `/usuarios/{id}/historial/{viajeId}` | ✅ | Borrar un viaje del historial |
-| `GET` | `/usuarios/{id}/viaje-frecuente` | ✅ | Viaje más repetido del usuario |
-| `POST` | `/viajes/calcular` | ✅ | Calcular viaje y guardarlo en el historial |
-| `PUT` | `/admin/tarifas/taxi` | ✅ (ADMIN) | Actualizar la tarifa oficial de taxi |
+| Método   | Endpoint                             | Auth      | Descripción                                |
+|----------|--------------------------------------|-----------|--------------------------------------------|
+| `POST`   | `/usuarios/registro`                 | ❌         | Crear usuario y devolver JWT               |
+| `POST`   | `/usuarios/login`                    | ❌         | Login clásico y devolver JWT               |
+| `GET`    | `/usuarios/me`                       | ✅         | Datos del usuario autenticado              |
+| `PUT`    | `/usuarios/{id}`                     | ✅         | Actualizar perfil propio                   |
+| `GET`    | `/usuarios/{id}/historial`           | ✅         | Historial de viajes del usuario            |
+| `DELETE` | `/usuarios/{id}/historial/{viajeId}` | ✅         | Borrar un viaje del historial              |
+| `GET`    | `/usuarios/{id}/viaje-frecuente`     | ✅         | Viaje más repetido del usuario             |
+| `POST`   | `/viajes/calcular`                   | ✅         | Calcular viaje y guardarlo en el historial |
+| `PUT`    | `/admin/tarifas/taxi`                | ✅ (ADMIN) | Actualizar la tarifa oficial de taxi       |
 
 Endpoints protegidos requieren:
+
 ```http
 Authorization: Bearer <tu_token>
 ```
@@ -372,6 +394,7 @@ curl -X POST http://localhost:8080/usuarios/registro \
 ```
 
 **Response 200**:
+
 ```json
 {
   "id": 3,
@@ -409,6 +432,7 @@ curl -X POST http://localhost:8080/viajes/calcular \
 ```
 
 **Response 200**:
+
 ```json
 [
   {
@@ -443,6 +467,7 @@ curl http://localhost:8080/usuarios/3/historial \
 ```
 
 **Response 200**:
+
 ```json
 [
   {
@@ -464,14 +489,17 @@ curl http://localhost:8080/usuarios/3/historial \
 ## 📘 Documentación navegable (Swagger UI)
 
 **Producción (EC2)**:
+
 - **Swagger UI** → https://movilidadmdq.ddns.net/swagger-ui.html
 - **OpenAPI JSON** → https://movilidadmdq.ddns.net/api-docs
 
 **Local**:
+
 - **Swagger UI** → http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON** → http://localhost:8080/api-docs
 
 Desde Swagger UI podés:
+
 - Ver todos los endpoints con sus schemas.
 - Probarlos directamente desde el navegador (botón **Try it out**).
 - Autorizarte con el JWT (botón **Authorize** → pegar `Bearer <token>`).
@@ -496,11 +524,13 @@ Checklist recomendado:
 ## 🛠️ Verificar que todo compile
 
 **Backend**:
+
 ```bash
 ./mvnw test
 ```
 
 **Frontend**:
+
 ```bash
 cd frontend && npm run build
 ```
@@ -509,15 +539,15 @@ cd frontend && npm run build
 
 ## 🧯 Problemas comunes
 
-| Problema | Qué revisar |
-| --- | --- |
-| No encuentra Java | Instalar **Java 21** y verificar con `java -version` |
-| Error 401 al calcular | Falta iniciar sesión o el token venció |
-| Google Maps no carga | `VITE_GOOGLE_MAPS_API_KEY` en `frontend/.env` |
-| Distance Matrix falla | `GOOGLE_MAPS_KEY` en `.env` raíz y APIs habilitadas en Google Cloud |
-| OAuth2 falla | Redirect URI y JavaScript origins en Google Cloud |
-| No conecta a AWS | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y reglas del Security Group de RDS |
-| CORS bloqueado | Revisar `APP_CORS_ALLOWED_ORIGINS` en `.env` raíz |
+| Problema              | Qué revisar                                                                          |
+|-----------------------|--------------------------------------------------------------------------------------|
+| No encuentra Java     | Instalar **Java 21** y verificar con `java -version`                                 |
+| Error 401 al calcular | Falta iniciar sesión o el token venció                                               |
+| Google Maps no carga  | `VITE_GOOGLE_MAPS_API_KEY` en `frontend/.env`                                        |
+| Distance Matrix falla | `GOOGLE_MAPS_KEY` en `.env` raíz y APIs habilitadas en Google Cloud                  |
+| OAuth2 falla          | Redirect URI y JavaScript origins en Google Cloud                                    |
+| No conecta a AWS      | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y reglas del Security Group de RDS |
+| CORS bloqueado        | Revisar `APP_CORS_ALLOWED_ORIGINS` en `.env` raíz                                    |
 
 ---
 
