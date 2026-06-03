@@ -4,7 +4,7 @@ App web de **MovilidadMDQ** construida con **React 19 + TypeScript + Vite**. Con
 Boot.
 
 > 📘 La documentación general del proyecto (descripción, integrantes, backend, deploy, endpoints, ejemplos) está en
-> el [README raíz](/README.md).
+> el [README raíz](../README.md).
 
 ---
 
