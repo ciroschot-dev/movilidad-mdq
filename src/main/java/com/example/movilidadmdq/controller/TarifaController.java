@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Tarifas - Admin", description = "Gestión de tarifas de transporte. Solo accesible por administradores.")
 @RestController
 @RequestMapping("/admin/tarifas/taxi")
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class TarifaController
 {
     private final TarifaService tarifaService;
 
-    @Operation(summary = "Actualizar tarifa taxi", description = "Actualiza el precio base y el precio por km de servicio taxi. Solo accesible por dministradores")
+    @Operation(summary = "Actualizar tarifa taxi", description = "Actualiza el precio base y el precio por km del servicio taxi. Solo accesible por administradores.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tarifa actualizada correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos"),
