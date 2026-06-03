@@ -189,12 +189,17 @@ public class ViajeService
             long distanciaMetros
     )
     {
+        // Uber suele ser un 10-15% más barato que el Taxi como base
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85));
+        
         double fH = obtenerFactorHorario();
         double fD = obtenerFactorDemanda();
 
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(fH * factorClima));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * factorClima * fD));
+        // Moderamos el impacto del clima en apps (antes multiplicaba directo, ahora es un promedio pesado)
+        double factorCombinado = (fH * fD * (1 + (factorClima - 1) * 0.5));
+
+        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorCombinado * 0.9));
+        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorCombinado * 1.2));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.UBER,
@@ -211,13 +216,17 @@ public class ViajeService
 
     private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima, long distanciaMetros)
     {
-        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
+        // Didi suele ser la opción más agresiva en precio, hasta un 20% menos que taxi
+        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.80));
 
         double fH = obtenerFactorHorario();
         double fD = obtenerFactorDemanda();
+        
+        // Moderamos factores
+        double factorCombinado = (fH * (1 + (fD - 1) * 0.5) * (1 + (factorClima - 1) * 0.3));
 
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(fH));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(fH * factorClima * fD));
+        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorCombinado * 0.85));
+        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorCombinado * 1.15));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.DIDI,
@@ -235,15 +244,18 @@ public class ViajeService
     }
 
     // =========================
-    // 📊 FACTORES DINÁMICOS
+    // 📊 FACTORES DINÁMICOS (Moderados)
     // =========================
 
     private double obtenerFactorHorario()
     {
         int hora = LocalTime.now().getHour();
-        if (hora >= 7 && hora <= 9) return 1.3;
-        if (hora >= 17 && hora <= 20) return 1.4;
-        if (hora >= 22 || hora < 6) return 1.2;
+        // Pico mañana (7-9): 1.15 (antes 1.3)
+        if (hora >= 7 && hora <= 9) return 1.15;
+        // Pico tarde (17-20): 1.2 (antes 1.4)
+        if (hora >= 17 && hora <= 20) return 1.2;
+        // Nocturno: 1.1 (antes 1.2)
+        if (hora >= 22 || hora < 6) return 1.1;
         return 1.0;
     }
 
@@ -254,10 +266,10 @@ public class ViajeService
 
     private double obtenerFactorDemanda()
     {
-        // Simulación de demanda basada en aleatoriedad (Pendiente: Integración con API real si existe)
+        // Moderamos la variabilidad de la demanda aleatoria
         int autosDisponibles = (int) (Math.random() * 10);
-        if (autosDisponibles < 3) return 1.5;
-        if (autosDisponibles < 6) return 1.2;
+        if (autosDisponibles < 2) return 1.3; // Pico de demanda raro
+        if (autosDisponibles < 5) return 1.1; // Demanda moderada
         return 1.0;
     }
 
