@@ -1,6 +1,7 @@
 package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
+import com.example.movilidadmdq.dto.ConfirmarViajeRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.service.ViajeService;
@@ -45,6 +46,23 @@ public class ViajeController
                         request.destinoLat(),
                         request.destinoLng()
                 )))
+                .orElse(ResponseEntity.status(401).build());
+    }
+
+    @Operation(summary = "Confirmar elección de transporte", description = "Guarda en el historial la opción seleccionada por el usuario.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Viaje guardado en el historial con éxito"),
+        @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    @PostMapping("/confirmar")
+    public ResponseEntity<Void> confirmar(@Valid @RequestBody ConfirmarViajeRequest request, Authentication authentication)
+    {
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuario ->
+                {
+                    viajeService.guardarViajeConfirmado(request, usuario.getId());
+                    return ResponseEntity.ok().<Void>build();
+                })
                 .orElse(ResponseEntity.status(401).build());
     }
 }

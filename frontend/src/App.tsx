@@ -28,6 +28,7 @@ interface OpcionTransporteApi {
   precioMin: number;
   precioMax: number;
   tiempoMinutos: number;
+  distanciaEnMetros: number;
   url: string;
 }
 
@@ -38,6 +39,11 @@ interface Opcion {
   color: string;
   icon: ReactNode;
   url: string;
+  raw: OpcionTransporteApi;
+  context: {
+    origen: string;
+    destino: string;
+  };
 }
 
 interface ViajeHistorial {
@@ -47,8 +53,11 @@ interface ViajeHistorial {
   distanciaEnMetros: number;
   tiempoEstimadoMin: number;
   precioTaxi: number;
-  precioMinApp: number;
-  precioMaxApp: number;
+  precioUberMin: number;
+  precioUberMax: number;
+  precioDidiMin: number;
+  precioDidiMax: number;
+  tipoElegido: 'TAXI' | 'UBER' | 'DIDI';
   fechaHora: string;
 }
 
@@ -283,8 +292,49 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     window.location.href = `${OAUTH_BASE_URL}/oauth2/authorization/google`;
   };
 
-  const handleSelectOption = (url: string) => {
+  const confirmTravel = async (opcion: Opcion) => {
+    if (!session) return;
+
+    try {
+      const taxi = resultados?.find(r => r.raw.tipo === 'TAXI')?.raw;
+      const uber = resultados?.find(r => r.raw.tipo === 'UBER')?.raw;
+      const didi = resultados?.find(r => r.raw.tipo === 'DIDI')?.raw;
+
+      if (!taxi || !uber || !didi) return;
+
+      const payload = {
+        origen: opcion.context.origen,
+        destino: opcion.context.destino,
+        distanciaEnMetros: opcion.raw.distanciaEnMetros || 0,
+        tiempoEstimadoMin: opcion.raw.tiempoMinutos || 0,
+        precioTaxi: taxi.precioMin,
+        precioUberMin: uber.precioMin,
+        precioUberMax: uber.precioMax,
+        precioDidiMin: didi.precioMin,
+        precioDidiMax: didi.precioMax,
+        tipoElegido: opcion.raw.tipo
+      };
+
+      await fetch(getApiUrl('/viajes/confirmar'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.token}`,
+        },
+        keepalive: true,
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      console.error('Error al confirmar viaje:', e);
+    }
+  };
+
+  const handleSelectOption = async (opcion: Opcion) => {
+    const { url } = opcion;
     if (!url) return;
+
+    // Esperamos a que se guarde el historial antes de redirigir
+    await confirmTravel(opcion);
 
     if (url.startsWith("uber://")) {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -367,6 +417,8 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           precio,
           tiempo: `${item.tiempoMinutos} min`,
           url: item.url,
+          raw: item,
+          context: { origen, destino }
         };
       });
 
@@ -609,7 +661,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                         key={`${opcion.tipo}-${index}`}
                         {...opcion}
                         delay={index * 0.1}
-                        onClick={() => handleSelectOption(opcion.url)}
+                        onClick={() => handleSelectOption(opcion)}
                       />
                     ))}
                   </motion.div>
@@ -685,9 +737,13 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                 </div>
 
                                 <div className="text-right">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Taxi</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                                        Elegiste: {viaje.tipoElegido}
+                                    </p>
                                     <p className="text-lg font-black text-gray-900">
-                                        {formatPrecio(viaje.precioTaxi)}
+                                        {viaje.tipoElegido === 'TAXI' ? formatPrecio(viaje.precioTaxi) : 
+                                         viaje.tipoElegido === 'UBER' ? `${formatPrecio(viaje.precioUberMin)} - ${formatPrecio(viaje.precioUberMax)}` :
+                                         `${formatPrecio(viaje.precioDidiMin)} - ${formatPrecio(viaje.precioDidiMax)}`}
                                     </p>
                                 </div>
                             </div>

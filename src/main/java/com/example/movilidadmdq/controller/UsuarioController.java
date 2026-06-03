@@ -202,8 +202,11 @@ public class UsuarioController
                 viaje.getDistanciaEnMetros(),
                 viaje.getTiempoEstimadoMin(),
                 viaje.getPrecioTaxi(),
-                viaje.getPrecioMinApp(),
-                viaje.getPrecioMaxApp(),
+                viaje.getPrecioUberMin(),
+                viaje.getPrecioUberMax(),
+                viaje.getPrecioDidiMin(),
+                viaje.getPrecioDidiMax(),
+                viaje.getTipoElegido().name(),
                 viaje.getFechaHora()
         );
     }
