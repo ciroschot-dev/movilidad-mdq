@@ -25,7 +25,6 @@
 - [Endpoints](#-endpoints)
 - [Ejemplos de requests y responses](#-ejemplos-de-requests-y-responses)
 - [Documentación navegable (Swagger UI)](#-documentación-navegable-swagger-ui)
-- [Cómo probar la app](#-cómo-probar-la-app)
 - [Verificar que todo compile](#-verificar-que-todo-compile)
 - [Problemas comunes](#-problemas-comunes)
 - [Notas para el equipo](#-notas-para-el-equipo)
@@ -54,6 +53,17 @@
 - La carpeta `frontend/` es la app vigente; cualquier referencia a `frontend-demo/` es legado y no se usa.
 - No se incluyen credenciales hardcodeadas: el corrector puede registrar un usuario nuevo en segundos desde la UI o vía
   `curl`.
+
+**Checklist funcional para validar la app**:
+
+- ✅ Abrir https://movilidad-mdq.vercel.app/ (o `http://localhost:5173` si la corrés en local).
+- ✅ Registrarse con usuario, email y contraseña.
+- ✅ Cerrar sesión y volver a iniciar sesión.
+- ✅ Probar **"Continuar con Google"** (OAuth2).
+- ✅ Calcular un viaje en Mar del Plata.
+- ✅ Ver opciones de Taxi, Uber y Didi.
+- ✅ Entrar a **Historial** y confirmar que se guardó el viaje.
+- ✅ Borrar un viaje del historial.
 
 ---
 
@@ -503,21 +513,6 @@ Desde Swagger UI podés:
 - Ver todos los endpoints con sus schemas.
 - Probarlos directamente desde el navegador (botón **Try it out**).
 - Autorizarte con el JWT (botón **Authorize** → pegar `Bearer <token>`).
-
----
-
-## 🧪 Cómo probar la app
-
-Checklist recomendado:
-
-- ✅ Abrir `http://localhost:5173`.
-- ✅ Registrarse con usuario, email y contraseña.
-- ✅ Cerrar sesión y volver a iniciar sesión.
-- ✅ Probar **"Continuar con Google"** (si configuraste OAuth2).
-- ✅ Calcular un viaje en Mar del Plata.
-- ✅ Ver opciones de Taxi, Uber y Didi.
-- ✅ Entrar a **Historial** y confirmar que se guardó el viaje.
-- ✅ Borrar un viaje del historial.
 
 ---
 
