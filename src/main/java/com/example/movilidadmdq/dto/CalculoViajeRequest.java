@@ -8,7 +8,7 @@ public record CalculoViajeRequest(
         @Schema(description = "Nombre del origen", example = "Pinamar")
         @NotBlank String origen,
 
-        @Schema(description = "Nombre del origen", example = "Miramar")
+        @Schema(description = "Nombre del destino", example = "Mar del Plata")
         @NotBlank String destino,
 
         @Schema(description = "Origen en coordenadas latitud", example = "-38.0")
@@ -22,5 +22,6 @@ public record CalculoViajeRequest(
 
         @Schema(description = "Destino en longitud", example = "32.1200")
         Double destinoLng
-) {
+)
+{
 }
