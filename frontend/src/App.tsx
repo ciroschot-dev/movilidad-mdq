@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
-import InputForm from './components/InputForm';
+import InputForm, { type LugarSeleccionado } from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
 import AdminDashboard from './components/AdminDashboard';
@@ -312,10 +312,8 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const handleCalculate = async (
       origen: string,
       destino: string,
-      origenLat?: number,
-      origenLng?: number,
-      destinoLat?: number,
-      destinoLng?: number
+      origenPlace?: LugarSeleccionado,
+      destinoPlace?: LugarSeleccionado
   ) => {
     if (!session) {
       setError('Inicia sesion para calcular y guardar tu viaje.');
@@ -332,7 +330,20 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.token}`,
         },
-        body: JSON.stringify({ origen, destino, origenLat, origenLng, destinoLat, destinoLng }),
+        body: JSON.stringify({
+          origen,
+          destino,
+          origenAddressLine1: origenPlace?.addressLine1,
+          origenAddressLine2: origenPlace?.addressLine2,
+          origenPlaceId: origenPlace?.placeId,
+          origenLat: origenPlace?.latitude,
+          origenLng: origenPlace?.longitude,
+          destinoAddressLine1: destinoPlace?.addressLine1,
+          destinoAddressLine2: destinoPlace?.addressLine2,
+          destinoPlaceId: destinoPlace?.placeId,
+          destinoLat: destinoPlace?.latitude,
+          destinoLng: destinoPlace?.longitude,
+        }),
       });
 
       if (response.status === 401 || response.status === 403) {
@@ -340,7 +351,9 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         throw new Error('Tu sesion vencio. Inicia sesion otra vez.');
       }
 
-      if (!response.ok) throw new Error('No se pudieron calcular las opciones.');
+      if (!response.ok) {
+        throw new Error('No se pudieron calcular las opciones.');
+      }
 
       const data: OpcionTransporteApi[] = await response.json();
 
@@ -357,9 +370,17 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         };
 
         if (item.tipo === 'UBER') {
-          config = { tipo: 'Uber', color: 'bg-black', icon: <Smartphone size={24} /> };
+          config = {
+            tipo: 'Uber',
+            color: 'bg-black',
+            icon: <Smartphone size={24} />,
+          };
         } else if (item.tipo === 'DIDI') {
-          config = { tipo: 'Didi', color: 'bg-orange-500', icon: <Smartphone size={24} /> };
+          config = {
+            tipo: 'Didi',
+            color: 'bg-orange-500',
+            icon: <Smartphone size={24} />,
+          };
         }
 
         return {

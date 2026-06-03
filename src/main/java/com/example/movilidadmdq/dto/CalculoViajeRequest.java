@@ -1,27 +1,46 @@
 package com.example.movilidadmdq.dto;
 
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
+@Schema(description = "Datos necesarios para calcular un viaje")
 public record CalculoViajeRequest(
-        @Schema(description = "Nombre del origen", example = "Pinamar")
-        @NotBlank String origen,
+        @Schema(description = "Direccion de origen", example = "Paseo Costanera Mar del Plata")
+        @NotBlank
+        String origen,
 
-        @Schema(description = "Nombre del destino", example = "Mar del Plata")
-        @NotBlank String destino,
+        @Schema(description = "Direccion de destino", example = "Grand Beach")
+        @NotBlank
+        String destino,
 
-        @Schema(description = "Origen en coordenadas latitud", example = "-38.0")
+        @Schema(description = "Nombre corto del lugar de origen", example = "Paseo Costanera Mar del Plata")
+        String origenAddressLine1,
+
+        @Schema(description = "Direccion completa del lugar de origen", example = "Santiago del Estero 1202, Mar del Plata")
+        String origenAddressLine2,
+
+        @Schema(description = "Google Place ID del origen", example = "ChIJKwxUL7bdhJUR_yRC-2o5c_c")
+        String origenPlaceId,
+
+        @Schema(description = "Latitud del origen", example = "-37.99572510000001")
         Double origenLat,
 
-        @Schema(description = "Origen en longitud", example = "-32.1200")
+        @Schema(description = "Longitud del origen", example = "-57.542423400000004")
         Double origenLng,
 
-        @Schema(description = "Destino en coordenadas latitud", example = "-38.0")
+        @Schema(description = "Nombre corto del lugar de destino", example = "Grand Beach")
+        String destinoAddressLine1,
+
+        @Schema(description = "Direccion completa del lugar de destino", example = "Saavedra 65, Mar del Plata")
+        String destinoAddressLine2,
+
+        @Schema(description = "Google Place ID del destino", example = "ChIJD0zcgMvdhJURkZqCZ7ciEBY")
+        String destinoPlaceId,
+
+        @Schema(description = "Latitud del destino", example = "-38.0277922")
         Double destinoLat,
 
-        @Schema(description = "Destino en longitud", example = "32.1200")
+        @Schema(description = "Longitud del destino", example = "-57.532317199999994")
         Double destinoLng
-)
-{
+) {
 }
