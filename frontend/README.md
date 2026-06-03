@@ -1,73 +1,100 @@
-# React + TypeScript + Vite
+# 🚗 MovilidadMDQ — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App web de **MovilidadMDQ** construida con **React 19 + TypeScript + Vite**. Consume la API REST del backend Spring Boot.
 
-Currently, two official plugins are available:
+> 📘 La documentación general del proyecto (descripción, integrantes, backend, deploy, endpoints, ejemplos) está en el [README raíz](../README.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🌐 Deploy
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend** → https://movilidad-mdq.vercel.app/ (Vercel)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Google Maps JavaScript API + Places
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## ✅ Requisitos
+
+- Node.js 18+
+- npm
+- API key de Google Maps con **Maps JavaScript API** y **Places API** habilitadas
+
+---
+
+## ⚙️ Configuración
+
+Copiá `.env.example` a `.env` y completá:
+
+```env
+VITE_API_URL=http://localhost:8080
+VITE_GOOGLE_MAPS_API_KEY=tu_google_maps_key_para_browser
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+> Para apuntar al backend de producción, usar `VITE_API_URL=https://movilidadmdq.ddns.net`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+> En Google Cloud conviene restringir la key por referer a `http://localhost:5173/*` y al dominio del deploy.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## ▶️ Cómo correrlo
+
+```bash
+npm install
+npm run dev
 ```
+
+Abre `http://localhost:5173`.
+
+---
+
+## 📦 Build de producción
+
+```bash
+npm run build
+npm run preview   # opcional, sirve el build localmente
+```
+
+---
+
+## 📂 Estructura
+
+```text
+frontend/
+├── public/           # Assets estáticos
+├── src/              # Componentes, páginas, hooks, API client
+├── index.html
+├── vite.config.ts
+├── tsconfig*.json
+├── eslint.config.js
+├── vercel.json       # Config de deploy en Vercel
+└── .env.example
+```
+
+---
+
+## 🚀 Deploy en Vercel
+
+Está configurado mediante `vercel.json`. En el dashboard de Vercel, las variables que hay que definir son las mismas del `.env`:
+
+- `VITE_API_URL` → `https://movilidadmdq.ddns.net`
+- `VITE_GOOGLE_MAPS_API_KEY` → la key de Google Maps (con el dominio de Vercel permitido)
+
+---
+
+## 🧯 Problemas comunes
+
+| Problema | Qué revisar |
+| --- | --- |
+| Mapa no carga | `VITE_GOOGLE_MAPS_API_KEY` en `.env` y restricciones en Google Cloud |
+| Llamadas a la API fallan | `VITE_API_URL` correcto y backend levantado |
+| CORS bloqueado | `APP_CORS_ALLOWED_ORIGINS` en el `.env` del backend |
+| 401 al calcular viaje | Falta JWT o el token venció — iniciar sesión otra vez |
