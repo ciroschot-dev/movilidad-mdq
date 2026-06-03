@@ -46,17 +46,15 @@ public class ViajeService
 
     public List<OpcionTransporteResponse> calcularViaje(String origen, String destino, Long usuarioId, Double origenLat, Double origenLng, Double destinoLat, Double destinoLng)
     {
-        // 🔵 VALORES POR DEFECTO (Simulación / Fallback)
+        // 🔵 VALORES POR DEFECTO
         double distanciaKm = 5.0;
         int tiempoMin = 15;
 
         LatLng origenCoords = (origenLat != null && origenLng != null) ? new LatLng(origenLat, origenLng) : null;
         LatLng destinoCoords = (destinoLat != null && destinoLng != null) ? new LatLng(destinoLat, destinoLng) : null;
-        // Asegurar que la búsqueda sea en Mar del Plata si no se especificó
+        
         String origenFinal = normalizarDireccion(origen);
         String destinoFinal = normalizarDireccion(destino);
-
-        System.out.println("Solicitando viaje: [" + origenFinal + "] -> [" + destinoFinal + "]");
 
         try
         {
@@ -66,7 +64,6 @@ public class ViajeService
                 DistanceMatrixElement element = matrix.rows[0].elements[0];
                 distanciaKm = element.distance.inMeters / 1000.0;
                 tiempoMin = (int) Math.ceil(element.duration.inSeconds / 60.0);
-                System.out.println("✅ Datos REALES obtenidos: " + distanciaKm + "km, " + tiempoMin + "min");
             }
         }
         catch (Exception e)
@@ -76,14 +73,12 @@ public class ViajeService
 
         BigDecimal precioTaxi = calcularTaxi(distanciaKm);
         double factorClima = obtenerFactorClima();
-
-        // --- GUARDAR EN BASE DE DATOS ---
-        guardarHistorial(origenFinal, destinoFinal, (long) (distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId);
+        long distanciaMetros = (long) (distanciaKm * 1000);
 
         List<OpcionTransporteResponse> opciones = List.of(
-                construirTaxi(precioTaxi, tiempoMin),
-                construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima),
-                construirDidi(precioTaxi, tiempoMin, factorClima)
+                construirTaxi(precioTaxi, tiempoMin, distanciaMetros),
+                construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima, distanciaMetros),
+                construirDidi(precioTaxi, tiempoMin, factorClima, distanciaMetros)
         );
 
         return opciones.stream()
@@ -92,27 +87,31 @@ public class ViajeService
     }
 
 
-    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId)
+    public void guardarViajeConfirmado(com.example.movilidadmdq.dto.ConfirmarViajeRequest request, Long usuarioId)
     {
         try
         {
             usuarioRepository.findById(usuarioId).ifPresent(usuario ->
             {
                 com.example.movilidadmdq.model.Viaje nuevoViaje = new com.example.movilidadmdq.model.Viaje();
-                nuevoViaje.setOrigen(origen);
-                nuevoViaje.setDestino(destino);
-                nuevoViaje.setDistanciaEnMetros(distanciaMetros);
-                nuevoViaje.setTiempoEstimadoMin(tiempoMin);
-                nuevoViaje.setPrecioTaxi(precioTaxi);
-
-                // Valores estimados para historial
-                nuevoViaje.setPrecioMinApp(precioTaxi.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP));
-                nuevoViaje.setPrecioMaxApp(precioTaxi.multiply(BigDecimal.valueOf(1.2)).setScale(2, RoundingMode.HALF_UP));
-
+                nuevoViaje.setOrigen(request.origen());
+                nuevoViaje.setDestino(request.destino());
+                nuevoViaje.setDistanciaEnMetros(request.distanciaEnMetros());
+                nuevoViaje.setTiempoEstimadoMin(request.tiempoEstimadoMin());
+                nuevoViaje.setPrecioTaxi(request.precioTaxi());
+                nuevoViaje.setPrecioUberMin(request.precioUberMin());
+                nuevoViaje.setPrecioUberMax(request.precioUberMax());
+                nuevoViaje.setPrecioDidiMin(request.precioDidiMin());
+                nuevoViaje.setPrecioDidiMax(request.precioDidiMax());
+                nuevoViaje.setTipoElegido(request.tipoElegido());
                 nuevoViaje.setUsuario(usuario);
 
+                // Llenar campos viejos para compatibilidad con schema antiguo
+                nuevoViaje.setPrecioMinApp(request.precioUberMin());
+                nuevoViaje.setPrecioMaxApp(request.precioUberMax());
+
                 viajeRepository.save(nuevoViaje);
-                System.out.println("💾 Viaje guardado automáticamente en AWS para el usuario: " + usuario.getUsername());
+                System.out.println("✅ Viaje guardado en el historial para el usuario: " + usuario.getUsername());
             });
         }
         catch (Exception e)
@@ -166,13 +165,14 @@ public class ViajeService
         return (hora >= 22 || hora < 6);
     }
 
-    private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin)
+    private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin, long distanciaMetros)
     {
         return new OpcionTransporteResponse(
                 TipoTransporte.TAXI,
                 precioTaxi,
                 precioTaxi,
                 tiempoMin,
+                distanciaMetros,
                 "tel:" + telefonoTaxi
         );
     }
@@ -185,7 +185,8 @@ public class ViajeService
             BigDecimal precioTaxi, int tiempoMin,
             String origen, LatLng origenCoords,
             String destino, LatLng destinoCoords,
-            double factorClima
+            double factorClima,
+            long distanciaMetros
     )
     {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85));
@@ -200,6 +201,7 @@ public class ViajeService
                 precioMin.setScale(2, RoundingMode.HALF_UP),
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
+                distanciaMetros,
                 generarUrlUber(origen, origenCoords, destino, destinoCoords)
         );
     }
@@ -207,7 +209,7 @@ public class ViajeService
     // 🚙 DIDI
     // =========================
 
-    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima)
+    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima, long distanciaMetros)
     {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
 
@@ -222,6 +224,7 @@ public class ViajeService
                 precioMin.setScale(2, RoundingMode.HALF_UP),
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
+                distanciaMetros,
                 "https://www.didiglobal.com/"
         );
     }
