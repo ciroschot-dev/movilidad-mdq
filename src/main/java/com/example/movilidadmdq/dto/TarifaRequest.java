@@ -1,14 +1,15 @@
 package com.example.movilidadmdq.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
 public class TarifaRequest {
-    @Schema(description= "precio base de taxi", example = "3000" )
+    @Schema(description = "Precio base del viaje en pesos", example = "1500.00")
     BigDecimal precioBase;
 
-    Schema(description="precio por km en taxi", example = "200")
+    @Schema(description = "Precio por kilómetro recorrido en pesos", example = "350.00")
     BigDecimal precioPorKm;
 }
