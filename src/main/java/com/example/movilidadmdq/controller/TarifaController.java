@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
@@ -21,11 +22,10 @@ public class TarifaController {
 
     @Operation(summary = "Actualizar tarifa taxi", description = "Actualiza el precio base y el precio por km de servicio taxi. Solo accesible por dministradores")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tarifa actualizada correctamente")
-            @ApiResponse(responseCode = "400", description = "Datos invalidos")
+            @ApiResponse(responseCode = "200", description = "Tarifa actualizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
             @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
     })
-
 
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
