@@ -43,6 +43,7 @@ public class ViajeService
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
     private final UberDeepLinkService uberDeepLinkService;
+    private final DidiDeepLinkService didiDeepLinkService;
 
     public List<OpcionTransporteResponse> calcularViaje(String origen, String destino, Long usuarioId, Double origenLat, Double origenLng, Double destinoLat, Double destinoLng)
     {
@@ -78,7 +79,7 @@ public class ViajeService
         List<OpcionTransporteResponse> opciones = List.of(
                 construirTaxi(precioTaxi, tiempoMin, distanciaMetros),
                 construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima, distanciaMetros),
-                construirDidi(precioTaxi, tiempoMin, factorClima, distanciaMetros)
+                construirDidi(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima, distanciaMetros)
         );
 
         return opciones.stream()
@@ -140,8 +141,6 @@ public class ViajeService
     private BigDecimal calcularTaxi(double distanciaKm)
     {
         Tarifa tarifa = tarifaService.obtenerTarifaTaxi();
-
-        boolean esNocturno = esHorarioNocturno();
 
         boolean nocturno = esHorarioNocturno();
 
@@ -214,7 +213,13 @@ public class ViajeService
     // 🚙 DIDI
     // =========================
 
-    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima, long distanciaMetros)
+    private OpcionTransporteResponse construirDidi(
+            BigDecimal precioTaxi, int tiempoMin,
+            String origen, LatLng origenCoords,
+            String destino, LatLng destinoCoords,
+            double factorClima,
+            long distanciaMetros
+    )
     {
         // Didi suele ser la opción más agresiva en precio, hasta un 20% menos que taxi
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.80));
@@ -234,8 +239,20 @@ public class ViajeService
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 distanciaMetros,
-                "https://www.didiglobal.com/"
+                generarUrlDidi(origen, origenCoords, destino, destinoCoords)
         );
+    }
+
+    private String generarUrlDidi(String origen, LatLng origenCoords, String destino, LatLng destinoCoords)
+    {
+        if (origenCoords != null && destinoCoords != null)
+        {
+            return didiDeepLinkService.generarDeepLink(
+                    origen, origenCoords.lat, origenCoords.lng,
+                    destino, destinoCoords.lat, destinoCoords.lng
+            );
+        }
+        return "https://www.didiglobal.com/";
     }
 
     private String encode(String value)

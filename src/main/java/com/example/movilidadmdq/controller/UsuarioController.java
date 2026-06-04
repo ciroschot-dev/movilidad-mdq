@@ -2,6 +2,7 @@ package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.ViajeFrecuenteResponse;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -201,12 +202,12 @@ public class UsuarioController
                 viaje.getDestino(),
                 viaje.getDistanciaEnMetros(),
                 viaje.getTiempoEstimadoMin(),
-                viaje.getPrecioTaxi(),
-                viaje.getPrecioUberMin(),
-                viaje.getPrecioUberMax(),
-                viaje.getPrecioDidiMin(),
-                viaje.getPrecioDidiMax(),
-                viaje.getTipoElegido().name(),
+                viaje.getPrecioTaxi() != null ? viaje.getPrecioTaxi() : BigDecimal.ZERO,
+                viaje.getPrecioUberMin() != null ? viaje.getPrecioUberMin() : BigDecimal.ZERO,
+                viaje.getPrecioUberMax() != null ? viaje.getPrecioUberMax() : BigDecimal.ZERO,
+                viaje.getPrecioDidiMin() != null ? viaje.getPrecioDidiMin() : BigDecimal.ZERO,
+                viaje.getPrecioDidiMax() != null ? viaje.getPrecioDidiMax() : BigDecimal.ZERO,
+                viaje.getTipoElegido() != null ? viaje.getTipoElegido().name() : "TAXI",
                 viaje.getFechaHora()
         );
     }
