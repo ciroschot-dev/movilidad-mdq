@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
+import MapView from './MapView';
 
 export interface LugarSeleccionado {
   addressLine1: string;
@@ -137,6 +138,11 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
               required
           />
         </div>
+
+        <MapView 
+          origen={origenPlace ? { lat: origenPlace.latitude, lng: origenPlace.longitude } : undefined}
+          destino={destinoPlace ? { lat: destinoPlace.latitude, lng: destinoPlace.longitude } : undefined}
+        />
 
         <button
             type="submit"
