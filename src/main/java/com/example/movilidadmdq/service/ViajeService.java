@@ -51,35 +51,47 @@ public class ViajeService
         double distanciaKm = 5.0;
         int tiempoMin = 15;
 
+        // Usar coordenadas para Google Maps si están disponibles, de lo contrario usar nombres
+        String originSearch = (origenLat != null && origenLng != null) ? origenLat + "," + origenLng : normalizarDireccion(origen);
+        String destinationSearch = (destinoLat != null && destinoLng != null) ? destinoLat + "," + destinoLng : normalizarDireccion(destino);
+        
         LatLng origenCoords = (origenLat != null && origenLng != null) ? new LatLng(origenLat, origenLng) : null;
         LatLng destinoCoords = (destinoLat != null && destinoLng != null) ? new LatLng(destinoLat, destinoLng) : null;
-        
-        String origenFinal = normalizarDireccion(origen);
-        String destinoFinal = normalizarDireccion(destino);
 
         try
         {
-            DistanceMatrix matrix = googleMapsService.obtenerDatosViaje(origenFinal, destinoFinal);
+            DistanceMatrix matrix = googleMapsService.obtenerDatosViaje(originSearch, destinationSearch);
             if (esRespuestaValida(matrix))
             {
                 DistanceMatrixElement element = matrix.rows[0].elements[0];
                 distanciaKm = element.distance.inMeters / 1000.0;
                 tiempoMin = (int) Math.ceil(element.duration.inSeconds / 60.0);
+                System.out.println("📍 Distancia calculada por Google Maps: " + distanciaKm + " km");
+            }
+            else
+            {
+                System.err.println("⚠️ Google Maps no pudo calcular la ruta (usando default 5km). Status: " + 
+                    (matrix != null && matrix.rows.length > 0 ? matrix.rows[0].elements[0].status : "NULL"));
             }
         }
         catch (Exception e)
         {
-            System.err.println("❌ Error Google Maps API: " + e.getMessage());
+            System.err.println("❌ Error Google Maps API: " + e.getMessage() + " (usando default 5km)");
         }
 
-        BigDecimal precioTaxi = calcularTaxi(distanciaKm);
+        // Calculamos el PRECIO BASE del taxi (sin nocturno) para usarlo como base comparativa
+        BigDecimal precioTaxiBase = calcularTaxiBase(distanciaKm);
+        
+        BigDecimal precioTaxiFinal = aplicarSargoNocturnoTaxi(precioTaxiBase);
         double factorClima = obtenerFactorClima();
         long distanciaMetros = (long) (distanciaKm * 1000);
 
+        System.out.println("📊 Factores: Clima=" + factorClima + " | Distancia=" + distanciaMetros + "m");
+
         List<OpcionTransporteResponse> opciones = List.of(
-                construirTaxi(precioTaxi, tiempoMin, distanciaMetros),
-                construirUber(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima, distanciaMetros),
-                construirDidi(precioTaxi, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima, distanciaMetros)
+                construirTaxi(precioTaxiFinal, tiempoMin, distanciaMetros),
+                construirUber(precioTaxiBase, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima, distanciaMetros),
+                construirDidi(precioTaxiBase, tiempoMin, origen, origenCoords, destino, destinoCoords, factorClima, distanciaMetros)
         );
 
         return opciones.stream()
@@ -123,6 +135,7 @@ public class ViajeService
 
     private String normalizarDireccion(String direccion)
     {
+        if (direccion == null || direccion.isBlank()) return "Mar del Plata, Argentina";
         if (direccion.toLowerCase().contains("mar del plata")) return direccion;
         return direccion + ", Mar del Plata, Argentina";
     }
@@ -138,24 +151,21 @@ public class ViajeService
     // 🚕 TAXI
     // =========================
 
-    private BigDecimal calcularTaxi(double distanciaKm)
+    private BigDecimal calcularTaxiBase(double distanciaKm)
     {
         Tarifa tarifa = tarifaService.obtenerTarifaTaxi();
-
-        boolean nocturno = esHorarioNocturno();
-
         BigDecimal precioBase = tarifa.getPrecioBase();
         BigDecimal precioPorKm = tarifa.getPrecioPorKm();
 
-        BigDecimal precio = precioBase
-                .add(precioPorKm.multiply(BigDecimal.valueOf(distanciaKm)));
+        return precioBase.add(precioPorKm.multiply(BigDecimal.valueOf(distanciaKm)));
+    }
 
-        // ajuste por horario
-        BigDecimal factor = nocturno
-                ? BigDecimal.valueOf(1.2)
-                : BigDecimal.ONE;
-
-        return precio.multiply(factor);
+    private BigDecimal aplicarSargoNocturnoTaxi(BigDecimal precioBase)
+    {
+        if (esHorarioNocturno()) {
+            return precioBase.multiply(BigDecimal.valueOf(1.2)); // +20% oficial
+        }
+        return precioBase;
     }
 
     private boolean esHorarioNocturno()
@@ -168,8 +178,8 @@ public class ViajeService
     {
         return new OpcionTransporteResponse(
                 TipoTransporte.TAXI,
-                precioTaxi,
-                precioTaxi,
+                precioTaxi.setScale(2, RoundingMode.HALF_UP),
+                precioTaxi.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 distanciaMetros,
                 "tel:" + telefonoTaxi
@@ -181,24 +191,24 @@ public class ViajeService
     // =========================
 
     private OpcionTransporteResponse construirUber(
-            BigDecimal precioTaxi, int tiempoMin,
+            BigDecimal precioBaseTaxi, int tiempoMin,
             String origen, LatLng origenCoords,
             String destino, LatLng destinoCoords,
             double factorClima,
             long distanciaMetros
     )
     {
-        // Uber suele ser un 10-15% más barato que el Taxi como base
-        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85));
+        // Uber Base es un 15% menos que el Taxi base
+        BigDecimal baseUber = precioBaseTaxi.multiply(BigDecimal.valueOf(0.85));
         
         double fH = obtenerFactorHorario();
         double fD = obtenerFactorDemanda();
 
-        // Moderamos el impacto del clima en apps (antes multiplicaba directo, ahora es un promedio pesado)
+        // Factor combinado: Horario * Demanda * Clima (atenuado)
         double factorCombinado = (fH * fD * (1 + (factorClima - 1) * 0.5));
 
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorCombinado * 0.9));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorCombinado * 1.2));
+        BigDecimal precioMin = baseUber.multiply(BigDecimal.valueOf(factorCombinado * 0.9));
+        BigDecimal precioMax = baseUber.multiply(BigDecimal.valueOf(factorCombinado * 1.2));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.UBER,
@@ -214,15 +224,15 @@ public class ViajeService
     // =========================
 
     private OpcionTransporteResponse construirDidi(
-            BigDecimal precioTaxi, int tiempoMin,
+            BigDecimal precioBaseTaxi, int tiempoMin,
             String origen, LatLng origenCoords,
             String destino, LatLng destinoCoords,
             double factorClima,
             long distanciaMetros
     )
     {
-        // Didi suele ser la opción más agresiva en precio, hasta un 20% menos que taxi
-        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.80));
+        // Didi Base es un 20% menos que el Taxi base
+        BigDecimal baseDidi = precioBaseTaxi.multiply(BigDecimal.valueOf(0.80));
 
         double fH = obtenerFactorHorario();
         double fD = obtenerFactorDemanda();
@@ -230,8 +240,8 @@ public class ViajeService
         // Moderamos factores
         double factorCombinado = (fH * (1 + (fD - 1) * 0.5) * (1 + (factorClima - 1) * 0.3));
 
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorCombinado * 0.85));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorCombinado * 1.15));
+        BigDecimal precioMin = baseDidi.multiply(BigDecimal.valueOf(factorCombinado * 0.85));
+        BigDecimal precioMax = baseDidi.multiply(BigDecimal.valueOf(factorCombinado * 1.15));
 
         return new OpcionTransporteResponse(
                 TipoTransporte.DIDI,
