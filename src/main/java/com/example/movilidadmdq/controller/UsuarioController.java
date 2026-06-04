@@ -79,12 +79,11 @@ public class UsuarioController
         }
     }
 
-    @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado.")
+    @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado ")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Devuelve datos del usuario"),
         @ApiResponse(responseCode = "401", description = "No autenticado o token inválido")
     })
-
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponse> obtenerUsuarioActual(Authentication authentication)
     {
@@ -127,8 +126,7 @@ public class UsuarioController
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Borrado historial del usuario con exito"),
         @ApiResponse(responseCode = "401", description = "No autenticado o token inválido"),
-        @ApiResponse(responseCode = "403", description = "No tenés permiso para borrar el historial de otro usuario"),
-        @ApiResponse(responseCode = "404", description = "Viaje inexistente o no pertenece al usuario")
+        @ApiResponse(responseCode = "403", description = "No tenés permiso para borrar el historial de otro usuario")
     })
 
     @DeleteMapping("/{id}/historial/{viajeId}")
@@ -156,9 +154,8 @@ public class UsuarioController
     }
 
     @Operation(summary = "Obtener viaje frecuente de un usuario segun ID", description = "Obtener viaje frecuente del usuario de la base de datos")
-    @ApiResponses(value = {
+    @ApiResponses(value ={
         @ApiResponse(responseCode = "200", description = "Viaje frecuente del usuario hallado con exito"),
-        @ApiResponse(responseCode = "204", description = "El usuario no tiene un viaje frecuente"),
         @ApiResponse(responseCode = "401", description = "No autenticado o token inválido"),
         @ApiResponse(responseCode = "403", description = "No tenés permiso para ver los viajes de otro usuario")
     })

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Tarifas - Admin", description = "Gestión de tarifas de transporte. Solo accesible por administradores.")
@@ -28,7 +29,6 @@ public class TarifaController
             @ApiResponse(responseCode = "400", description = "Datos invalidos"),
             @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
     })
-
 
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")

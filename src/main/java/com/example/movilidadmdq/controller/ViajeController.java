@@ -26,26 +26,27 @@ public class ViajeController
     private final ViajeService viajeService;
     private final UsuarioRepository usuarioRepository;
 
-    @Operation(summary = "Calcular viaje", description = "Obtiene y calcula el viaje solicitado por el usuario")
+    @Operation(
+            summary = "Calcular viaje",
+            description = "Obtiene y calcula el viaje solicitado por el usuario. Si se envian datos de Google Places, genera deep links enriquecidos para abrir apps externas con origen y destino precargados."
+    )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "El viaje se ha calculado con exito"),
-        @ApiResponse(responseCode = "400", description = "El calculo del viaje fallo"),
-        @ApiResponse(responseCode = "401", description = "Los datos ingresados son incorrectos")
+            @ApiResponse(responseCode = "200", description = "El viaje se ha calculado con exito"),
+            @ApiResponse(responseCode = "400", description = "El calculo del viaje fallo"),
+            @ApiResponse(responseCode = "401", description = "Los datos ingresados son incorrectos")
     })
-
     @PostMapping("/calcular")
-    public ResponseEntity<List<OpcionTransporteResponse>> calcular(@Valid @RequestBody CalculoViajeRequest request, Authentication authentication)
+    public ResponseEntity<List<OpcionTransporteResponse>> calcular(
+            @Valid @RequestBody CalculoViajeRequest request,
+            Authentication authentication
+    )
     {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(
-                        request.origen(),
-                        request.destino(),
-                        usuario.getId(),
-                        request.origenLat(),
-                        request.origenLng(),
-                        request.destinoLat(),
-                        request.destinoLng()
-                )))
+                .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId())))
                 .orElse(ResponseEntity.status(401).build());
     }
 
