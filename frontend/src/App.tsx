@@ -191,7 +191,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                 return;
             }
 
-            if (response.status === 401 || response.status === 403) {
+            if (response.status === 401 || response.status === 403) {inte
                 cerrarSesion();
                 return;
             }
