@@ -1,10 +1,12 @@
 package com.example.movilidadmdq;
 
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
+import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.service.ViajeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
 
 import java.util.List;
 
@@ -22,9 +24,23 @@ class ViajeServiceDebugTest {
         String destino = "Colon 3132, Mar del Plata";
 
         System.out.println("--- INICIANDO TEST DE DEPURACION ---");
-        List<OpcionTransporteResponse> resultados =
-                viajeService.calcularViaje(origen, destino, 1L, null, null, null, null);
-
+        List<OpcionTransporteResponse> resultados = viajeService.calcularViaje(
+                new CalculoViajeRequest(
+                        origen,
+                        destino,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                ),
+                1L
+        );
         assertNotNull(resultados);
         for (OpcionTransporteResponse opcion : resultados) {
             System.out.println(
