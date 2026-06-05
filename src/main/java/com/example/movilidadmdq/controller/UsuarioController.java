@@ -99,7 +99,7 @@ public class UsuarioController
     }
 
     @Operation(summary = "Obtener el historial de un usuario segun ID", description = "Devuelve una lista como historial del usuario")
-    @ApiResponses (value = {
+    @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Datos del usuario"),
         @ApiResponse(responseCode = "401", description = "No autenticado o token inválido"),
         @ApiResponse(responseCode = "403", description = "No tenés permiso para ver el historial de otro usuario")

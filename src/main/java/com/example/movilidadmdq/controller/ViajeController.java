@@ -58,6 +58,10 @@ public class ViajeController
     @PostMapping("/confirmar")
     public ResponseEntity<Void> confirmar(@Valid @RequestBody ConfirmarViajeRequest request, Authentication authentication)
     {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         return usuarioRepository.findByUsername(authentication.getName())
                 .map(usuario ->
                 {
