@@ -105,7 +105,7 @@ public class ViajeService
                 nuevoViaje.setTipoElegido(request.tipoElegido());
                 nuevoViaje.setUsuario(usuario);
 
-                // Llenar campos viejos para compatibilidad con schema antiguo
+                // Llenar campos viejos paraa compatibilidad con schema antiguo
                 nuevoViaje.setPrecioMinApp(request.precioUberMin());
                 nuevoViaje.setPrecioMaxApp(request.precioUberMax());
 
