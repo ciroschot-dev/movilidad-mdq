@@ -107,6 +107,7 @@ public class ViajeService
         catch (Exception e)
         {
             System.err.println("Error al guardar historial: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
