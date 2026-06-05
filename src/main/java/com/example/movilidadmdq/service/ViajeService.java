@@ -6,8 +6,8 @@ import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
 import com.example.movilidadmdq.model.Tarifa;
 import com.google.maps.model.DistanceMatrix;
-import com.google.maps.model.LatLng;
 import com.google.maps.model.DistanceMatrixElement;
+import com.google.maps.model.LatLng;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -50,15 +50,20 @@ public class ViajeService
         LatLng origenCoords = (request.origenLat() != null && request.origenLng() != null) ? new LatLng(request.origenLat(), request.origenLng()) : null;
         LatLng destinoCoords = (request.destinoLat() != null && request.destinoLng() != null) ? new LatLng(request.destinoLat(), request.destinoLng()) : null;
 
+        System.out.println("Solicitando viaje: [" + originSearch + "] -> [" + destinationSearch + "]");
+
+        // Intento de obtener datos reales de Google Maps
         try
         {
             DistanceMatrix matrix = googleMapsService.obtenerDatosViaje(originSearch, destinationSearch);
             if (esRespuestaValida(matrix))
             {
                 DistanceMatrixElement element = matrix.rows[0].elements[0];
+
+                // Convertir metros a Kilómetros y segundos a Minutos
                 distanciaKm = element.distance.inMeters / 1000.0;
                 tiempoMin = (int) Math.ceil(element.duration.inSeconds / 60.0);
-                System.out.println("📍 Distancia calculada por Google Maps: " + distanciaKm + " km");
+                System.out.println("✅ Datos REALES obtenidos: " + distanciaKm + "km, " + tiempoMin + "min");
             }
         }
         catch (Exception e)
@@ -81,6 +86,7 @@ public class ViajeService
                 construirDidi(precioTaxiBase, tiempoMin, request.origen(), origenCoords, request.destino(), destinoCoords, factorClima, distanciaMetros)
         );
 
+        // 💸 ordenar por precio más bajo
         return opciones.stream()
                 .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
                 .toList();
@@ -88,6 +94,8 @@ public class ViajeService
 
     public void guardarViajeConfirmado(ConfirmarViajeRequest request, Long usuarioId)
     {
+        if (usuarioId == null) return;
+
         try
         {
             usuarioRepository.findById(usuarioId).ifPresent(usuario ->
@@ -105,7 +113,7 @@ public class ViajeService
                 nuevoViaje.setTipoElegido(request.tipoElegido());
                 nuevoViaje.setUsuario(usuario);
 
-                // Llenar campos viejos paraa compatibilidad con schema antiguo
+                // Llenar campos viejos para compatibilidad con schema antiguo
                 nuevoViaje.setPrecioMinApp(request.precioUberMin());
                 nuevoViaje.setPrecioMaxApp(request.precioUberMax());
 
@@ -116,6 +124,7 @@ public class ViajeService
         catch (Exception e)
         {
             System.err.println("❌ Error al guardar historial: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -128,13 +137,16 @@ public class ViajeService
 
     private boolean esRespuestaValida(DistanceMatrix matrix)
     {
-        return matrix != null && matrix.rows.length > 0 &&
-                matrix.rows[0].elements.length > 0 &&
-                matrix.rows[0].elements[0].status.toString().equals("OK");
+        return matrix != null
+                && matrix.rows.length > 0
+                && matrix.rows[0].elements.length > 0
+                && matrix.rows[0].elements[0].status.toString().equals("OK")
+                && matrix.rows[0].elements[0].distance != null
+                && matrix.rows[0].elements[0].duration != null;
     }
 
     // =========================
-    // 🚕 TAXI
+    // 🚕 TAXI (tarifa real)
     // =========================
 
     private BigDecimal calcularTaxiBase(double distanciaKm)
@@ -157,7 +169,7 @@ public class ViajeService
     private boolean esHorarioNocturno()
     {
         int hora = LocalTime.now().getHour();
-        return (hora >= 22 || hora < 6);
+        return hora >= 22 || hora < 6;
     }
 
     private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin, long distanciaMetros)
@@ -255,13 +267,12 @@ public class ViajeService
     // =========================
     // 📊 FACTORES DINÁMICOS
     // =========================
-
     private double obtenerFactorHorario()
     {
         int hora = LocalTime.now().getHour();
-        if (hora >= 7 && hora <= 9) return 1.15;
-        if (hora >= 17 && hora <= 20) return 1.2;
-        if (hora >= 22 || hora < 6) return 1.1;
+        if (hora >= 7 && hora <= 9) return 1.3; // hora pico mañana
+        if (hora >= 17 && hora <= 20) return 1.4; // hora pico tarde
+        if (hora >= 22 || hora < 6) return 1.2; // noche
         return 1.0;
     }
 
@@ -273,8 +284,8 @@ public class ViajeService
     private double obtenerFactorDemanda()
     {
         int autosDisponibles = (int) (Math.random() * 10);
-        if (autosDisponibles < 2) return 1.3;
-        if (autosDisponibles < 5) return 1.1;
+        if (autosDisponibles < 3) return 1.5;
+        if (autosDisponibles < 6) return 1.2;
         return 1.0;
     }
 
@@ -282,7 +293,7 @@ public class ViajeService
     {
         if (request.origenLat() == null || request.origenLng() == null ||
             request.destinoLat() == null || request.destinoLng() == null) {
-            return "uber://?action=setPickup"
+            return "https://m.uber.com/ul/?action=setPickup"
                     + "&pickup[formatted_address]=" + encode(request.origen())
                     + "&dropoff[formatted_address]=" + encode(request.destino());
         }
