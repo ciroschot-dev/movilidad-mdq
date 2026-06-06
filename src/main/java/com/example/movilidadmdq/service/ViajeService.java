@@ -111,9 +111,21 @@ public class ViajeService
             nuevoViaje.setTipoElegido(request.tipoElegido());
             nuevoViaje.setUsuario(usuario);
 
-            // Llenar campos viejos para compatibilidad con schema antiguo
-            nuevoViaje.setPrecioMinApp(request.precioUberMin());
-            nuevoViaje.setPrecioMaxApp(request.precioUberMax());
+            // Llenar campos viejos con la opcion elegida para bases anteriores.
+            switch (request.tipoElegido()) {
+                case TAXI -> {
+                    nuevoViaje.setPrecioMinApp(request.precioTaxi());
+                    nuevoViaje.setPrecioMaxApp(request.precioTaxi());
+                }
+                case UBER -> {
+                    nuevoViaje.setPrecioMinApp(request.precioUberMin());
+                    nuevoViaje.setPrecioMaxApp(request.precioUberMax());
+                }
+                case DIDI -> {
+                    nuevoViaje.setPrecioMinApp(request.precioDidiMin());
+                    nuevoViaje.setPrecioMaxApp(request.precioDidiMax());
+                }
+            }
 
             viajeRepository.save(nuevoViaje);
             System.out.println("Viaje guardado en el historial para el usuario: " + usuario.getUsername());

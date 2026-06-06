@@ -293,14 +293,17 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   };
 
   const confirmTravel = async (opcion: Opcion) => {
-    if (!session) return;
+    if (!session) return false;
 
     try {
       const taxi = resultados?.find(r => r.raw.tipo === 'TAXI')?.raw;
       const uber = resultados?.find(r => r.raw.tipo === 'UBER')?.raw;
       const didi = resultados?.find(r => r.raw.tipo === 'DIDI')?.raw;
 
-      if (!taxi || !uber || !didi) return;
+      if (!taxi || !uber || !didi) {
+        setError('No se pudo guardar el viaje porque faltan opciones calculadas.');
+        return false;
+      }
 
       const payload = {
         origen: opcion.context.origen,
@@ -334,9 +337,11 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
       setHistorial(null);
       void cargarViajeFrecuente();
+      return true;
     } catch (e) {
       console.error('Error al confirmar viaje:', e);
       setError(e instanceof Error ? e.message : 'Error al guardar el viaje en el historial.');
+      return false;
     }
   };
 
@@ -345,7 +350,8 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     if (!url) return;
 
     // Esperamos a que se guarde el historial antes de redirigir
-    await confirmTravel(opcion);
+    const viajeGuardado = await confirmTravel(opcion);
+    if (!viajeGuardado) return;
 
     if (url.startsWith("uber://")) {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);

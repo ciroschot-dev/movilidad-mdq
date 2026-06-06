@@ -204,9 +204,38 @@ public class UsuarioController
                 viaje.getPrecioUberMax() != null ? viaje.getPrecioUberMax() : BigDecimal.ZERO,
                 viaje.getPrecioDidiMin() != null ? viaje.getPrecioDidiMin() : BigDecimal.ZERO,
                 viaje.getPrecioDidiMax() != null ? viaje.getPrecioDidiMax() : BigDecimal.ZERO,
-                viaje.getTipoElegido() != null ? viaje.getTipoElegido().name() : "TAXI",
+                obtenerTipoElegido(viaje),
                 viaje.getFechaHora()
         );
+    }
+
+    private String obtenerTipoElegido(Viaje viaje)
+    {
+        if (viaje.getTipoElegido() != null) {
+            return viaje.getTipoElegido().name();
+        }
+
+        if (mismoPrecio(viaje.getPrecioMinApp(), viaje.getPrecioTaxi())
+                && mismoPrecio(viaje.getPrecioMaxApp(), viaje.getPrecioTaxi())) {
+            return "TAXI";
+        }
+
+        if (mismoPrecio(viaje.getPrecioMinApp(), viaje.getPrecioDidiMin())
+                && mismoPrecio(viaje.getPrecioMaxApp(), viaje.getPrecioDidiMax())) {
+            return "DIDI";
+        }
+
+        if (mismoPrecio(viaje.getPrecioMinApp(), viaje.getPrecioUberMin())
+                && mismoPrecio(viaje.getPrecioMaxApp(), viaje.getPrecioUberMax())) {
+            return "UBER";
+        }
+
+        return "TAXI";
+    }
+
+    private boolean mismoPrecio(BigDecimal primerPrecio, BigDecimal segundoPrecio)
+    {
+        return primerPrecio != null && segundoPrecio != null && primerPrecio.compareTo(segundoPrecio) == 0;
     }
 
 
