@@ -2,6 +2,7 @@ package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
+import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.service.ViajeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,12 +41,10 @@ public class ViajeController
             Authentication authentication
     )
     {
-        if (authentication == null || authentication.getName() == null) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario)) {
             return ResponseEntity.status(401).build();
         }
 
-        return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId())))
-                .orElse(ResponseEntity.status(401).build());
+        return ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId()));
     }
 }
