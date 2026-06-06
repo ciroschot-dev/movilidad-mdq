@@ -96,36 +96,28 @@ public class ViajeService
     {
         if (usuarioId == null) return;
 
-        try
+        usuarioRepository.findById(usuarioId).ifPresent(usuario ->
         {
-            usuarioRepository.findById(usuarioId).ifPresent(usuario ->
-            {
-                com.example.movilidadmdq.model.Viaje nuevoViaje = new com.example.movilidadmdq.model.Viaje();
-                nuevoViaje.setOrigen(request.origen());
-                nuevoViaje.setDestino(request.destino());
-                nuevoViaje.setDistanciaEnMetros(request.distanciaEnMetros());
-                nuevoViaje.setTiempoEstimadoMin(request.tiempoEstimadoMin());
-                nuevoViaje.setPrecioTaxi(request.precioTaxi());
-                nuevoViaje.setPrecioUberMin(request.precioUberMin());
-                nuevoViaje.setPrecioUberMax(request.precioUberMax());
-                nuevoViaje.setPrecioDidiMin(request.precioDidiMin());
-                nuevoViaje.setPrecioDidiMax(request.precioDidiMax());
-                nuevoViaje.setTipoElegido(request.tipoElegido());
-                nuevoViaje.setUsuario(usuario);
+            com.example.movilidadmdq.model.Viaje nuevoViaje = new com.example.movilidadmdq.model.Viaje();
+            nuevoViaje.setOrigen(request.origen());
+            nuevoViaje.setDestino(request.destino());
+            nuevoViaje.setDistanciaEnMetros(request.distanciaEnMetros());
+            nuevoViaje.setTiempoEstimadoMin(request.tiempoEstimadoMin());
+            nuevoViaje.setPrecioTaxi(request.precioTaxi());
+            nuevoViaje.setPrecioUberMin(request.precioUberMin());
+            nuevoViaje.setPrecioUberMax(request.precioUberMax());
+            nuevoViaje.setPrecioDidiMin(request.precioDidiMin());
+            nuevoViaje.setPrecioDidiMax(request.precioDidiMax());
+            nuevoViaje.setTipoElegido(request.tipoElegido());
+            nuevoViaje.setUsuario(usuario);
 
-                // Llenar campos viejos para compatibilidad con schema antiguo
-                nuevoViaje.setPrecioMinApp(request.precioUberMin());
-                nuevoViaje.setPrecioMaxApp(request.precioUberMax());
+            // Llenar campos viejos para compatibilidad con schema antiguo
+            nuevoViaje.setPrecioMinApp(request.precioUberMin());
+            nuevoViaje.setPrecioMaxApp(request.precioUberMax());
 
-                viajeRepository.save(nuevoViaje);
-                System.out.println("✅ Viaje guardado en el historial para el usuario: " + usuario.getUsername());
-            });
-        }
-        catch (Exception e)
-        {
-            System.err.println("❌ Error al guardar historial: " + e.getMessage());
-            e.printStackTrace();
-        }
+            viajeRepository.save(nuevoViaje);
+            System.out.println("Viaje guardado en el historial para el usuario: " + usuario.getUsername());
+        });
     }
 
     private String normalizarDireccion(String direccion)

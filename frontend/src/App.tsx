@@ -315,7 +315,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         tipoElegido: opcion.raw.tipo
       };
 
-      await fetch(getApiUrl('/viajes/confirmar'), {
+      const response = await fetch(getApiUrl('/viajes/confirmar'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -324,8 +324,19 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         keepalive: true,
         body: JSON.stringify(payload),
       });
+
+      if (response.status === 401 || response.status === 403) {
+        cerrarSesion();
+        throw new Error('Tu sesion vencio. Inicia sesion otra vez.');
+      }
+
+      if (!response.ok) throw new Error('No se pudo guardar el viaje en el historial.');
+
+      setHistorial(null);
+      void cargarViajeFrecuente();
     } catch (e) {
       console.error('Error al confirmar viaje:', e);
+      setError(e instanceof Error ? e.message : 'Error al guardar el viaje en el historial.');
     }
   };
 
