@@ -30,8 +30,13 @@ CREATE TABLE IF NOT EXISTS viajes (
     distancia_en_metros BIGINT NOT NULL,
     tiempo_estimado_min INT NOT NULL,
     precio_taxi DECIMAL(10, 2) NOT NULL,
+    precio_uber_min DECIMAL(10, 2),
+    precio_uber_max DECIMAL(10, 2),
+    precio_didi_min DECIMAL(10, 2),
+    precio_didi_max DECIMAL(10, 2),
     precio_min_app DECIMAL(10, 2) NOT NULL,
     precio_max_app DECIMAL(10, 2) NOT NULL,
+    tipo_elegido VARCHAR(50),
     fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
     usuario_id BIGINT NOT NULL,
     CONSTRAINT fk_viaje_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -55,5 +60,5 @@ INSERT INTO tarifas (tipo_transporte, precio_base, precio_por_km) VALUES
 ('DIDI', 0.00, 0.00);         
 
 -- Ejemplo de un viaje guardado
-INSERT INTO viajes (origen, destino, distancia_en_metros, tiempo_estimado_min, precio_taxi, precio_min_app, precio_max_app, usuario_id) 
-VALUES ('Luro y Mitre, Mar del Plata', 'Juan B. Justo 1500, Mar del Plata', 5200, 15, 7125.50, 6050.00, 8500.00, 2);
+INSERT INTO viajes (origen, destino, distancia_en_metros, tiempo_estimado_min, precio_taxi, precio_uber_min, precio_uber_max, precio_didi_min, precio_didi_max, precio_min_app, precio_max_app, tipo_elegido, usuario_id) 
+VALUES ('Luro y Mitre, Mar del Plata', 'Juan B. Justo 1500, Mar del Plata', 5200, 15, 7125.50, 6050.00, 8500.00, 5900.00, 8050.00, 6050.00, 8500.00, 'UBER', 2);
