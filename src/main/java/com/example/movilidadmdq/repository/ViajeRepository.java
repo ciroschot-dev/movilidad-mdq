@@ -8,4 +8,6 @@ import java.util.List;
 public interface ViajeRepository extends JpaRepository<Viaje, Long>
 {
     List<Viaje> findByUsuarioIdOrderByFechaHoraDesc(Long usuarioId);
+
+    List<Viaje> findByUsuarioIdAndFavoritoTrue(Long usuarioId);
 }

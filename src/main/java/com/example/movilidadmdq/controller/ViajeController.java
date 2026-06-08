@@ -2,6 +2,8 @@ package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
+import com.example.movilidadmdq.dto.ViajeHistorialResponse;
+import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.service.ViajeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,4 +50,40 @@ public class ViajeController
                 .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId())))
                 .orElse(ResponseEntity.status(401).build());
     }
+    // Metodo para marcar vviaje fav
+    @PutMapping("/{viajeId}/favorito")
+    public ResponseEntity<Void> toggleFavorito(
+            @PathVariable Long viajeId,
+            Authentication authentication) {
+
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuario -> {
+                    viajeService.toggleFavorito(viajeId, usuario.getId());
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.status(401).build());
+    }
+    // Meotodo para obtener favs
+    @GetMapping("/favoritos")
+    public ResponseEntity<List<ViajeHistorialResponse>> obtenerFavoritos(
+            Authentication authentication
+    ) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuario ->
+                        ResponseEntity.ok(
+                                viajeService.obtenerFavoritos(usuario.getId()).stream()
+                                        .map(viajeService::toResponse)
+                                        .toList()
+                        ))
+                .orElse(ResponseEntity.status(401).build());
+    }
+
 }

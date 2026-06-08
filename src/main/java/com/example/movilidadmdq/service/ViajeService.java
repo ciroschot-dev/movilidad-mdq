@@ -2,12 +2,14 @@ package com.example.movilidadmdq.service;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
+import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
+import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
@@ -65,7 +67,7 @@ public class ViajeService
         double factorClima = obtenerFactorClima();
 
         // --- GUARDAR EN BASE DE DATOS ---
-        guardarHistorial(origenFinal, destinoFinal, (long) (distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId);
+        guardarHistorial(origenFinal, destinoFinal, (long) (distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId, request);
 
         List<OpcionTransporteResponse> opciones = List.of(
                 construirTaxi(precioTaxi, tiempoMin),
@@ -79,7 +81,7 @@ public class ViajeService
                 .toList();
     }
 
-    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId)
+    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId, CalculoViajeRequest request)
     {
         if (usuarioId == null) return;
 
@@ -97,6 +99,14 @@ public class ViajeService
                 // Valores estimados para historial
                 nuevoViaje.setPrecioMinApp(precioTaxi.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP));
                 nuevoViaje.setPrecioMaxApp(precioTaxi.multiply(BigDecimal.valueOf(1.2)).setScale(2, RoundingMode.HALF_UP));
+
+                // Guardar coordenadas y Place IDs para optimización futura
+                nuevoViaje.setOrigenPlaceId(request.origenPlaceId());
+                nuevoViaje.setOrigenLat(request.origenLat());
+                nuevoViaje.setOrigenLng(request.origenLng());
+                nuevoViaje.setDestinoPlaceId(request.destinoPlaceId());
+                nuevoViaje.setDestinoLat(request.destinoLat());
+                nuevoViaje.setDestinoLng(request.destinoLng());
 
                 nuevoViaje.setUsuario(usuario);
 
@@ -323,5 +333,44 @@ public class ViajeService
         if (autosDisponibles < 6) return 1.2;
 
         return 1.0;
+    }
+
+    @Transactional
+    public void toggleFavorito(Long viajeId, Long usuarioId) {
+
+        Viaje viaje = viajeRepository.findById(viajeId)
+                .orElseThrow(() -> new RuntimeException("Viaje no encontrado"));
+
+        if (!viaje.getUsuario().getId().equals(usuarioId)) {
+            throw new RuntimeException("No tienes permiso para modificar este viaje");
+        }
+
+        viaje.setFavorito(!viaje.isFavorito());
+
+        viajeRepository.save(viaje);
+    }
+    public List<Viaje> obtenerFavoritos(Long usuarioId) {
+        return viajeRepository.findByUsuarioIdAndFavoritoTrue(usuarioId);
+    }
+
+    public ViajeHistorialResponse toResponse(Viaje viaje) {
+        return new ViajeHistorialResponse(
+                viaje.getId(),
+                viaje.getOrigen(),
+                viaje.getDestino(),
+                viaje.getDistanciaEnMetros(),
+                viaje.getTiempoEstimadoMin(),
+                viaje.getPrecioTaxi(),
+                viaje.getPrecioMinApp(),
+                viaje.getPrecioMaxApp(),
+                viaje.getFechaHora(),
+                viaje.isFavorito(),
+                viaje.getOrigenPlaceId(),
+                viaje.getOrigenLat(),
+                viaje.getOrigenLng(),
+                viaje.getDestinoPlaceId(),
+                viaje.getDestinoLat(),
+                viaje.getDestinoLng()
+        );
     }
 }
