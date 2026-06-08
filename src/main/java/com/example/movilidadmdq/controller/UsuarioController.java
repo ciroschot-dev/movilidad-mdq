@@ -273,5 +273,28 @@ public class UsuarioController
         return ResponseEntity.ok(usuarioService.toResponse(usuarioRepository.save(usuario)));
     }
 
+    @Operation(summary = "Eliminar cuenta de usuario", description = "Elimina permanentemente la cuenta del usuario autenticado y todos sus datos asociados")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Cuenta eliminada con éxito"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No tiene permiso para eliminar esta cuenta")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCuenta(@PathVariable Long id, Authentication authentication)
+    {
+        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario))
+        {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (!usuario.getId().equals(id))
+        {
+            return ResponseEntity.status(403).build();
+        }
+
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }

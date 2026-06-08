@@ -637,6 +637,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
             session={session}
             onUpdate={setSession}
             onBack={() => setActiveView('calculo')}
+            onLogout={cerrarSesion}
             apiUrl={API_URL}
           />
         ) : activeView === 'admin' ? (
