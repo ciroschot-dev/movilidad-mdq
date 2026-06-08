@@ -47,20 +47,66 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
 
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
-  const mapRef = useRef<HTMLDivElement>(null);
+  const geocoder = useRef<google.maps.Geocoder | null>(null);
 
   useEffect(() => {
     const initServices = async () => {
       if (!window.google) return;
       const { AutocompleteService, PlacesService } = (await google.maps.importLibrary('places')) as google.maps.PlacesLibrary;
+      const { Geocoder } = (await google.maps.importLibrary('geocoding')) as google.maps.GeocodingLibrary;
+      
       autocompleteService.current = new AutocompleteService();
+      geocoder.current = new Geocoder();
       
       // PlacesService necesita un elemento del DOM aunque no lo usemos para mostrar el mapa
       const dummyDiv = document.createElement('div');
       placesService.current = new PlacesService(dummyDiv);
+
+      // Una vez inicializados los servicios, intentamos obtener la ubicación actual
+      obtenerUbicacionActual();
     };
     void initServices();
   }, []);
+
+  const obtenerUbicacionActual = () => {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        reverseGeocode(latitude, longitude);
+      },
+      (error) => {
+        console.warn('No se pudo obtener la geolocalización:', error.message);
+      }
+    );
+  };
+
+  const reverseGeocode = (lat: number, lng: number) => {
+    if (!geocoder.current) return;
+
+    geocoder.current.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === 'OK' && results && results[0]) {
+        const place = results[0];
+        const address = place.formatted_address;
+        
+        // Solo actualizamos si el usuario no ha empezado a escribir manualmente
+        setOrigen((current) => {
+          if (!current || current.trim() === '') {
+            setOrigenPlace({
+              addressLine1: address.split(',')[0],
+              addressLine2: address,
+              placeId: place.place_id,
+              latitude: lat,
+              longitude: lng,
+            });
+            return address;
+          }
+          return current;
+        });
+      }
+    });
+  };
 
   const getPredictions = useCallback(async (input: string, setter: (p: Prediction[]) => void) => {
     if (!input || input.length < 3 || !autocompleteService.current) {
