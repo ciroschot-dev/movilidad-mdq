@@ -311,8 +311,8 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         </div>
 
         <MapView
-            origen={origenPlace ? { lat: origenPlace.latitude, lng: origenPlace.longitude } : undefined}
-            destino={destinoPlace ? { lat: destinoPlace.latitude, lng: destinoPlace.longitude } : undefined}
+          origen={origenPlace ? { lat: origenPlace.latitude, lng: origenPlace.longitude } : undefined}
+          destino={destinoPlace ? { lat: destinoPlace.latitude, lng: destinoPlace.longitude } : undefined}
         />
 
         <button
