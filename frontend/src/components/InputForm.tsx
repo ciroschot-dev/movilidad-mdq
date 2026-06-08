@@ -10,17 +10,11 @@ export interface LugarSeleccionado {
   longitude: number;
 }
 
-interface ViajeFavorito {
-  id: number;
-  origen: string;
-  destino: string;
-  distanciaEnMetros: number;
-  tiempoEstimadoMin: number;
-  precioTaxi: number;
-  precioMinApp: number;
-  precioMaxApp: number;
-  fechaHora: string;
-  favorito: boolean;
+interface DireccionFavorita {
+  direccion: string;
+  placeId: string;
+  lat: number;
+  lng: number;
 }
 
 interface InputFormProps {
@@ -32,7 +26,7 @@ interface InputFormProps {
   ) => Promise<void>;
   loading: boolean;
   onInputChange?: () => void;
-  favoritos: ViajeFavorito[];
+  favoritos: DireccionFavorita[];
 }
 
 interface Prediction {
@@ -115,11 +109,8 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
     });
   };
 
-  const handleFavoriteSelect = (viaje: ViajeFavorito, type: 'origen' | 'destino') => {
-    const direccion = type === 'origen' ? viaje.origen : viaje.destino;
-    const placeId = type === 'origen' ? viaje.origenPlaceId : viaje.destinoPlaceId;
-    const lat = type === 'origen' ? viaje.origenLat : viaje.destinoLat;
-    const lng = type === 'origen' ? viaje.origenLng : viaje.destinoLng;
+  const handleFavoriteSelect = (fav: DireccionFavorita, type: 'origen' | 'destino') => {
+    const { direccion, placeId, lat, lng } = fav;
 
     if (type === 'origen') {
       setOrigen(direccion);
@@ -128,13 +119,12 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
       if (placeId && lat && lng) {
           setOrigenPlace({
               addressLine1: direccion,
-              addressLine2: direccion, // Simplificamos ya que es un favorito
+              addressLine2: direccion,
               placeId: placeId,
               latitude: lat,
               longitude: lng
           });
       } else {
-          // Fallback por si algun favorito viejo no tiene coordenadas
           void handlePredictionSelect({ description: direccion, placeId: '' }, 'origen');
       }
     } else {
@@ -218,16 +208,9 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
     const input = type === 'origen' ? origen : destino;
     if (!input) return [];
     
-    // Obtenemos solo las direcciones únicas de los favoritos
-    const uniqueAddresses = new Set<string>();
-    return favoritos.filter(v => {
-      const addr = type === 'origen' ? v.origen : v.destino;
-      if (addr.toLowerCase().includes(input.toLowerCase()) && !uniqueAddresses.has(addr)) {
-        uniqueAddresses.add(addr);
-        return true;
-      }
-      return false;
-    }).slice(0, 3); // Mostrar máximo 3 favoritos para no saturar
+    return favoritos.filter(f => 
+      f.direccion.toLowerCase().includes(input.toLowerCase())
+    ).slice(0, 5); // Mostrar máximo 5
   };
 
   const renderDropdown = (type: 'origen' | 'destino') => {
@@ -251,7 +234,7 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
             </div>
             <div className="flex flex-col overflow-hidden">
               <span className="font-bold text-gray-900 truncate">
-                {type === 'origen' ? fav.origen : fav.destino}
+                {fav.direccion}
               </span>
               <span className="text-xs font-bold text-yellow-600 uppercase tracking-widest">Favorito</span>
             </div>

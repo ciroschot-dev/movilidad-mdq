@@ -1,6 +1,7 @@
 package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
+import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.model.Viaje;
@@ -83,6 +84,20 @@ public class ViajeController
                                         .map(viajeService::toResponse)
                                         .toList()
                         ))
+                .orElse(ResponseEntity.status(401).build());
+    }
+
+    @Operation(summary = "Obtener direcciones favoritas", description = "Devuelve una lista única de todas las direcciones (orígenes y destinos) marcadas como favoritas.")
+    @GetMapping("/direcciones-favoritas")
+    public ResponseEntity<List<DireccionFavoritaResponse>> obtenerDireccionesFavoritas(
+            Authentication authentication
+    ) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuario -> ResponseEntity.ok(viajeService.obtenerDireccionesFavoritas(usuario.getId())))
                 .orElse(ResponseEntity.status(401).build());
     }
 
