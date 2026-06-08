@@ -1,6 +1,7 @@
 package com.example.movilidadmdq.service;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
+import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
@@ -366,6 +367,39 @@ public class ViajeService
     }
     public List<Viaje> obtenerFavoritos(Long usuarioId) {
         return viajeRepository.findByUsuarioIdAndFavoritoTrue(usuarioId);
+    }
+
+    public List<DireccionFavoritaResponse> obtenerDireccionesFavoritas(Long usuarioId) {
+        List<Viaje> favoritos = obtenerFavoritos(usuarioId);
+        
+        // Usamos un mapa para evitar duplicados basado en la dirección o el placeId
+        java.util.Map<String, DireccionFavoritaResponse> direcciones = new java.util.LinkedHashMap<>();
+
+        for (Viaje v : favoritos) {
+            // Procesar Origen
+            if (v.getOrigen() != null) {
+                String key = v.getOrigenPlaceId() != null ? v.getOrigenPlaceId() : v.getOrigen();
+                direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
+                        v.getOrigen(),
+                        v.getOrigenPlaceId(),
+                        v.getOrigenLat(),
+                        v.getOrigenLng()
+                ));
+            }
+
+            // Procesar Destino
+            if (v.getDestino() != null) {
+                String key = v.getDestinoPlaceId() != null ? v.getDestinoPlaceId() : v.getDestino();
+                direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
+                        v.getDestino(),
+                        v.getDestinoPlaceId(),
+                        v.getDestinoLat(),
+                        v.getDestinoLng()
+                ));
+            }
+        }
+
+        return new java.util.ArrayList<>(direcciones.values());
     }
 
     public ViajeHistorialResponse toResponse(Viaje viaje) {

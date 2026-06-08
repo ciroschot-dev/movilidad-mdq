@@ -64,6 +64,14 @@ interface ViajeFrecuente {
     destino: string;
     cantidad: number;
 }
+
+interface DireccionFavorita {
+  direccion: string;
+  placeId: string;
+  lat: number;
+  lng: number;
+}
+
 type AuthMode = 'login' | 'registro';
 type AppView = 'calculo' | 'historial' | 'perfil' | 'admin';
 
@@ -100,7 +108,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [resultados, setResultados] = useState<Opcion[] | null>(null);
   const [historial, setHistorial] = useState<ViajeHistorial[] | null>(null);
-  const [favoritos, setFavoritos] = useState<ViajeHistorial[] | null>(null);
+  const [favoritos, setFavoritos] = useState<DireccionFavorita[] | null>(null);
   const [viajeFrecuente, setViajeFrecuente] = useState<ViajeFrecuente | null>(null);
   const [historialLoading, setHistorialLoading] = useState(false);
   const [historialError, setHistorialError] = useState<string | null>(null);
@@ -217,7 +225,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         if (!session) return;
 
         try {
-            const response = await fetch(getApiUrl('/viajes/favoritos'), {
+            const response = await fetch(getApiUrl('/viajes/direcciones-favoritas'), {
                 headers: {
                     Authorization: `Bearer ${session.token}`,
                 },
@@ -230,7 +238,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
             if (!response.ok) return;
 
-            const data: ViajeHistorial[] = await response.json();
+            const data: DireccionFavorita[] = await response.json();
             setFavoritos(data);
         } catch (error) {
             console.error('Error al cargar favoritos:', error);
@@ -285,29 +293,15 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
             if (!response.ok) throw new Error('No se pudo cambiar el estado de favorito.');
 
-            // Actualización optimista de AMBOS estados para sincronía total
+            // Actualización optimista del historial
             setHistorial((current) =>
                 current?.map((viaje) =>
                     viaje.id === viajeId ? { ...viaje, favorito: !viaje.favorito } : viaje
                 ) ?? []
             );
 
-            setFavoritos((current) => {
-                if (!current) return [];
-                const viajeEnFavoritos = current.find(v => v.id === viajeId);
-                
-                if (viajeEnFavoritos) {
-                    // Si ya estaba en favoritos, lo quitamos
-                    return current.filter(v => v.id !== viajeId);
-                } else {
-                    // Si no estaba, buscamos el viaje en el historial para añadirlo
-                    const viajeAAgregar = historial?.find(v => v.id === viajeId);
-                    if (viajeAAgregar) {
-                        return [...current, { ...viajeAAgregar, favorito: true }];
-                    }
-                    return current;
-                }
-            });
+            // Recargamos el pool de direcciones favoritas para asegurar consistencia
+            void cargarFavoritos();
         } catch (error) {
             console.error('Error al cambiar favorito:', error);
         }
