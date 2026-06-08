@@ -14,6 +14,7 @@ import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
 import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.service.UsuarioService;
+import com.example.movilidadmdq.service.ViajeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -37,6 +38,7 @@ public class UsuarioController
     private final UsuarioRepository usuarioRepository;
     private final ViajeRepository viajeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ViajeService viajeService;
 
     @Operation(summary = "Ingresar", description = "Se ingresan credenciales para iniciar sesion, devuelve token")
     @ApiResponses(value = {
@@ -114,7 +116,7 @@ public class UsuarioController
         return usuarioRepository.findByUsername(authentication.getName())
                 .filter(usuario -> usuario.getId().equals(id))
                 .map(usuario -> viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
-                        .map(this::toHistorialResponse)
+                        .map(viajeService::toResponse)
                         .toList())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(403).build());
@@ -189,22 +191,6 @@ public class UsuarioController
                 .orElse(ResponseEntity.noContent().build());
     }
 
-    private ViajeHistorialResponse toHistorialResponse(Viaje viaje)
-    {
-        return new ViajeHistorialResponse(
-                viaje.getId(),
-                viaje.getOrigen(),
-                viaje.getDestino(),
-                viaje.getDistanciaEnMetros(),
-                viaje.getTiempoEstimadoMin(),
-                viaje.getPrecioTaxi(),
-                viaje.getPrecioMinApp(),
-                viaje.getPrecioMaxApp(),
-                viaje.getFechaHora()
-        );
-    }
-
-
     @Operation(summary = "Actualizar el perfil del usuario", description = "Se usa el ID del usuario para actualizar sus datos")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Se actualizo el perfil del usuario con exito"),
@@ -233,6 +219,4 @@ public class UsuarioController
                     return ResponseEntity.ok(usuarioService.toResponse(usuarioRepository.save(usuario)));
                 }).orElse(ResponseEntity.status(403).build());
     }
-
-
 }

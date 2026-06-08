@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings } from 'lucide-react';
+import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings, Star } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import InputForm, { type LugarSeleccionado } from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
@@ -50,6 +50,13 @@ interface ViajeHistorial {
   precioMinApp: number;
   precioMaxApp: number;
   fechaHora: string;
+  favorito: boolean;
+  origenPlaceId?: string;
+  origenLat?: number;
+  origenLng?: number;
+  destinoPlaceId?: string;
+  destinoLat?: number;
+  destinoLng?: number;
 }
 
 interface ViajeFrecuente {
@@ -93,6 +100,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [resultados, setResultados] = useState<Opcion[] | null>(null);
   const [historial, setHistorial] = useState<ViajeHistorial[] | null>(null);
+  const [favoritos, setFavoritos] = useState<ViajeHistorial[] | null>(null);
   const [viajeFrecuente, setViajeFrecuente] = useState<ViajeFrecuente | null>(null);
   const [historialLoading, setHistorialLoading] = useState(false);
   const [historialError, setHistorialError] = useState<string | null>(null);
@@ -205,6 +213,30 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         }
     };
 
+    const cargarFavoritos = async () => {
+        if (!session) return;
+
+        try {
+            const response = await fetch(getApiUrl('/viajes/favoritos'), {
+                headers: {
+                    Authorization: `Bearer ${session.token}`,
+                },
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                cerrarSesion();
+                return;
+            }
+
+            if (!response.ok) return;
+
+            const data: ViajeHistorial[] = await response.json();
+            setFavoritos(data);
+        } catch (error) {
+            console.error('Error al cargar favoritos:', error);
+        }
+    };
+
     const borrarViaje = async (viajeId: number) => {
         if (!session) return;
 
@@ -235,6 +267,52 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         void handleCalculate(origen, destino);
     };
 
+    const toggleFavorito = async (viajeId: number) => {
+        if (!session) return;
+
+        try {
+            const response = await fetch(getApiUrl(`/viajes/${viajeId}/favorito`), {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${session.token}`,
+                },
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                cerrarSesion();
+                return;
+            }
+
+            if (!response.ok) throw new Error('No se pudo cambiar el estado de favorito.');
+
+            // Actualización optimista de AMBOS estados para sincronía total
+            setHistorial((current) =>
+                current?.map((viaje) =>
+                    viaje.id === viajeId ? { ...viaje, favorito: !viaje.favorito } : viaje
+                ) ?? []
+            );
+
+            setFavoritos((current) => {
+                if (!current) return [];
+                const viajeEnFavoritos = current.find(v => v.id === viajeId);
+                
+                if (viajeEnFavoritos) {
+                    // Si ya estaba en favoritos, lo quitamos
+                    return current.filter(v => v.id !== viajeId);
+                } else {
+                    // Si no estaba, buscamos el viaje en el historial para añadirlo
+                    const viajeAAgregar = historial?.find(v => v.id === viajeId);
+                    if (viajeAAgregar) {
+                        return [...current, { ...viajeAAgregar, favorito: true }];
+                    }
+                    return current;
+                }
+            });
+        } catch (error) {
+            console.error('Error al cambiar favorito:', error);
+        }
+    };
+
   useEffect(() => {
     if (session && activeView === 'historial') {
       void cargarHistorial();
@@ -244,6 +322,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   useEffect(() => {
       if (session && activeView === 'calculo') {
           void cargarViajeFrecuente();
+          void cargarFavoritos();
         }
     }, [activeView, session?.id]);
 
@@ -597,7 +676,12 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
               ) : null}
 
               <section className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 mb-8">
-                  <InputForm onCalculate={handleCalculate} loading={loading} onInputChange={() => setError(null)} />
+                  <InputForm 
+                    onCalculate={handleCalculate} 
+                    loading={loading} 
+                    onInputChange={() => setError(null)} 
+                    favoritos={favoritos || []}
+                  />
               </section>
 
             <div className="space-y-4">
@@ -705,11 +789,25 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                     </p>
                                 </div>
 
-                                <div className="text-right">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Taxi</p>
-                                    <p className="text-lg font-black text-gray-900">
-                                        {formatPrecio(viaje.precioTaxi)}
-                                    </p>
+                                <div className="flex flex-col items-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleFavorito(viaje.id)}
+                                        className={`mb-2 flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                                            viaje.favorito 
+                                            ? 'bg-yellow-50 text-yellow-500 shadow-sm border border-yellow-100' 
+                                            : 'bg-gray-50 text-gray-300 hover:text-gray-400'
+                                        }`}
+                                        title={viaje.favorito ? "Quitar de favoritos" : "Marcar como favorito"}
+                                    >
+                                        <Star size={16} fill={viaje.favorito ? "currentColor" : "none"} />
+                                    </button>
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Taxi</p>
+                                        <p className="text-lg font-black text-gray-900">
+                                            {formatPrecio(viaje.precioTaxi)}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
