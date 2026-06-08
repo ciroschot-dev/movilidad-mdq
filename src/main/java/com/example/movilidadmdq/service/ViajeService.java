@@ -67,12 +67,13 @@ public class ViajeService
         double factorClima = obtenerFactorClima();
 
         // --- GUARDAR EN BASE DE DATOS ---
-        guardarHistorial(origenFinal, destinoFinal, (long) (distanciaKm * 1000), tiempoMin, precioTaxi, usuarioId, request);
+        long distanciaMetros = (long) (distanciaKm * 1000);
+        guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin, precioTaxi, usuarioId, request);
 
         List<OpcionTransporteResponse> opciones = List.of(
-                construirTaxi(precioTaxi, tiempoMin),
-                construirUber(precioTaxi, tiempoMin, request, factorClima),
-                construirDidi(precioTaxi, tiempoMin, factorClima)
+                construirTaxi(precioTaxi, tiempoMin, distanciaMetros),
+                construirUber(precioTaxi, tiempoMin, request, factorClima, distanciaMetros),
+                construirDidi(precioTaxi, tiempoMin, factorClima, distanciaMetros)
         );
 
         // 💸 ordenar por precio más bajo
@@ -97,8 +98,19 @@ public class ViajeService
                 nuevoViaje.setPrecioTaxi(precioTaxi);
 
                 // Valores estimados para historial
-                nuevoViaje.setPrecioMinApp(precioTaxi.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP));
-                nuevoViaje.setPrecioMaxApp(precioTaxi.multiply(BigDecimal.valueOf(1.2)).setScale(2, RoundingMode.HALF_UP));
+                BigDecimal uberMin = precioTaxi.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal uberMax = precioTaxi.multiply(BigDecimal.valueOf(1.2)).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal didiMin = precioTaxi.multiply(BigDecimal.valueOf(0.75)).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal didiMax = precioTaxi.multiply(BigDecimal.valueOf(1.1)).setScale(2, RoundingMode.HALF_UP);
+
+                nuevoViaje.setPrecioUberMin(uberMin);
+                nuevoViaje.setPrecioUberMax(uberMax);
+                nuevoViaje.setPrecioDidiMin(didiMin);
+                nuevoViaje.setPrecioDidiMax(didiMax);
+
+                // Compatibilidad
+                nuevoViaje.setPrecioMinApp(uberMin);
+                nuevoViaje.setPrecioMaxApp(uberMax);
 
                 // Guardar coordenadas y Place IDs para optimización futura
                 nuevoViaje.setOrigenPlaceId(request.origenPlaceId());
@@ -167,13 +179,14 @@ public class ViajeService
         return hora >= 22 || hora < 6;
     }
 
-    private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin)
+    private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin, long distanciaMetros)
     {
         return new OpcionTransporteResponse(
                 TipoTransporte.TAXI,
                 precioTaxi,
                 precioTaxi,
                 tiempoMin,
+                distanciaMetros,
                 generarUrlTaxi()
         );
     }
@@ -181,7 +194,7 @@ public class ViajeService
     // =========================
     // 🚗 UBER
     // =========================
-    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, CalculoViajeRequest request, double factorClima)
+    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, CalculoViajeRequest request, double factorClima, long distanciaMetros)
     {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85)); // base más barato que taxi
 
@@ -196,6 +209,7 @@ public class ViajeService
                 precioMin.setScale(2, RoundingMode.HALF_UP),
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
+                distanciaMetros,
                 generarUrlUber(request)
         );
     }
@@ -203,7 +217,7 @@ public class ViajeService
     // =========================
     // 🚙 DIDI
     // =========================
-    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima)
+    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima, long distanciaMetros)
     {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
 
@@ -218,6 +232,7 @@ public class ViajeService
                 precioMin.setScale(2, RoundingMode.HALF_UP),
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
+                distanciaMetros,
                 generarUrlDidi()
         );
     }
@@ -361,8 +376,11 @@ public class ViajeService
                 viaje.getDistanciaEnMetros(),
                 viaje.getTiempoEstimadoMin(),
                 viaje.getPrecioTaxi(),
-                viaje.getPrecioMinApp(),
-                viaje.getPrecioMaxApp(),
+                viaje.getPrecioUberMin(),
+                viaje.getPrecioUberMax(),
+                viaje.getPrecioDidiMin(),
+                viaje.getPrecioDidiMax(),
+                viaje.getTipoElegido() != null ? viaje.getTipoElegido().name() : null,
                 viaje.getFechaHora(),
                 viaje.isFavorito(),
                 viaje.getOrigenPlaceId(),

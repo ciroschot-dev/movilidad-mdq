@@ -42,10 +42,12 @@ export default function MapView({ origen, destino }: Props) {
       (result, status) => {
         if (status === "OK" && result) {
           setDirections(result);
+        } else {
+          console.error("Error en DirectionsService:", status, result);
         }
       }
     );
-  }, [origen, destino]);
+  }, [origen, destino, window.google]);
 
   return (
     <GoogleMap
