@@ -1,5 +1,6 @@
 package com.example.movilidadmdq.model;
 
+import com.example.movilidadmdq.enums.TipoTransporte;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,14 +33,32 @@ public class Viaje
     @Column(nullable = false)
     private Integer tiempoEstimadoMin;
 
-    @Column(nullable = false)
+    @Column
     private BigDecimal precioTaxi;
 
-    @Column(nullable = false)
+    @Column
+    private BigDecimal precioUberMin;
+
+    @Column
+    private BigDecimal precioUberMax;
+
+    @Column
+    private BigDecimal precioDidiMin;
+
+    @Column
+    private BigDecimal precioDidiMax;
+
+    // --- Campos de compatibilidad (para no tener que borrar la tabla) ---
+    @Column(name = "precio_min_app")
     private BigDecimal precioMinApp;
 
-    @Column(nullable = false)
+    @Column(name = "precio_max_app")
     private BigDecimal precioMaxApp;
+    // --------------------------------------------------------------------
+
+    @Enumerated(EnumType.STRING)
+    @Column
+    private TipoTransporte tipoElegido;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime fechaHora = LocalDateTime.now();
