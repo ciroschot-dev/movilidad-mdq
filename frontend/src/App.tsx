@@ -606,14 +606,19 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">MovilidadMDQ</h1>
-            <button
-              onClick={() => setActiveView('perfil')}
-              className="text-gray-500 dark:text-gray-400 font-medium hover:text-black dark:hover:text-white flex items-center gap-1 transition-colors"
-            >
-              Hola, {session.username} <User size={14} />
-            </button>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">
+              Hola, {session.username}
+            </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveView('perfil')}
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 shadow-sm transition-all hover:text-gray-900 dark:hover:text-white"
+              title="Mi perfil"
+            >
+              <User size={19} />
+            </button>
             <button
               type="button"
               onClick={toggleTheme}
@@ -813,27 +818,38 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col items-end">
+                                <div className="flex flex-col items-end gap-3">
                                     <button
                                         type="button"
                                         onClick={() => toggleFavorito(viaje.id)}
-                                        className={`mb-2 flex h-8 w-8 items-center justify-center rounded-full transition-all ${
-                                            viaje.favorito 
-                                            ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-500 shadow-sm border border-yellow-100 dark:border-yellow-900' 
+                                        className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                                            viaje.favorito
+                                            ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-500 shadow-sm border border-yellow-100 dark:border-yellow-900'
                                             : 'bg-gray-50 dark:bg-gray-800 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500'
                                         }`}
                                         title={viaje.favorito ? "Quitar de favoritos" : "Marcar como favorito"}
                                     >
                                         <Star size={16} fill={viaje.favorito ? "currentColor" : "none"} />
                                     </button>
-                                    <div className="text-right">
-                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Taxi</p>
-                                        <p className="text-lg font-black text-gray-900 dark:text-white">
-                                            {formatPrecio(viaje.precioTaxi)}
-                                        </p>
+
+                                    <div className="flex flex-col items-end space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black uppercase tracking-tighter text-gray-400">Taxi</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioTaxi)}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black uppercase tracking-tighter text-blue-500">Uber</span>
+                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioUberMin)}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black uppercase tracking-tighter text-orange-500">Didi</span>
+                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioDidiMin)}</span>
+                                      </div>
                                     </div>
                                 </div>
-                            </div>
+                                </div>
 
                           <div className="mt-4 grid grid-cols-2 gap-2">
                             <button
