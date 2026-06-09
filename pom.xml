@@ -73,7 +73,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.46</version>
             <optional>true</optional>
         </dependency>
 
@@ -95,18 +94,6 @@
             <version>5.17.0</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>1.18.8</version>
-        </dependency>
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy-agent</artifactId>
-            <version>1.18.8</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- Google Maps -->
         <dependency>
             <groupId>com.google.maps</groupId>
@@ -162,7 +149,6 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.46</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
