@@ -267,22 +267,22 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
     if (!isVisible || (favs.length === 0 && preds.length === 0)) return null;
 
     return (
-      <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-72 overflow-y-auto">
+      <div className="absolute left-0 right-0 top-full mt-2 z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden max-h-72 overflow-y-auto">
         {favs.map((fav, i) => (
           <button
             key={`fav-${i}`}
             type="button"
             onClick={() => handleFavoriteSelect(fav, type)}
-            className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-yellow-50 transition-colors border-b border-gray-50 last:border-0"
+            className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors border-b border-gray-50 dark:border-gray-700 last:border-0"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
               <Star size={16} fill="currentColor" />
             </div>
             <div className="flex flex-col overflow-hidden">
-              <span className="font-bold text-gray-900 truncate">
+              <span className="font-bold text-gray-900 dark:text-gray-100 truncate">
                 {fav.direccion}
               </span>
-              <span className="text-xs font-bold text-yellow-600 uppercase tracking-widest">Favorito</span>
+              <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-widest">Favorito</span>
             </div>
           </button>
         ))}
@@ -291,12 +291,12 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
             key={`pred-${i}`}
             type="button"
             onClick={() => handlePredictionSelect(p, type)}
-            className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+            className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 last:border-0"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
               <Search size={16} />
             </div>
-            <span className="text-sm font-semibold text-gray-600 truncate">{p.description}</span>
+            <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 truncate">{p.description}</span>
           </button>
         ))}
       </div>
@@ -306,13 +306,13 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
   return (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10">
             <MapPin size={20} />
           </div>
           <input
               type="text"
               placeholder="¿De dónde sales?"
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
+              className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-black dark:focus:ring-white transition-all outline-none text-lg placeholder:text-gray-400 dark:placeholder:text-gray-500"
               value={origen}
               onChange={(e) => handleInputChange('origen', e.target.value)}
               onFocus={() => setShowOrigenSuggestions(true)}
@@ -323,13 +323,13 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         </div>
 
         <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10">
             <Navigation size={20} />
           </div>
           <input
               type="text"
               placeholder="¿A dónde vas?"
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 focus:ring-2 focus:ring-black transition-all outline-none text-lg"
+              className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-black dark:focus:ring-white transition-all outline-none text-lg placeholder:text-gray-400 dark:placeholder:text-gray-500"
               value={destino}
               onChange={(e) => handleInputChange('destino', e.target.value)}
               onFocus={() => setShowDestinoSuggestions(true)}
@@ -347,7 +347,7 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
         <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white font-bold py-4 rounded-2xl text-xl shadow-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 mt-2"
+            className="w-full bg-black dark:bg-white text-white dark:text-black font-bold py-4 rounded-2xl text-xl shadow-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 mt-2"
         >
           {loading ? (
               <>
