@@ -186,18 +186,18 @@ export default function ProfileView({ session, onUpdate, onBack, onLogout, apiUr
       </div>
 
       {/* Zona de Peligro */}
-      <div className="rounded-3xl border border-red-100 bg-red-50/50 p-6">
-        <div className="mb-4 flex items-center gap-2 text-red-600">
+      <div className="rounded-3xl border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 p-6">
+        <div className="mb-4 flex items-center gap-2 text-red-600 dark:text-red-400">
           <AlertTriangle size={20} />
           <h3 className="text-lg font-black tracking-tight">Zona de Peligro</h3>
         </div>
-        <p className="mb-6 text-sm font-medium text-gray-600">
+        <p className="mb-6 text-sm font-medium text-gray-600 dark:text-gray-400">
           Una vez que elimines tu cuenta, no hay vuelta atrás. Se borrarán todos tus viajes guardados y preferencias.
         </p>
         <button
           onClick={handleDeleteAccount}
           disabled={deleteLoading}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-red-200 bg-white py-4 text-sm font-black text-red-600 transition-all hover:bg-red-50 hover:border-red-300 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-red-200 dark:border-red-900/50 bg-white dark:bg-gray-900 py-4 text-sm font-black text-red-600 dark:text-red-400 transition-all hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-800 disabled:opacity-50"
         >
           {deleteLoading ? 'Eliminando...' : (
             <>
