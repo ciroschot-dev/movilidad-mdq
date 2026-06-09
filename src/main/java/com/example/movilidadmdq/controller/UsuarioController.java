@@ -1,8 +1,6 @@
 package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.ViajeFrecuenteResponse;
-
-import java.math.BigDecimal;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -14,9 +12,9 @@ import com.example.movilidadmdq.dto.UsuarioResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
-import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.service.UsuarioService;
+import com.example.movilidadmdq.service.ViajeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -40,6 +38,7 @@ public class UsuarioController
     private final UsuarioRepository usuarioRepository;
     private final ViajeRepository viajeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ViajeService viajeService;
 
     @Operation(summary = "Ingresar", description = "Se ingresan credenciales para iniciar sesion, devuelve token")
     @ApiResponses(value = {
@@ -88,12 +87,15 @@ public class UsuarioController
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponse> obtenerUsuarioActual(Authentication authentication)
     {
-        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario))
+        if (authentication == null || authentication.getName() == null)
         {
             return ResponseEntity.status(401).build();
         }
 
-        return ResponseEntity.ok(usuarioService.toResponse(usuario));
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuarioService::toResponse)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(401).build());
     }
 
     @Operation(summary = "Obtener el historial de un usuario segun ID", description = "Devuelve una lista como historial del usuario")
@@ -106,20 +108,18 @@ public class UsuarioController
     @GetMapping("/{id}/historial")
     public ResponseEntity<List<ViajeHistorialResponse>> obtenerHistorial(@PathVariable Long id, Authentication authentication)
     {
-        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario))
+        if (authentication == null || authentication.getName() == null)
         {
             return ResponseEntity.status(401).build();
         }
 
-        if (!usuario.getId().equals(id))
-        {
-            return ResponseEntity.status(403).build();
-        }
-
-        List<ViajeHistorialResponse> historial = viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
-                .map(this::toHistorialResponse)
-                .toList();
-        return ResponseEntity.ok(historial);
+        return usuarioRepository.findByUsername(authentication.getName())
+                .filter(usuario -> usuario.getId().equals(id))
+                .map(usuario -> viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
+                        .map(viajeService::toResponse)
+                        .toList())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(403).build());
     }
 
     @Operation(summary = "Borrar el historial de un usuario segun ID", description = "Borra historial del usuario de la base de datos")
@@ -136,18 +136,15 @@ public class UsuarioController
             Authentication authentication
     )
     {
-        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario))
+        if (authentication == null || authentication.getName() == null)
         {
             return ResponseEntity.status(401).build();
         }
 
-        if (!usuario.getId().equals(id))
-        {
-            return ResponseEntity.status(403).build();
-        }
-
-        return viajeRepository.findById(viajeId)
-                .filter(viaje -> viaje.getUsuario().getId().equals(usuario.getId()))
+        return usuarioRepository.findByUsername(authentication.getName())
+                .filter(usuario -> usuario.getId().equals(id))
+                .flatMap(usuario -> viajeRepository.findById(viajeId)
+                        .filter(viaje -> viaje.getUsuario().getId().equals(usuario.getId())))
                 .map(viaje ->
                 {
                     viajeRepository.delete(viaje);
@@ -169,80 +166,30 @@ public class UsuarioController
             Authentication authentication
     )
     {
-        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario))
+        if (authentication == null || authentication.getName() == null)
         {
             return ResponseEntity.status(401).build();
         }
 
-        if (!usuario.getId().equals(id))
-        {
-            return ResponseEntity.status(403).build();
-        }
-
-        return viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
-                .collect(Collectors.groupingBy(
-                        viaje -> viaje.getOrigen() + "||" + viaje.getDestino(),
-                        Collectors.counting()
-                ))
-                .entrySet()
-                .stream()
-                .filter(entry -> entry.getValue() > 2)
-                .max(Map.Entry.comparingByValue())
-                .map(entry ->
-                {
-                    String[] partes = entry.getKey().split("\\|\\|", 2);
-                    return ResponseEntity.ok(new ViajeFrecuenteResponse(partes[0], partes[1], entry.getValue()));
-                })
+        return usuarioRepository.findByUsername(authentication.getName())
+                .filter(usuario -> usuario.getId().equals(id))
+                .flatMap(usuario -> viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
+                        .collect(Collectors.groupingBy(
+                                viaje -> viaje.getOrigen() + "||" + viaje.getDestino(),
+                                Collectors.counting()
+                        ))
+                        .entrySet()
+                        .stream()
+                        .filter(entry -> entry.getValue() > 2)
+                        .max(Map.Entry.comparingByValue())
+                        .map(entry ->
+                        {
+                            String[] partes = entry.getKey().split("\\|\\|", 2);
+                            return new ViajeFrecuenteResponse(partes[0], partes[1], entry.getValue());
+                        }))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.noContent().build());
     }
-
-    private ViajeHistorialResponse toHistorialResponse(Viaje viaje)
-    {
-        return new ViajeHistorialResponse(
-                viaje.getId(),
-                viaje.getOrigen(),
-                viaje.getDestino(),
-                viaje.getDistanciaEnMetros(),
-                viaje.getTiempoEstimadoMin(),
-                viaje.getPrecioTaxi() != null ? viaje.getPrecioTaxi() : BigDecimal.ZERO,
-                viaje.getPrecioUberMin() != null ? viaje.getPrecioUberMin() : BigDecimal.ZERO,
-                viaje.getPrecioUberMax() != null ? viaje.getPrecioUberMax() : BigDecimal.ZERO,
-                viaje.getPrecioDidiMin() != null ? viaje.getPrecioDidiMin() : BigDecimal.ZERO,
-                viaje.getPrecioDidiMax() != null ? viaje.getPrecioDidiMax() : BigDecimal.ZERO,
-                obtenerTipoElegido(viaje),
-                viaje.getFechaHora()
-        );
-    }
-
-    private String obtenerTipoElegido(Viaje viaje)
-    {
-        if (viaje.getTipoElegido() != null) {
-            return viaje.getTipoElegido().name();
-        }
-
-        if (mismoPrecio(viaje.getPrecioMinApp(), viaje.getPrecioTaxi())
-                && mismoPrecio(viaje.getPrecioMaxApp(), viaje.getPrecioTaxi())) {
-            return "TAXI";
-        }
-
-        if (mismoPrecio(viaje.getPrecioMinApp(), viaje.getPrecioDidiMin())
-                && mismoPrecio(viaje.getPrecioMaxApp(), viaje.getPrecioDidiMax())) {
-            return "DIDI";
-        }
-
-        if (mismoPrecio(viaje.getPrecioMinApp(), viaje.getPrecioUberMin())
-                && mismoPrecio(viaje.getPrecioMaxApp(), viaje.getPrecioUberMax())) {
-            return "UBER";
-        }
-
-        return "TAXI";
-    }
-
-    private boolean mismoPrecio(BigDecimal primerPrecio, BigDecimal segundoPrecio)
-    {
-        return primerPrecio != null && segundoPrecio != null && primerPrecio.compareTo(segundoPrecio) == 0;
-    }
-
 
     @Operation(summary = "Actualizar el perfil del usuario", description = "Se usa el ID del usuario para actualizar sus datos")
     @ApiResponses(value = {
@@ -254,47 +201,22 @@ public class UsuarioController
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponse> actualizarPerfil(@PathVariable Long id, @Valid @RequestBody ActualizarUsuarioRequest datosNuevos, Authentication authentication)
     {
-        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario))
+        if (authentication == null || authentication.getName() == null)
         {
             return ResponseEntity.status(401).build();
         }
 
-        if (!usuario.getId().equals(id))
-        {
-            return ResponseEntity.status(403).build();
-        }
-
-        usuario.setUsername(datosNuevos.username());
-        usuario.setEmail(datosNuevos.email());
-        if (datosNuevos.password() != null && !datosNuevos.password().isBlank())
-        {
-            usuario.setPassword(passwordEncoder.encode(datosNuevos.password()));
-        }
-        return ResponseEntity.ok(usuarioService.toResponse(usuarioRepository.save(usuario)));
+        return usuarioRepository.findByUsername(authentication.getName())
+                .filter(usuario -> usuario.getId().equals(id))
+                .map(usuario ->
+                {
+                    usuario.setUsername(datosNuevos.username());
+                    usuario.setEmail(datosNuevos.email());
+                    if (datosNuevos.password() != null && !datosNuevos.password().isBlank())
+                    {
+                        usuario.setPassword(passwordEncoder.encode(datosNuevos.password()));
+                    }
+                    return ResponseEntity.ok(usuarioService.toResponse(usuarioRepository.save(usuario)));
+                }).orElse(ResponseEntity.status(403).build());
     }
-
-    @Operation(summary = "Eliminar cuenta de usuario", description = "Elimina permanentemente la cuenta del usuario autenticado y todos sus datos asociados")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Cuenta eliminada con éxito"),
-            @ApiResponse(responseCode = "401", description = "No autenticado"),
-            @ApiResponse(responseCode = "403", description = "No tiene permiso para eliminar esta cuenta")
-    })
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarCuenta(@PathVariable Long id, Authentication authentication)
-    {
-        if (authentication == null || !(authentication.getPrincipal() instanceof Usuario usuario))
-        {
-            return ResponseEntity.status(401).build();
-        }
-
-        if (!usuario.getId().equals(id))
-        {
-            return ResponseEntity.status(403).build();
-        }
-
-        usuarioService.eliminarUsuario(id);
-        return ResponseEntity.noContent().build();
-    }
-
-
 }

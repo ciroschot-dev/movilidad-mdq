@@ -40,5 +40,21 @@ public record ViajeHistorialResponse(
         String tipoElegido,
 
         @Schema(description = "Fecha y hora en que se calculó el viaje", example = "2026-06-03T14:30:00")
-        LocalDateTime fechaHora
+        LocalDateTime fechaHora,
+
+        @Schema(description = "Indica si el viaje está marcado como favorito", example = "true")
+        boolean favorito,
+
+        @Schema(description = "Place ID de origen")
+        String origenPlaceId,
+        @Schema(description = "Latitud de origen")
+        Double origenLat,
+        @Schema(description = "Longitud de origen")
+        Double origenLng,
+        @Schema(description = "Place ID de destino")
+        String destinoPlaceId,
+        @Schema(description = "Latitud de destino")
+        Double destinoLat,
+        @Schema(description = "Longitud de destino")
+        Double destinoLng
 ) {}

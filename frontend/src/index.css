@@ -7,9 +7,24 @@
   --color-brand-taxi: #ffcc00;
 }
 
+/* Forzar que la variante dark: de Tailwind responda a la clase .dark */
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    @apply transition-colors duration-300;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+
+  .dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+}
+
 body {
-  background-color: #f9fafb;
-  color: #111827;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
