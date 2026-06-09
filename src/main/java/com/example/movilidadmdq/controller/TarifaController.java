@@ -35,6 +35,6 @@ public class TarifaController
 
     public Tarifa actualizarTarifaTaxi(@RequestBody TarifaRequest request)
     {
-        return tarifaService.actualizarTarifaTaxi(request.getPrecioBase(), request.getPrecioPorKm());
+        return tarifaService.actualizarTarifaTaxi(request);
     }
 }

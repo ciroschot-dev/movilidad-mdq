@@ -53,6 +53,14 @@ public class UsuarioService {
         return new UsuarioResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail(), usuario.getRole());
     }
 
+    public void eliminarUsuario(Long id) {
+        usuarioRepository.findById(id)
+                .ifPresentOrElse(
+                        usuarioRepository::delete,
+                        () -> { throw new RuntimeException("Usuario no encontrado"); }
+                );
+    }
+
     private AuthResponse toAuthResponse(Usuario usuario) {
         String token = jwtService.generateToken(usuario);
         return new AuthResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail(), token, usuario.getRole());

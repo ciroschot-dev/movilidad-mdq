@@ -33,6 +33,22 @@ public class Tarifa
     @DecimalMin("0.0")
     private BigDecimal precioPorKm;
 
+    // Campos especificos para el modelo de fichas del taxi (Mar del Plata)
+    // Nullable para mantener compatibilidad con filas UBER/DIDI
+    @DecimalMin("0.0")
+    private BigDecimal bajadaBanderaDia;
+
+    @DecimalMin("0.0")
+    private BigDecimal bajadaBanderaNoche;
+
+    @DecimalMin("0.0")
+    private BigDecimal valorFichaDia;
+
+    @DecimalMin("0.0")
+    private BigDecimal valorFichaNoche;
+
+    private Integer metrosPorFicha;
+
     private LocalDateTime ultimaActualizacion;
 
     @PrePersist
