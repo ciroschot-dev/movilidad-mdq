@@ -48,6 +48,12 @@ public class SecurityConfig
     @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080,https://movilidad-mdq.vercel.app,https://movilidad-mb6kktce3-mdp-tech.vercel.app}")
     private List<String> allowedOrigins;
 
+    @Value("${app.admin.username}")
+    private String adminUsername;
+
+    @Value("${app.admin.password}")
+    private String adminPassword;
+
     @Bean
     public UserDetailsService userDetailsService()
     {
@@ -98,19 +104,38 @@ public class SecurityConfig
         return http.build();
     }
 
+    // Bootstrap inicial del sistema. Corre en cada arranque, pero:
+    //
+    //   - El admin se crea SOLO si no existe en la DB. Las variables de entorno
+    //     APP_ADMIN_USERNAME y APP_ADMIN_PASSWORD se usan UNICAMENTE en ese
+    //     primer arranque contra una DB vacia.
+    //   - Una vez creado, la password del admin vive en la tabla "usuarios"
+    //     hasheada con BCrypt. Esa es la fuente de verdad: cambiar el .env
+    //     despues NO modifica al admin existente.
+    //   - Para cambiar la password real, se usa el endpoint PUT /usuarios/{id}
+    //     o un UPDATE en la DB con un hash BCrypt nuevo.
+    //
+    // Las credenciales nunca van hardcodeadas en el codigo: si las variables
+    // no estan seteadas, la app falla al arrancar.
     @Bean
     CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder) {
         return args -> {
-            // 1. Asegurar Admin: Si existe lo actualiza, si no lo crea
-            Usuario admin = userRepo.findByUsername("admin").orElse(null);
+            if (adminUsername == null || adminUsername.isBlank() || adminPassword == null || adminPassword.isBlank()) {
+                throw new IllegalStateException(
+                        "APP_ADMIN_USERNAME y APP_ADMIN_PASSWORD deben estar definidas en el entorno (.env)");
+            }
+
+            // 1. Asegurar Admin: si no existe lo crea con las credenciales del .env.
+            //    Si ya existe, solo verifica que tenga rol ADMIN (no toca la password).
+            Usuario admin = userRepo.findByUsername(adminUsername).orElse(null);
             if (admin == null) {
                 admin = new Usuario();
-                admin.setUsername("admin");
-                admin.setPassword(encoder.encode("admin123"));
+                admin.setUsername(adminUsername);
+                admin.setPassword(encoder.encode(adminPassword));
                 admin.setEmail("admin@movilidadmdq.com");
                 admin.setRole(Role.ADMIN);
                 userRepo.save(admin);
-                System.out.println("--- [SISTEMA] Usuario admin creado (admin/admin123) ---");
+                System.out.println("--- [SISTEMA] Usuario admin creado ---");
             } else if (admin.getRole() != Role.ADMIN) {
                 admin.setRole(Role.ADMIN);
                 userRepo.save(admin);
