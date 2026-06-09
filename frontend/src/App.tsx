@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings, Star } from 'lucide-react';
+import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings, Star, Sun, Moon } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import InputForm, { type LugarSeleccionado } from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
@@ -12,7 +12,8 @@ const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '');
 const OAUTH_BASE_URL = (import.meta.env.VITE_OAUTH_BASE_URL ?? 'https://movilidadmdq.ddns.net').replace(/\/$/, '');
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 const SESSION_STORAGE_KEY = 'movilidadmdq.auth.v1';
-const LIBRARIES: ('places')[] = ['places'];
+const THEME_STORAGE_KEY = 'movilidadmdq.theme.v1';
+const LIBRARIES: ('places' | 'geocoding')[] = ['places', 'geocoding'];
 
 const getApiUrl = (path: string) => `${API_URL}${path}`;
 
@@ -104,6 +105,11 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [authForm, setAuthForm] = useState({ username: '', email: '', password: '' });
   const [activeView, setActiveView] = useState<AppView>('calculo');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === 'dark' || stored === 'light') return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [resultados, setResultados] = useState<Opcion[] | null>(null);
@@ -114,6 +120,19 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const [historialError, setHistorialError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
+    }
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((curr) => (curr === 'light' ? 'dark' : 'light'));
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('token');
@@ -478,7 +497,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
   if (!mapReady) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center font-sans">
         <p className="text-gray-400 font-medium">Cargando aplicacion...</p>
       </div>
     );
@@ -486,18 +505,18 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4 font-sans">
         <motion.section
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl shadow-gray-200/70"
+          className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-xl shadow-gray-200/70 dark:shadow-black/50"
         >
           <div className="mb-6">
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-gray-400">MovilidadMDQ</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-gray-950">
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-gray-950 dark:text-gray-100">
               {authMode === 'login' ? 'Inicia sesion' : 'Crea tu cuenta'}
             </h1>
-            <p className="mt-2 text-sm font-medium text-gray-500">
+            <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
               Necesitas una sesion para calcular viajes y guardar historial en AWS.
             </p>
           </div>
@@ -508,7 +527,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
               <input
                 value={authForm.username}
                 onChange={(event) => setAuthForm((current) => ({ ...current, username: event.target.value }))}
-                className="w-full rounded-2xl bg-gray-50 py-4 pl-12 pr-4 text-gray-900 outline-none transition-all focus:ring-2 focus:ring-black"
+                className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 py-4 pl-12 pr-4 text-gray-900 dark:text-gray-100 outline-none transition-all focus:ring-2 focus:ring-black dark:focus:ring-white"
                 placeholder="Usuario"
                 autoComplete="username"
                 required
@@ -521,7 +540,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                 <input
                   value={authForm.email}
                   onChange={(event) => setAuthForm((current) => ({ ...current, email: event.target.value }))}
-                  className="w-full rounded-2xl bg-gray-50 py-4 pl-12 pr-4 text-gray-900 outline-none transition-all focus:ring-2 focus:ring-black"
+                  className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 py-4 pl-12 pr-4 text-gray-900 dark:text-gray-100 outline-none transition-all focus:ring-2 focus:ring-black dark:focus:ring-white"
                   placeholder="Email"
                   type="email"
                   autoComplete="email"
@@ -535,7 +554,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
               <input
                 value={authForm.password}
                 onChange={(event) => setAuthForm((current) => ({ ...current, password: event.target.value }))}
-                className="w-full rounded-2xl bg-gray-50 py-4 pl-12 pr-4 text-gray-900 outline-none transition-all focus:ring-2 focus:ring-black"
+                className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 py-4 pl-12 pr-4 text-gray-900 dark:text-gray-100 outline-none transition-all focus:ring-2 focus:ring-black dark:focus:ring-white"
                 placeholder="Contrasena"
                 type="password"
                 autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
@@ -544,7 +563,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
             </label>
 
             {authError ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              <div className="rounded-2xl border border-red-200 bg-red-50 dark:bg-red-900/30 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-400">
                 {authError}
               </div>
             ) : null}
@@ -552,7 +571,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full rounded-2xl bg-black py-4 text-lg font-black text-white shadow-lg transition-all hover:bg-gray-800 disabled:bg-gray-400"
+              className="w-full rounded-2xl bg-black dark:bg-white py-4 text-lg font-black text-white dark:text-black shadow-lg transition-all hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-400"
             >
               {authLoading ? 'Procesando...' : authMode === 'login' ? 'ENTRAR' : 'REGISTRARME'}
             </button>
@@ -561,7 +580,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="mt-3 w-full rounded-2xl border border-gray-200 bg-white py-4 text-sm font-black text-gray-800 transition-all hover:bg-gray-50"
+            className="mt-3 w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-4 text-sm font-black text-gray-800 dark:text-gray-200 transition-all hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Continuar con Google
           </button>
@@ -572,7 +591,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
               setAuthMode((current) => (current === 'login' ? 'registro' : 'login'));
               setAuthError(null);
             }}
-            className="mt-5 w-full text-center text-sm font-bold text-gray-500 hover:text-gray-900"
+            className="mt-5 w-full text-center text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             {authMode === 'login' ? 'No tienes cuenta? Registrate' : 'Ya tienes cuenta? Inicia sesion'}
           </button>
@@ -582,40 +601,50 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center p-4 sm:p-8 font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex justify-center p-4 sm:p-8 font-sans transition-colors duration-300">
       <div className="w-full max-w-md">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">MovilidadMDQ</h1>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">MovilidadMDQ</h1>
             <button
               onClick={() => setActiveView('perfil')}
-              className="text-gray-500 font-medium hover:text-black flex items-center gap-1 transition-colors"
+              className="text-gray-500 dark:text-gray-400 font-medium hover:text-black dark:hover:text-white flex items-center gap-1 transition-colors"
             >
               Hola, {session.username} <User size={14} />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={cerrarSesion}
-            className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-white text-gray-500 shadow-sm transition-all hover:text-gray-900"
-            title="Cerrar sesion"
-          >
-            <LogOut size={19} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 shadow-sm transition-all hover:text-gray-900 dark:hover:text-white"
+              title={theme === 'light' ? 'Activar modo oscuro' : 'Activar modo claro'}
+            >
+              {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
+            </button>
+            <button
+              type="button"
+              onClick={cerrarSesion}
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 shadow-sm transition-all hover:text-gray-900 dark:hover:text-white"
+              title="Cerrar sesion"
+            >
+              <LogOut size={19} />
+            </button>
+          </div>
         </header>
 
-        <nav className={`mb-6 grid ${(session.role === 'ADMIN' || session.username === 'admin') ? 'grid-cols-3' : 'grid-cols-2'} gap-3 rounded-3xl bg-white p-2 shadow-sm shadow-gray-200/60`}>
+        <nav className={`mb-6 grid ${(session.role === 'ADMIN' || session.username === 'admin') ? 'grid-cols-3' : 'grid-cols-2'} gap-3 rounded-3xl bg-white dark:bg-gray-900 p-2 shadow-sm shadow-gray-200/60 dark:shadow-black/40`}>
           <button
             type="button"
             onClick={() => setActiveView('calculo')}
-            className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'calculo' ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+            className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'calculo' ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'}`}
           >
             <Home size={17} /> Calcular
           </button>
           <button
             type="button"
             onClick={() => setActiveView('historial')}
-            className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'historial' ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+            className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'historial' ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'}`}
           >
             <History size={17} /> Historial
           </button>
@@ -623,7 +652,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
             <button
               type="button"
               onClick={() => setActiveView('admin')}
-              className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'admin' ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+              className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'admin' ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'}`}
             >
               <Settings size={17} /> Admin
             </button>
@@ -631,7 +660,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         </nav>
 
         {loadError ? (
-          <div className="mb-4 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm font-semibold text-yellow-800">
+          <div className="mb-4 rounded-2xl border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 text-sm font-semibold text-yellow-800 dark:text-yellow-200">
             Google Maps no cargo en el navegador. Puedes escribir las direcciones manualmente.
           </div>
         ) : null}
@@ -655,21 +684,21 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                   <button
                       type="button"
                       onClick={() => repetirViaje(viajeFrecuente.origen, viajeFrecuente.destino)}
-                      className="mb-4 w-full rounded-3xl border border-blue-100 bg-blue-50 p-4 text-left shadow-sm transition-all hover:bg-blue-100"
+                      className="mb-4 w-full rounded-3xl border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-900/20 p-4 text-left shadow-sm transition-all hover:bg-blue-100 dark:hover:bg-blue-900/40"
                   >
-                      <p className="text-xs font-black uppercase tracking-widest text-blue-500">
+                      <p className="text-xs font-black uppercase tracking-widest text-blue-500 dark:text-blue-400">
                           Viaje frecuente
                       </p>
-                      <p className="mt-1 text-sm font-bold text-gray-900">
+                      <p className="mt-1 text-sm font-bold text-gray-900 dark:text-white">
                           {viajeFrecuente.origen} → {viajeFrecuente.destino}
                       </p>
-                      <p className="mt-1 text-xs font-semibold text-gray-500">
+                      <p className="mt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
                           Lo hiciste {viajeFrecuente.cantidad} veces. Toca para repetirlo.
                       </p>
                   </button>
               ) : null}
 
-              <section className="bg-white rounded-3xl p-6 shadow-xl shadow-gray-200/50 mb-8">
+              <section className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl shadow-gray-200/50 dark:shadow-black/40 mb-8">
                   <InputForm 
                     onCalculate={handleCalculate} 
                     loading={loading} 
@@ -680,7 +709,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
             <div className="space-y-4">
               {error ? (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                <div className="rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-400">
                   {error}
                 </div>
               ) : null}
@@ -691,14 +720,14 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-center py-12 border-2 border-dashed border-gray-200 rounded-3xl"
+                    className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl"
                   >
                     <p className="text-gray-400 font-medium">Calculando opciones...</p>
                   </motion.div>
                 ) : resultados ? (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <div className="flex items-center justify-between mb-4 px-1">
-                      <h2 className="text-lg font-bold text-gray-800">Opciones disponibles</h2>
+                      <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">Opciones disponibles</h2>
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
                         <CreditCard size={12} /> ARS
                       </span>
@@ -716,7 +745,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center py-12 border-2 border-dashed border-gray-200 rounded-3xl"
+                    className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl"
                   >
                     <p className="text-gray-400 font-medium">Ingresa tu ruta para ver opciones</p>
                   </motion.div>
@@ -728,14 +757,14 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           <section className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <div>
-                <h2 className="text-xl font-black text-gray-900">Tu historial</h2>
-                <p className="text-sm font-medium text-gray-500">Viajes guardados en AWS RDS</p>
+                <h2 className="text-xl font-black text-gray-900 dark:text-white">Tu historial</h2>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Viajes guardados en AWS RDS</p>
               </div>
               <button
                 type="button"
                 onClick={cargarHistorial}
                 disabled={historialLoading}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm transition-all hover:text-gray-900 disabled:text-gray-300"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 shadow-sm transition-all hover:text-gray-900 dark:hover:text-white disabled:text-gray-300"
                 title="Recargar historial"
               >
                 <RefreshCw size={18} className={historialLoading ? 'animate-spin' : ''} />
@@ -744,13 +773,13 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
 
 
             {historialError ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              <div className="rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-400">
                 {historialError}
               </div>
             ) : null}
 
             {historialLoading && !historial ? (
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 py-12 text-center text-gray-400 font-medium">
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 py-12 text-center text-gray-400 font-medium">
                 Cargando historial...
               </div>
             ) : historial && historial.length > 0 ? (
@@ -760,25 +789,25 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                             key={viaje.id}
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-200/60"
+                            className="rounded-3xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm shadow-gray-200/60 dark:shadow-black/40"
                         >
                             <div className="space-y-3">
-                                <div className="flex gap-3 text-sm font-semibold text-gray-700">
+                                <div className="flex gap-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     <MapPin size={18} className="mt-0.5 shrink-0 text-gray-400" />
                                     <span>{viaje.origen}</span>
                                 </div>
-                                <div className="flex gap-3 text-sm font-semibold text-gray-700">
+                                <div className="flex gap-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     <Navigation size={18} className="mt-0.5 shrink-0 text-gray-400" />
                                     <span>{viaje.destino}</span>
                                 </div>
                             </div>
 
-                            <div className="mt-4 flex items-end justify-between border-t border-gray-100 pt-4">
+                            <div className="mt-4 flex items-end justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
                                 <div>
                                     <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
                                         {formatFecha(viaje.fechaHora)}
                                     </p>
-                                    <p className="mt-1 text-sm font-bold text-gray-500">
+                                    <p className="mt-1 text-sm font-bold text-gray-500 dark:text-gray-400">
                                         {viaje.tiempoEstimadoMin} min · {(viaje.distanciaEnMetros / 1000).toFixed(1)} km
                                     </p>
                                 </div>
@@ -789,8 +818,8 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                         onClick={() => toggleFavorito(viaje.id)}
                                         className={`mb-2 flex h-8 w-8 items-center justify-center rounded-full transition-all ${
                                             viaje.favorito 
-                                            ? 'bg-yellow-50 text-yellow-500 shadow-sm border border-yellow-100' 
-                                            : 'bg-gray-50 text-gray-300 hover:text-gray-400'
+                                            ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-500 shadow-sm border border-yellow-100 dark:border-yellow-900' 
+                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500'
                                         }`}
                                         title={viaje.favorito ? "Quitar de favoritos" : "Marcar como favorito"}
                                     >
@@ -798,7 +827,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                     </button>
                                     <div className="text-right">
                                         <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Taxi</p>
-                                        <p className="text-lg font-black text-gray-900">
+                                        <p className="text-lg font-black text-gray-900 dark:text-white">
                                             {formatPrecio(viaje.precioTaxi)}
                                         </p>
                                     </div>
@@ -809,7 +838,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                             <button
                                 type="button"
                                 onClick={() => repetirViaje(viaje.origen, viaje.destino)}
-                                className="flex items-center justify-center gap-2 rounded-2xl bg-black px-3 py-3 text-sm font-black text-white transition-all hover:bg-gray-800"
+                                className="flex items-center justify-center gap-2 rounded-2xl bg-black dark:bg-white px-3 py-3 text-sm font-black text-white dark:text-black transition-all hover:bg-gray-800 dark:hover:bg-gray-200"
                             >
                                 <Repeat size={16} />
                                 Repetir
@@ -818,7 +847,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                             <button
                                 type="button"
                                 onClick={() => borrarViaje(viaje.id)}
-                                className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-3 py-3 text-sm font-black text-red-600 transition-all hover:bg-red-100"
+                                className="flex items-center justify-center gap-2 rounded-2xl border border-red-100 dark:border-red-900 bg-red-50 dark:bg-red-900/20 px-3 py-3 text-sm font-black text-red-600 dark:text-red-400 transition-all hover:bg-red-100 dark:hover:bg-red-900/40"
                             >
                                 <Trash2 size={16} />
                                 Borrar
@@ -828,9 +857,9 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                     ))}
               </div>
             ) : (
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 py-12 text-center">
-                <p className="font-bold text-gray-500">Todavia no tenes viajes guardados.</p>
-                <p className="mt-1 text-sm font-medium text-gray-400">Calcula una ruta para verla aca.</p>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 py-12 text-center">
+                <p className="font-bold text-gray-500 dark:text-gray-400">Todavia no tenes viajes guardados.</p>
+                <p className="mt-1 text-sm font-medium text-gray-400 dark:text-gray-500">Calcula una ruta para verla aca.</p>
               </div>
             )}
           </section>
