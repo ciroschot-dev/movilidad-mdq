@@ -38,6 +38,13 @@ CREATE TABLE IF NOT EXISTS viajes (
     precio_max_app DECIMAL(10, 2) NOT NULL,
     tipo_elegido VARCHAR(50),
     fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+    favorito BOOLEAN DEFAULT FALSE,
+    origen_place_id VARCHAR(255),
+    origen_lat DOUBLE,
+    origen_lng DOUBLE,
+    destino_place_id VARCHAR(255),
+    destino_lat DOUBLE,
+    destino_lng DOUBLE,
     usuario_id BIGINT NOT NULL,
     CONSTRAINT fk_viaje_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

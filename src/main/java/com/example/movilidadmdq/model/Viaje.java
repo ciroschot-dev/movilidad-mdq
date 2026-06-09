@@ -63,6 +63,18 @@ public class Viaje
     @Column(nullable = false, updatable = false)
     private LocalDateTime fechaHora = LocalDateTime.now();
 
+    // Boolean para marcar Favorito
+    @Column(nullable = false)
+    private boolean favorito = false;
+
+    // Campos para optimización de favoritos y deep links
+    private String origenPlaceId;
+    private Double origenLat;
+    private Double origenLng;
+    private String destinoPlaceId;
+    private Double destinoLat;
+    private Double destinoLng;
+
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
