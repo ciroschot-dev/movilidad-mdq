@@ -67,15 +67,17 @@ public class ViajeService
         BigDecimal precioTaxi = calcularTaxi(distanciaKm);
         double factorClima = obtenerFactorClima();
 
-        // --- GUARDAR EN BASE DE DATOS ---
-        long distanciaMetros = (long) (distanciaKm * 1000);
-        guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin, precioTaxi, usuarioId, request);
+        OpcionTransporteResponse taxi = construirTaxi(precioTaxi, tiempoMin, (long) (distanciaKm * 1000));
+        OpcionTransporteResponse uber = construirUber(precioTaxi, tiempoMin, request, factorClima, (long) (distanciaKm * 1000));
+        OpcionTransporteResponse didi = construirDidi(precioTaxi, tiempoMin, factorClima, (long) (distanciaKm * 1000));
 
-        List<OpcionTransporteResponse> opciones = List.of(
-                construirTaxi(precioTaxi, tiempoMin, distanciaMetros),
-                construirUber(precioTaxi, tiempoMin, request, factorClima, distanciaMetros),
-                construirDidi(precioTaxi, tiempoMin, factorClima, distanciaMetros)
-        );
+        // --- GUARDAR EN BASE DE DATOS AL FINAL CON PRECIOS REALES ---
+        long distanciaMetros = (long) (distanciaKm * 1000);
+        guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin, 
+                        taxi.precioMin(), uber.precioMin(), uber.precioMax(), 
+                        didi.precioMin(), didi.precioMax(), usuarioId, request);
+
+        List<OpcionTransporteResponse> opciones = List.of(taxi, uber, didi);
 
         // 💸 ordenar por precio más bajo
         return opciones.stream()
@@ -83,7 +85,9 @@ public class ViajeService
                 .toList();
     }
 
-    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, BigDecimal precioTaxi, Long usuarioId, CalculoViajeRequest request)
+    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, 
+                                 BigDecimal precioTaxi, BigDecimal uberMin, BigDecimal uberMax, 
+                                 BigDecimal didiMin, BigDecimal didiMax, Long usuarioId, CalculoViajeRequest request)
     {
         if (usuarioId == null) return;
 
@@ -97,12 +101,6 @@ public class ViajeService
                 nuevoViaje.setDistanciaEnMetros(distanciaMetros);
                 nuevoViaje.setTiempoEstimadoMin(tiempoMin);
                 nuevoViaje.setPrecioTaxi(precioTaxi);
-
-                // Valores estimados para historial
-                BigDecimal uberMin = precioTaxi.multiply(BigDecimal.valueOf(0.85)).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal uberMax = precioTaxi.multiply(BigDecimal.valueOf(1.2)).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal didiMin = precioTaxi.multiply(BigDecimal.valueOf(0.75)).setScale(2, RoundingMode.HALF_UP);
-                BigDecimal didiMax = precioTaxi.multiply(BigDecimal.valueOf(1.1)).setScale(2, RoundingMode.HALF_UP);
 
                 nuevoViaje.setPrecioUberMin(uberMin);
                 nuevoViaje.setPrecioUberMax(uberMax);
