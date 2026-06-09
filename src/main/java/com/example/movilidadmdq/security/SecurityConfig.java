@@ -31,6 +31,7 @@ import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.repository.TarifaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.math.BigDecimal;
 
 @Configuration
@@ -47,6 +48,12 @@ public class SecurityConfig
 
     @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080,https://movilidad-mdq.vercel.app,https://movilidad-mb6kktce3-mdp-tech.vercel.app}")
     private List<String> allowedOrigins;
+
+    @Value("${app.admin.username:}")
+    private String adminUsername;
+
+    @Value("${app.admin.password:}")
+    private String adminPassword;
 
     @Bean
     public UserDetailsService userDetailsService()
@@ -98,27 +105,48 @@ public class SecurityConfig
         return http.build();
     }
 
+    // Bootstrap inicial del sistema. Corre en cada arranque, pero:
+    //
+    //   - Si YA existe algun usuario con rol ADMIN en la DB, no se hace nada:
+    //     la app arranca normal, las variables APP_ADMIN_USERNAME / _PASSWORD
+    //     pueden estar vacias.
+    //   - Si NO existe ningun admin (primer arranque contra una DB vacia),
+    //     ahi si se exigen las variables y se crea el admin con esos valores.
+    //   - Una vez creado, la password del admin vive en la tabla "usuarios"
+    //     hasheada con BCrypt. Esa es la fuente de verdad: cambiar el .env
+    //     despues NO modifica al admin existente.
+    //   - Para cambiar la password real, se usa el endpoint PUT /usuarios/{id}
+    //     o un UPDATE en la DB con un hash BCrypt nuevo.
+    //
+    // Las credenciales nunca van hardcodeadas en el codigo.
     @Bean
-    CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder) {
-        return args -> {
-            // 1. Asegurar Admin: Si existe lo actualiza, si no lo crea
-            Usuario admin = userRepo.findByUsername("admin").orElse(null);
-            if (admin == null) {
-                admin = new Usuario();
-                admin.setUsername("admin");
-                admin.setPassword(encoder.encode("admin123"));
+    CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder)
+    {
+        return args ->
+        {
+            // 1. Asegurar Admin solo si no hay ninguno en la DB.
+            if (!userRepo.existsByRole(Role.ADMIN))
+            {
+                if (adminUsername == null || adminUsername.isBlank()
+                        || adminPassword == null || adminPassword.isBlank())
+                {
+                    throw new IllegalStateException(
+                            "Primer arranque sin admin en la DB: APP_ADMIN_USERNAME y "
+                                    + "APP_ADMIN_PASSWORD deben estar definidas en el entorno (.env)");
+                }
+
+                Usuario admin = new Usuario();
+                admin.setUsername(adminUsername);
+                admin.setPassword(encoder.encode(adminPassword));
                 admin.setEmail("admin@movilidadmdq.com");
                 admin.setRole(Role.ADMIN);
                 userRepo.save(admin);
-                System.out.println("--- [SISTEMA] Usuario admin creado (admin/admin123) ---");
-            } else if (admin.getRole() != Role.ADMIN) {
-                admin.setRole(Role.ADMIN);
-                userRepo.save(admin);
-                System.out.println("--- [SISTEMA] Usuario admin actualizado a rol ADMIN ---");
+                System.out.println("--- [SISTEMA] Usuario admin creado ---");
             }
 
             // 2. Asegurar Tarifas
-            if (tarifaRepo.count() == 0) {
+            if (tarifaRepo.count() == 0)
+            {
                 Tarifa taxi = new Tarifa();
                 taxi.setTipoTransporte(TipoTransporte.TAXI);
                 taxi.setPrecioBase(new BigDecimal("2250.00"));

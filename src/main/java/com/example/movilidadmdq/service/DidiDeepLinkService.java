@@ -2,23 +2,19 @@ package com.example.movilidadmdq.service;
 
 import org.springframework.stereotype.Service;
 
+/**
+ * Genera la URL para abrir Didi.
+ * Por ahora devuelve el sitio oficial porque Didi todavia no expone un esquema
+ * de deep link estable para Argentina con origen y destino precargados. Cuando
+ * esten disponibles, este servicio aceptara el CalculoViajeRequest y armara la
+ * URL completa, sin que ViajeService tenga que enterarse del cambio.
+ */
 @Service
-public class DidiDeepLinkService {
+public class DidiDeepLinkService
+{
 
-    public String generarDeepLink(
-            String origenNombre, double origenLat, double origenLng,
-            String destinoNombre, double destinoLat, double destinoLng
-    ) {
-        return String.format(
-            "https://m.didi.com/ul/?action=setPickup" +
-            "&pickup[latitude]=%s&pickup[longitude]=%s&pickup[formatted_address]=%s" +
-            "&dropoff[latitude]=%s&dropoff[longitude]=%s&dropoff[formatted_address]=%s",
-            origenLat, origenLng, encode(origenNombre),
-            destinoLat, destinoLng, encode(destinoNombre)
-        );
-    }
-
-    private String encode(String value) {
-        return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+    public String generarUrl()
+    {
+        return "https://www.didiglobal.com/";
     }
 }
