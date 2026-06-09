@@ -15,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
@@ -31,6 +29,8 @@ public class ViajeService
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
     private final TarifaService tarifaService;
+    private final UberDeepLinkService uberDeepLinkService;
+    private final DidiDeepLinkService didiDeepLinkService;
 
     public List<OpcionTransporteResponse> calcularViaje(CalculoViajeRequest request, Long usuarioId)
     {
@@ -247,7 +247,7 @@ public class ViajeService
                 precioTaxi,
                 tiempoMin,
                 distanciaMetros,
-                generarUrlTaxi()
+                "tel:+5402234941010"
         );
     }
 
@@ -270,7 +270,7 @@ public class ViajeService
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 distanciaMetros,
-                generarUrlUber(request)
+                uberDeepLinkService.generarUrl(request)
         );
     }
 
@@ -293,93 +293,19 @@ public class ViajeService
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 distanciaMetros,
-                generarUrlDidi()
+                didiDeepLinkService.generarUrl()
         );
     }
 
     // =========================
     // 🔗 URLs
     // =========================
+    // Los deep links de Uber y Didi viven en sus propios servicios
+    // (UberDeepLinkService / DidiDeepLinkService). Aca solo queda la URL del
+    // taxi: es un "tel:" estatico, no justifica un servicio aparte.
     private String generarUrlTaxi()
     {
         return "tel:+5402234941010";
-    }
-
-    private String generarUrlUber(CalculoViajeRequest request)
-    {
-        // Fallback: si el frontend no envía coordenadas/place data, usar el deep link simple.
-        if (
-                request.origenLat() == null ||
-                        request.origenLng() == null ||
-                        request.destinoLat() == null ||
-                        request.destinoLng() == null
-        )
-        {
-            return "https://m.uber.com/ul/?action=setPickup"
-                    + "&pickup[formatted_address]=" + encode(request.origen())
-                    + "&dropoff[formatted_address]=" + encode(request.destino());
-        }
-
-        // Formato usado por m.uber.com/go/drop para precargar origen y destino.
-        String pickupJson = """
-                {
-                  "addressLine1": "%s",
-                  "addressLine2": "%s",
-                  "id": "%s",
-                  "source": "SEARCH",
-                  "latitude": %s,
-                  "longitude": %s,
-                  "provider": "google_places"
-                }
-                """.formatted(
-                escapeJson(valorOTexto(request.origenAddressLine1(), request.origen())),
-                escapeJson(valorOTexto(request.origenAddressLine2(), request.origen())),
-                escapeJson(valorOTexto(request.origenPlaceId(), "")),
-                request.origenLat(),
-                request.origenLng()
-        );
-
-        String dropJson = """
-                {
-                  "addressLine1": "%s",
-                  "addressLine2": "%s",
-                  "id": "%s",
-                  "source": "SEARCH",
-                  "latitude": %s,
-                  "longitude": %s,
-                  "provider": "google_places"
-                }
-                """.formatted(
-                escapeJson(valorOTexto(request.destinoAddressLine1(), request.destino())),
-                escapeJson(valorOTexto(request.destinoAddressLine2(), request.destino())),
-                escapeJson(valorOTexto(request.destinoPlaceId(), "")),
-                request.destinoLat(),
-                request.destinoLng()
-        );
-
-        return "https://m.uber.com/go/drop"
-                + "?pickup=" + encode(pickupJson)
-                + "&drop%5B0%5D=" + encode(dropJson);
-    }
-
-    private String generarUrlDidi()
-    {
-        return "https://www.didiglobal.com/";
-    }
-
-    private String valorOTexto(String value, String fallback)
-    {
-        return value == null || value.isBlank() ? fallback : value;
-    }
-
-    private String escapeJson(String value)
-    {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
-
-    private String encode(String value)
-    {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     // =========================
