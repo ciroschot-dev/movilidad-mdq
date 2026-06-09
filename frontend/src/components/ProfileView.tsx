@@ -185,11 +185,11 @@ export default function ProfileView({ session, onUpdate, onBack, onLogout, apiUr
         </form>
       </div>
 
-      {/* Zona de Peligro */}
+      {/* Sección Eliminar Cuenta */}
       <div className="rounded-3xl border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 p-6">
         <div className="mb-4 flex items-center gap-2 text-red-600 dark:text-red-400">
           <AlertTriangle size={20} />
-          <h3 className="text-lg font-black tracking-tight">Zona de Peligro</h3>
+          <h3 className="text-lg font-black tracking-tight">Eliminar cuenta</h3>
         </div>
         <p className="mb-6 text-sm font-medium text-gray-600 dark:text-gray-400">
           Una vez que elimines tu cuenta, no hay vuelta atrás. Se borrarán todos tus viajes guardados y preferencias.
