@@ -155,38 +155,79 @@ public class ViajeService
     // =========================
     // 🚕 TAXI (tarifa real)
     // =========================
-    // Valores por defecto si la fila de Tarifa TAXI no tiene los campos cargados.
-    // Permiten que el calculo funcione en una DB existente sin migraciones manuales.
-    private static final BigDecimal DEFAULT_BAJADA_DIA = BigDecimal.valueOf(2250);
-    private static final BigDecimal DEFAULT_BAJADA_NOCHE = BigDecimal.valueOf(2700);
-    private static final BigDecimal DEFAULT_FICHA_DIA = BigDecimal.valueOf(150);
-    private static final BigDecimal DEFAULT_FICHA_NOCHE = BigDecimal.valueOf(180);
-    private static final int DEFAULT_METROS_POR_FICHA = 160;
+    //
+    // Como cobra el taxi en Mar del Plata:
+    //
+    //     precio_total = bajada_de_bandera + (cantidad_de_fichas * valor_de_ficha)
+    //
+    // - Bajada de bandera: monto fijo que se cobra al subir al taxi.
+    //   Es mas cara de noche que de dia.
+    // - Ficha: unidad de cobro por distancia recorrida. Cada N metros (160
+    //   por defecto) suma una ficha. Si el viaje sobra aunque sea un metro,
+    //   se cobra la ficha completa (por eso usamos Math.ceil mas abajo).
+    // - Valor de ficha: precio de cada ficha. Tambien es mas caro de noche.
+    //
+    // Los 5 valores se leen de la entidad Tarifa (tabla "tarifas"), asi un
+    // admin puede actualizarlos desde el endpoint PUT /admin/tarifas/taxi
+    // sin necesidad de redeploy.
+    //
+    // Si la DB tiene esos campos en NULL (por ejemplo cuando recien se
+    // agregan las columnas en una DB de produccion ya existente), se cae a
+    // los valores por defecto de abajo para que la app no rompa.
+
+    // Tarifas vigentes en Mar del Plata 2026 (fallback si la DB no tiene valores)
+    private static final BigDecimal DEFAULT_BAJADA_DIA       = BigDecimal.valueOf(2250);
+    private static final BigDecimal DEFAULT_BAJADA_NOCHE     = BigDecimal.valueOf(2700);
+    private static final BigDecimal DEFAULT_FICHA_DIA        = BigDecimal.valueOf(150);
+    private static final BigDecimal DEFAULT_FICHA_NOCHE      = BigDecimal.valueOf(180);
+    private static final int        DEFAULT_METROS_POR_FICHA = 160;
 
     private BigDecimal calcularTaxi(double distanciaKm)
     {
+        // 1. Traer la tarifa vigente del taxi desde la base de datos
         Tarifa tarifa = tarifaService.obtenerTarifaTaxi();
         boolean esNocturno = esHorarioNocturno();
 
-        BigDecimal bajadaBandera = esNocturno
-                ? valorOrDefault(tarifa.getBajadaBanderaNoche(), DEFAULT_BAJADA_NOCHE)
-                : valorOrDefault(tarifa.getBajadaBanderaDia(), DEFAULT_BAJADA_DIA);
+        // 2. Elegir que valores aplicar segun el horario
+        BigDecimal bajadaBandera = obtenerBajadaBandera(tarifa, esNocturno);
+        BigDecimal valorFicha    = obtenerValorFicha(tarifa, esNocturno);
+        int metrosPorFicha       = obtenerMetrosPorFicha(tarifa);
 
-        BigDecimal valorFicha = esNocturno
-                ? valorOrDefault(tarifa.getValorFichaNoche(), DEFAULT_FICHA_NOCHE)
-                : valorOrDefault(tarifa.getValorFichaDia(), DEFAULT_FICHA_DIA);
-
-        int metrosPorFicha = tarifa.getMetrosPorFicha() != null
-                ? tarifa.getMetrosPorFicha()
-                : DEFAULT_METROS_POR_FICHA;
-
+        // 3. Calcular cuantas fichas suma el viaje.
+        //    Math.ceil garantiza que cualquier fraccion de ficha se cobre como ficha entera.
         double distanciaMetros = distanciaKm * 1000;
-        int fichas = (int) Math.ceil(distanciaMetros / metrosPorFicha);
-        BigDecimal precioFichas = valorFicha.multiply(BigDecimal.valueOf(fichas));
+        int cantidadDeFichas   = (int) Math.ceil(distanciaMetros / metrosPorFicha);
 
-        return bajadaBandera.add(precioFichas);
+        // 4. Precio final = bajada de bandera + (fichas * valor de cada ficha)
+        BigDecimal precioPorFichas = valorFicha.multiply(BigDecimal.valueOf(cantidadDeFichas));
+        return bajadaBandera.add(precioPorFichas);
     }
 
+    private BigDecimal obtenerBajadaBandera(Tarifa tarifa, boolean esNocturno)
+    {
+        if (esNocturno) {
+            return valorOrDefault(tarifa.getBajadaBanderaNoche(), DEFAULT_BAJADA_NOCHE);
+        }
+        return valorOrDefault(tarifa.getBajadaBanderaDia(), DEFAULT_BAJADA_DIA);
+    }
+
+    private BigDecimal obtenerValorFicha(Tarifa tarifa, boolean esNocturno)
+    {
+        if (esNocturno) {
+            return valorOrDefault(tarifa.getValorFichaNoche(), DEFAULT_FICHA_NOCHE);
+        }
+        return valorOrDefault(tarifa.getValorFichaDia(), DEFAULT_FICHA_DIA);
+    }
+
+    private int obtenerMetrosPorFicha(Tarifa tarifa)
+    {
+        return tarifa.getMetrosPorFicha() != null
+                ? tarifa.getMetrosPorFicha()
+                : DEFAULT_METROS_POR_FICHA;
+    }
+
+    // Devuelve el valor si no es null, sino el por defecto. Sirve para que
+    // calcularTaxi nunca falle si la DB todavia no tiene los campos cargados.
     private BigDecimal valorOrDefault(BigDecimal valor, BigDecimal porDefecto)
     {
         return valor != null ? valor : porDefecto;
