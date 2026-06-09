@@ -119,9 +119,29 @@ public class SecurityConfig
 
             // 2. Asegurar Tarifas
             if (tarifaRepo.count() == 0) {
-                tarifaRepo.save(new Tarifa(null, TipoTransporte.TAXI, new BigDecimal("2250.00"), new BigDecimal("937.50"), null));
-                tarifaRepo.save(new Tarifa(null, TipoTransporte.UBER, BigDecimal.ZERO, BigDecimal.ZERO, null));
-                tarifaRepo.save(new Tarifa(null, TipoTransporte.DIDI, BigDecimal.ZERO, BigDecimal.ZERO, null));
+                Tarifa taxi = new Tarifa();
+                taxi.setTipoTransporte(TipoTransporte.TAXI);
+                taxi.setPrecioBase(new BigDecimal("2250.00"));
+                taxi.setPrecioPorKm(new BigDecimal("937.50"));
+                taxi.setBajadaBanderaDia(new BigDecimal("2250.00"));
+                taxi.setBajadaBanderaNoche(new BigDecimal("2700.00"));
+                taxi.setValorFichaDia(new BigDecimal("150.00"));
+                taxi.setValorFichaNoche(new BigDecimal("180.00"));
+                taxi.setMetrosPorFicha(160);
+                tarifaRepo.save(taxi);
+
+                Tarifa uber = new Tarifa();
+                uber.setTipoTransporte(TipoTransporte.UBER);
+                uber.setPrecioBase(BigDecimal.ZERO);
+                uber.setPrecioPorKm(BigDecimal.ZERO);
+                tarifaRepo.save(uber);
+
+                Tarifa didi = new Tarifa();
+                didi.setTipoTransporte(TipoTransporte.DIDI);
+                didi.setPrecioBase(BigDecimal.ZERO);
+                didi.setPrecioPorKm(BigDecimal.ZERO);
+                tarifaRepo.save(didi);
+
                 System.out.println("--- [SISTEMA] Tarifas base cargadas ---");
             }
         };

@@ -5,12 +5,14 @@ import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
+import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
@@ -28,6 +30,7 @@ public class ViajeService
     private final WeatherService weatherService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
+    private final TarifaService tarifaService;
 
     public List<OpcionTransporteResponse> calcularViaje(CalculoViajeRequest request, Long usuarioId)
     {
@@ -73,9 +76,9 @@ public class ViajeService
 
         // --- GUARDAR EN BASE DE DATOS AL FINAL CON PRECIOS REALES ---
         long distanciaMetros = (long) (distanciaKm * 1000);
-        guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin, 
-                        taxi.precioMin(), uber.precioMin(), uber.precioMax(), 
-                        didi.precioMin(), didi.precioMax(), usuarioId, request);
+        guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
+                taxi.precioMin(), uber.precioMin(), uber.precioMax(),
+                didi.precioMin(), didi.precioMax(), usuarioId, request);
 
         List<OpcionTransporteResponse> opciones = List.of(taxi, uber, didi);
 
@@ -85,9 +88,9 @@ public class ViajeService
                 .toList();
     }
 
-    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin, 
-                                 BigDecimal precioTaxi, BigDecimal uberMin, BigDecimal uberMax, 
-                                 BigDecimal didiMin, BigDecimal didiMax, Long usuarioId, CalculoViajeRequest request)
+    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin,
+                                  BigDecimal precioTaxi, BigDecimal uberMin, BigDecimal uberMax,
+                                  BigDecimal didiMin, BigDecimal didiMax, Long usuarioId, CalculoViajeRequest request)
     {
         if (usuarioId == null) return;
 
@@ -152,24 +155,41 @@ public class ViajeService
     // =========================
     // 🚕 TAXI (tarifa real)
     // =========================
+    // Valores por defecto si la fila de Tarifa TAXI no tiene los campos cargados.
+    // Permiten que el calculo funcione en una DB existente sin migraciones manuales.
+    private static final BigDecimal DEFAULT_BAJADA_DIA = BigDecimal.valueOf(2250);
+    private static final BigDecimal DEFAULT_BAJADA_NOCHE = BigDecimal.valueOf(2700);
+    private static final BigDecimal DEFAULT_FICHA_DIA = BigDecimal.valueOf(150);
+    private static final BigDecimal DEFAULT_FICHA_NOCHE = BigDecimal.valueOf(180);
+    private static final int DEFAULT_METROS_POR_FICHA = 160;
+
     private BigDecimal calcularTaxi(double distanciaKm)
     {
+        Tarifa tarifa = tarifaService.obtenerTarifaTaxi();
         boolean esNocturno = esHorarioNocturno();
 
-        BigDecimal bajadaBandera = esNocturno ? BigDecimal.valueOf(2700) : BigDecimal.valueOf(2250);
-        BigDecimal valorFicha = esNocturno ? BigDecimal.valueOf(180) : BigDecimal.valueOf(150);
+        BigDecimal bajadaBandera = esNocturno
+                ? valorOrDefault(tarifa.getBajadaBanderaNoche(), DEFAULT_BAJADA_NOCHE)
+                : valorOrDefault(tarifa.getBajadaBanderaDia(), DEFAULT_BAJADA_DIA);
 
-        double metrosPorFicha = 160;
+        BigDecimal valorFicha = esNocturno
+                ? valorOrDefault(tarifa.getValorFichaNoche(), DEFAULT_FICHA_NOCHE)
+                : valorOrDefault(tarifa.getValorFichaDia(), DEFAULT_FICHA_DIA);
+
+        int metrosPorFicha = tarifa.getMetrosPorFicha() != null
+                ? tarifa.getMetrosPorFicha()
+                : DEFAULT_METROS_POR_FICHA;
+
         double distanciaMetros = distanciaKm * 1000;
-
-        // calcular fichas
         int fichas = (int) Math.ceil(distanciaMetros / metrosPorFicha);
-
-        // calcular precio por fichas
         BigDecimal precioFichas = valorFicha.multiply(BigDecimal.valueOf(fichas));
 
-        // precio final: bajada de bandera + fichas calculadas
         return bajadaBandera.add(precioFichas);
+    }
+
+    private BigDecimal valorOrDefault(BigDecimal valor, BigDecimal porDefecto)
+    {
+        return valor != null ? valor : porDefecto;
     }
 
     private boolean esHorarioNocturno()
@@ -252,7 +272,8 @@ public class ViajeService
                         request.origenLng() == null ||
                         request.destinoLat() == null ||
                         request.destinoLng() == null
-        ) {
+        )
+        {
             return "https://m.uber.com/ul/?action=setPickup"
                     + "&pickup[formatted_address]=" + encode(request.origen())
                     + "&dropoff[formatted_address]=" + encode(request.destino());
@@ -350,12 +371,14 @@ public class ViajeService
     }
 
     @Transactional
-    public void toggleFavorito(Long viajeId, Long usuarioId) {
+    public void toggleFavorito(Long viajeId, Long usuarioId)
+    {
 
         Viaje viaje = viajeRepository.findById(viajeId)
                 .orElseThrow(() -> new RuntimeException("Viaje no encontrado"));
 
-        if (!viaje.getUsuario().getId().equals(usuarioId)) {
+        if (!viaje.getUsuario().getId().equals(usuarioId))
+        {
             throw new RuntimeException("No tienes permiso para modificar este viaje");
         }
 
@@ -363,19 +386,24 @@ public class ViajeService
 
         viajeRepository.save(viaje);
     }
-    public List<Viaje> obtenerFavoritos(Long usuarioId) {
+
+    public List<Viaje> obtenerFavoritos(Long usuarioId)
+    {
         return viajeRepository.findByUsuarioIdAndFavoritoTrue(usuarioId);
     }
 
-    public List<DireccionFavoritaResponse> obtenerDireccionesFavoritas(Long usuarioId) {
+    public List<DireccionFavoritaResponse> obtenerDireccionesFavoritas(Long usuarioId)
+    {
         List<Viaje> favoritos = obtenerFavoritos(usuarioId);
-        
+
         // Usamos un mapa para evitar duplicados basado en la dirección o el placeId
         java.util.Map<String, DireccionFavoritaResponse> direcciones = new java.util.LinkedHashMap<>();
 
-        for (Viaje v : favoritos) {
+        for (Viaje v : favoritos)
+        {
             // Procesar Origen
-            if (v.getOrigen() != null) {
+            if (v.getOrigen() != null)
+            {
                 String key = v.getOrigenPlaceId() != null ? v.getOrigenPlaceId() : v.getOrigen();
                 direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
                         v.getOrigen(),
@@ -386,7 +414,8 @@ public class ViajeService
             }
 
             // Procesar Destino
-            if (v.getDestino() != null) {
+            if (v.getDestino() != null)
+            {
                 String key = v.getDestinoPlaceId() != null ? v.getDestinoPlaceId() : v.getDestino();
                 direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
                         v.getDestino(),
@@ -400,7 +429,8 @@ public class ViajeService
         return new java.util.ArrayList<>(direcciones.values());
     }
 
-    public ViajeHistorialResponse toResponse(Viaje viaje) {
+    public ViajeHistorialResponse toResponse(Viaje viaje)
+    {
         return new ViajeHistorialResponse(
                 viaje.getId(),
                 viaje.getOrigen(),
