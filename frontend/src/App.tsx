@@ -48,6 +48,10 @@ interface ViajeHistorial {
   distanciaEnMetros: number;
   tiempoEstimadoMin: number;
   precioTaxi: number;
+  precioUberMin: number;
+  precioUberMax: number;
+  precioDidiMin: number;
+  precioDidiMax: number;
   precioMinApp: number;
   precioMaxApp: number;
   fechaHora: string;
