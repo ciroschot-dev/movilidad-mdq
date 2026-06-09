@@ -297,16 +297,9 @@ public class ViajeService
         );
     }
 
-    // =========================
-    // 🔗 URLs
-    // =========================
     // Los deep links de Uber y Didi viven en sus propios servicios
-    // (UberDeepLinkService / DidiDeepLinkService). Aca solo queda la URL del
-    // taxi: es un "tel:" estatico, no justifica un servicio aparte.
-    private String generarUrlTaxi()
-    {
-        return "tel:+5402234941010";
-    }
+    // (UberDeepLinkService / DidiDeepLinkService). La URL del taxi es un "tel:"
+    // estatico y va inline en construirTaxi().
 
     // =========================
     // 📊 FACTORES DINÁMICOS
