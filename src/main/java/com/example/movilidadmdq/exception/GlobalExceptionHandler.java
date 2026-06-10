@@ -3,6 +3,7 @@ package com.example.movilidadmdq.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +60,14 @@ public class GlobalExceptionHandler
                 .map(this::formatearError)
                 .toList();
         return construir(HttpStatus.BAD_REQUEST, "Datos invalidos", req, detalles);
+    }
+
+    // El cliente mando un JSON malformado o un body que no se puede leer.
+    // No es culpa del servidor (no es 500): es un input malo del cliente.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> manejarBodyIlegible(HttpMessageNotReadableException ex, HttpServletRequest req)
+    {
+        return construir(HttpStatus.BAD_REQUEST, "El cuerpo de la peticion no es un JSON valido", req, null);
     }
 
     // Red de seguridad: cualquier cosa que no matchee con los handlers

@@ -5,6 +5,10 @@ import com.example.movilidadmdq.config.JwtAuthFilter;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -75,9 +79,29 @@ public class SecurityConfig
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception
+                        // Cuando llega un request sin token o con token invalido a un
+                        // endpoint protegido, Spring Security corta antes de llegar al
+                        // controller. Por defecto devolveria un HTML feo o un 401 vacio:
+                        // forzamos un JSON con el mismo shape de ApiError para que el
+                        // cliente reciba siempre la misma forma de error.
                         .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
-                        )
+                        {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            String json = "{"
+                                    + "\"timestamp\":\"" + LocalDateTime.now() + "\","
+                                    + "\"status\":401,"
+                                    + "\"error\":\"Unauthorized\","
+                                    + "\"message\":\"No autenticado\","
+                                    + "\"path\":\"" + request.getRequestURI() + "\","
+                                    + "\"errores\":null"
+                                    + "}";
+                            try (PrintWriter writer = response.getWriter())
+                            {
+                                writer.write(json);
+                            }
+                        })
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
