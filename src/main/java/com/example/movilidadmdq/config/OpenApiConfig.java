@@ -17,6 +17,10 @@ import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 @Configuration
 public class OpenApiConfig
 {
@@ -79,8 +83,10 @@ public class OpenApiConfig
                         openApi.getComponents().addSchemas(nombre, schemaRef));
             }
 
-            // 2. Apuntar las responses de error al schema recien registrado.
+            // 2. Apuntar las responses de error al schema recien registrado
+            //    y a un ejemplo coherente con el codigo HTTP.
             Schema<?> apiErrorRef = new Schema<>().$ref("#/components/schemas/ApiError");
+            Map<String, Object> ejemplosPorCodigo = ejemplosPorCodigoDeError();
 
             openApi.getPaths().values().forEach(pathItem ->
                     pathItem.readOperations().forEach(operation ->
@@ -90,14 +96,95 @@ public class OpenApiConfig
                         {
                             if (codigo.startsWith("4") || codigo.startsWith("5"))
                             {
-                                response.content(new Content().addMediaType(
-                                        "application/json",
-                                        new MediaType().schema(apiErrorRef)
-                                ));
+                                MediaType media = new MediaType().schema(apiErrorRef);
+                                Object ejemplo = ejemplosPorCodigo.get(codigo);
+                                if (ejemplo != null)
+                                {
+                                    media.example(ejemplo);
+                                }
+                                response.content(new Content().addMediaType("application/json", media));
                             }
                         });
                     })
             );
         };
+    }
+
+    // Ejemplos que se ven en Swagger cuando alguien expande la response de error.
+    // Cada codigo HTTP tiene un ejemplo coherente con un escenario real de la API:
+    // - 400: validacion @Valid fallando en /usuarios/registro
+    // - 401: login con credenciales incorrectas
+    // - 403: usuario tocando un viaje de otro
+    // - 404: viaje que no existe
+    // - 409: registro duplicado
+    // - 500: error inesperado del servidor
+    private Map<String, Object> ejemplosPorCodigoDeError()
+    {
+        Map<String, Object> mapa = new LinkedHashMap<>();
+
+        mapa.put("400", ejemplo(
+                400,
+                "Bad Request",
+                "Datos invalidos",
+                "/usuarios/registro",
+                List.of(
+                        "email: El email no tiene un formato valido",
+                        "password: La password debe tener al menos 6 caracteres"
+                )
+        ));
+
+        mapa.put("401", ejemplo(
+                401,
+                "Unauthorized",
+                "Credenciales invalidas",
+                "/usuarios/login",
+                null
+        ));
+
+        mapa.put("403", ejemplo(
+                403,
+                "Forbidden",
+                "No tienes permiso para modificar este viaje",
+                "/viajes/42/favorito",
+                null
+        ));
+
+        mapa.put("404", ejemplo(
+                404,
+                "Not Found",
+                "Viaje no encontrado",
+                "/viajes/999999/favorito",
+                null
+        ));
+
+        mapa.put("409", ejemplo(
+                409,
+                "Conflict",
+                "El username ya esta registrado",
+                "/usuarios/registro",
+                null
+        ));
+
+        mapa.put("500", ejemplo(
+                500,
+                "Internal Server Error",
+                "Error interno del servidor",
+                "/viajes/calcular",
+                null
+        ));
+
+        return mapa;
+    }
+
+    private Map<String, Object> ejemplo(int status, String error, String message, String path, List<String> errores)
+    {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("timestamp", "2026-06-10T12:34:56.789");
+        m.put("status", status);
+        m.put("error", error);
+        m.put("message", message);
+        m.put("path", path);
+        m.put("errores", errores);
+        return m;
     }
 }
