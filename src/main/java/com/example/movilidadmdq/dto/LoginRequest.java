@@ -5,7 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
         @Schema(description = "Nombre de usuario para ingresar", example = "Morehidalggo")
-        @NotBlank String username,
+        @NotBlank(message = "El username es obligatorio")
+        String username,
 
         @Schema(description = "Contraseña para ingresar", example = "Ramona00.2")
-        @NotBlank String password) {}
+        @NotBlank(message = "La password es obligatoria")
+        String password) {}

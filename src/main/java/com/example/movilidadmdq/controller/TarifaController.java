@@ -4,6 +4,7 @@ import com.example.movilidadmdq.dto.TarifaRequest;
 import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.service.TarifaService;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -33,7 +34,7 @@ public class TarifaController
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
 
-    public Tarifa actualizarTarifaTaxi(@RequestBody TarifaRequest request)
+    public Tarifa actualizarTarifaTaxi(@Valid @RequestBody TarifaRequest request)
     {
         return tarifaService.actualizarTarifaTaxi(request);
     }
