@@ -339,10 +339,13 @@ public class ViajeService
         Viaje viaje = viajeRepository.findById(viajeId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Viaje no encontrado"));
 
-        // Caso 2: el viaje existe pero es de otro usuario. No queremos filtrar
-        // que existe (eso seria fuga de info), pero tampoco mentir devolviendo
-        // 404. Spring Security ya valido el JWT, asi que la respuesta correcta
-        // es 403: "se quien sos, pero esto no es tuyo".
+        // Caso 2: el viaje existe pero es de otro usuario -> 403.
+        //
+        // Nota: devolver 403 (distinto del 404) revela al cliente que el viaje
+        // existe. En contextos con datos sensibles eso seria una fuga de info y
+        // se preferiria responder 404 tambien aca. En esta API priorizamos
+        // claridad semantica: el JWT del usuario es valido, lo que falla es la
+        // autorizacion a nivel recurso. "Se quien sos, pero esto no es tuyo".
         if (!viaje.getUsuario().getId().equals(usuarioId))
         {
             throw new OperacionNoPermitidaException("No tienes permiso para modificar este viaje");
