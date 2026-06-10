@@ -1,5 +1,6 @@
 package com.example.movilidadmdq.security;
 
+import com.example.movilidadmdq.exception.RecursoNoEncontradoException;
 import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import jakarta.servlet.ServletException;
@@ -32,7 +33,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
 
-        Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuario no encontrado tras OAuth2"));
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado tras OAuth2"));
 
         String token = jwtService.generateToken(usuario);
 

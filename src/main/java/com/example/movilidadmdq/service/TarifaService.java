@@ -2,6 +2,7 @@ package com.example.movilidadmdq.service;
 
 import com.example.movilidadmdq.dto.TarifaRequest;
 import com.example.movilidadmdq.enums.TipoTransporte;
+import com.example.movilidadmdq.exception.RecursoNoEncontradoException;
 import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.repository.TarifaRepository;
 import org.springframework.stereotype.Service;
@@ -19,13 +20,13 @@ public class TarifaService
     public Tarifa obtenerTarifaTaxi()
     {
         return tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
-                .orElseThrow(() -> new RuntimeException("No se encontro la tarifa del taxi"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la tarifa del taxi"));
     }
 
     public Tarifa actualizarTarifaTaxi(TarifaRequest request)
     {
         Tarifa tarifaTaxi = tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
-                .orElseThrow(() -> new RuntimeException("No se encontro la tarifa de taxi"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la tarifa de taxi"));
 
         if (request.getPrecioBase() != null) tarifaTaxi.setPrecioBase(request.getPrecioBase());
         if (request.getPrecioPorKm() != null) tarifaTaxi.setPrecioPorKm(request.getPrecioPorKm());
