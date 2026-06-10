@@ -6,11 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 @Schema(description = "Datos necesarios para calcular un viaje")
 public record CalculoViajeRequest(
         @Schema(description = "Direccion de origen", example = "Paseo Costanera Mar del Plata")
-        @NotBlank
+        @NotBlank(message = "El origen es obligatorio")
         String origen,
 
         @Schema(description = "Direccion de destino", example = "Grand Beach")
-        @NotBlank
+        @NotBlank(message = "El destino es obligatorio")
         String destino,
 
         @Schema(description = "Nombre corto del lugar de origen", example = "Paseo Costanera Mar del Plata")

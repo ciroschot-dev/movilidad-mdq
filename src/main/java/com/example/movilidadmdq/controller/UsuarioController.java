@@ -50,33 +50,26 @@ public class UsuarioController
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request)
     {
-        try
-        {
-            return ResponseEntity.ok(usuarioService.login(request));
-        }
-        catch (RuntimeException ex)
-        {
-            return ResponseEntity.status(401).build();
-        }
+        // Sin try/catch: si las credenciales son invalidas, Spring Security
+        // tira BadCredentialsException y el GlobalExceptionHandler la traduce
+        // a un 401. Lo unico que hace este metodo es orquestar.
+        return ResponseEntity.ok(usuarioService.login(request));
     }
 
     @Operation(summary = "Registrarse", description = "Se ingresan credenciales para registrarse, devuelve token")
     @ApiResponses(value ={
         @ApiResponse(responseCode = "200", description = "Registro exitoso, devuelve el token"),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos o usuario ya registrado")
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "409", description = "Username o email ya registrados")
     })
 
     @PostMapping("/registro")
     public ResponseEntity<AuthResponse> registrar(@Valid @RequestBody RegistroRequest request)
     {
-        try
-        {
-            return ResponseEntity.ok(usuarioService.registrar(request));
-        }
-        catch (IllegalArgumentException ex)
-        {
-            return ResponseEntity.badRequest().build();
-        }
+        // Sin try/catch: las validaciones de @Valid tiran MethodArgumentNotValid
+        // (400) y los duplicados tiran RecursoDuplicadoException (409). Ambos
+        // los traduce el GlobalExceptionHandler.
+        return ResponseEntity.ok(usuarioService.registrar(request));
     }
 
     @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado ")

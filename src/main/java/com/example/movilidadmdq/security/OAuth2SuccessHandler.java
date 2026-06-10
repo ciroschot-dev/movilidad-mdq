@@ -14,6 +14,9 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -32,13 +35,29 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
 
-        Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Usuario no encontrado tras OAuth2"));
+        // Este handler corre dentro del filtro de Spring Security, no en un
+        // @RestController. Por eso el GlobalExceptionHandler NO atrapa las
+        // excepciones que se tiren desde aca: terminarian en una pagina de
+        // error de Spring. En vez de tirar excepcion, redirigimos al frontend
+        // con un query param de error para que el cliente lo muestre.
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        if (usuarioOpt.isEmpty())
+        {
+            String urlError = construirUrl(redirectUri, "error", "usuario_no_encontrado");
+            getRedirectStrategy().sendRedirect(request, response, urlError);
+            return;
+        }
 
-        String token = jwtService.generateToken(usuario);
+        String token = jwtService.generateToken(usuarioOpt.get());
+        String urlExito = construirUrl(redirectUri, "token", token);
+        getRedirectStrategy().sendRedirect(request, response, urlExito);
+    }
 
-        // Si la URI configurada no termina en ?, el token se agrega como query param
-        String targetUrl = redirectUri.contains("?") ? redirectUri + "&token=" + token : redirectUri + "?token=" + token;
-        
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    // Agrega un query param a la URL respetando si ya hay otros parametros.
+    private String construirUrl(String base, String clave, String valor)
+    {
+        String separador = base.contains("?") ? "&" : "?";
+        String valorEncoded = URLEncoder.encode(valor, StandardCharsets.UTF_8);
+        return base + separador + clave + "=" + valorEncoded;
     }
 }

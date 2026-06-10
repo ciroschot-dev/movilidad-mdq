@@ -3,17 +3,17 @@ package com.example.movilidadmdq.controller;
 import com.example.movilidadmdq.dto.TarifaRequest;
 import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.service.TarifaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Tarifas - Admin", description = "Gestión de tarifas de transporte. Solo accesible por administradores.")
 @RestController
@@ -33,7 +33,7 @@ public class TarifaController
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
 
-    public Tarifa actualizarTarifaTaxi(@RequestBody TarifaRequest request)
+    public Tarifa actualizarTarifaTaxi(@Valid @RequestBody TarifaRequest request)
     {
         return tarifaService.actualizarTarifaTaxi(request);
     }

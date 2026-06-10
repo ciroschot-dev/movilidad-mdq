@@ -5,6 +5,8 @@ import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
+import com.example.movilidadmdq.exception.OperacionNoPermitidaException;
+import com.example.movilidadmdq.exception.RecursoNoEncontradoException;
 import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
@@ -333,12 +335,20 @@ public class ViajeService
     public void toggleFavorito(Long viajeId, Long usuarioId)
     {
 
+        // Caso 1: el viaje no existe en la DB -> 404.
         Viaje viaje = viajeRepository.findById(viajeId)
-                .orElseThrow(() -> new RuntimeException("Viaje no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Viaje no encontrado"));
 
+        // Caso 2: el viaje existe pero es de otro usuario -> 403.
+        //
+        // Nota: devolver 403 (distinto del 404) revela al cliente que el viaje
+        // existe. En contextos con datos sensibles eso seria una fuga de info y
+        // se preferiria responder 404 tambien aca. En esta API priorizamos
+        // claridad semantica: el JWT del usuario es valido, lo que falla es la
+        // autorizacion a nivel recurso. "Se quien sos, pero esto no es tuyo".
         if (!viaje.getUsuario().getId().equals(usuarioId))
         {
-            throw new RuntimeException("No tienes permiso para modificar este viaje");
+            throw new OperacionNoPermitidaException("No tienes permiso para modificar este viaje");
         }
 
         viaje.setFavorito(!viaje.isFavorito());
