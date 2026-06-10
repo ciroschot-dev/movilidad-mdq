@@ -213,7 +213,23 @@ public class UsuarioController
                 }).orElse(ResponseEntity.status(403).build());
     }
 
-    @Operation(summary = "Eliminar cuenta de usuario", description = "Elimina permanentemente la cuenta del usuario autenticado y todos sus datos asociados")
+    @Operation(summary = "Buscar usuario por username o email", description = "Devuelve los datos de un usuario buscado. Solo accesible por administradores.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+            @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
+    })
+    @GetMapping("/buscar")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UsuarioResponse> buscarUsuario(@RequestParam String query) {
+        return usuarioRepository.findByUsername(query)
+                .or(() -> usuarioRepository.findByEmail(query))
+                .map(usuarioService::toResponse)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Eliminar cuenta de usuario", description = "Elimina permanentemente la cuenta del usuario. Los usuarios pueden eliminar su propia cuenta, y los administradores pueden eliminar cualquier cuenta.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Cuenta eliminada con éxito"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
@@ -228,7 +244,7 @@ public class UsuarioController
         }
 
         return usuarioRepository.findByUsername(authentication.getName())
-                .filter(usuario -> usuario.getId().equals(id))
+                .filter(usuario -> usuario.getId().equals(id) || usuario.getRole() == com.example.movilidadmdq.enums.Role.ADMIN)
                 .map(usuario -> {
                     usuarioService.eliminarUsuario(id);
                     return ResponseEntity.noContent().<Void>build();
