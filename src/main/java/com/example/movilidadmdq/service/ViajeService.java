@@ -119,10 +119,6 @@ public class ViajeService
                 nuevoViaje.setPrecioDidiMin(didiMin);
                 nuevoViaje.setPrecioDidiMax(didiMax);
 
-                // Compatibilidad
-                nuevoViaje.setPrecioMinApp(uberMin);
-                nuevoViaje.setPrecioMaxApp(uberMax);
-
                 // Guardar coordenadas y Place IDs para optimización futura
                 nuevoViaje.setOrigenPlaceId(request.origenPlaceId());
                 nuevoViaje.setOrigenLat(request.origenLat());
