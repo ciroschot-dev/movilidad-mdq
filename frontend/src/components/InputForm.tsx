@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { MapPin, Navigation, Loader2, Star, Search } from 'lucide-react';
 import MapView from './MapView';
+import type { DireccionFavorita } from '../types';
 
 export interface LugarSeleccionado {
   addressLine1: string;
@@ -8,13 +9,6 @@ export interface LugarSeleccionado {
   placeId: string;
   latitude: number;
   longitude: number;
-}
-
-interface DireccionFavorita {
-  direccion: string;
-  placeId: string;
-  lat: number;
-  lng: number;
 }
 
 interface InputFormProps {
@@ -280,8 +274,13 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
             </div>
             <div className="flex flex-col overflow-hidden">
               <span className="font-bold text-gray-900 dark:text-gray-100 truncate">
-                {fav.direccion}
+                {fav.nombre || fav.direccion}
               </span>
+              {fav.nombre && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {fav.direccion}
+                </span>
+              )}
               <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-widest">Favorito</span>
             </div>
           </button>

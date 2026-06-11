@@ -47,6 +47,9 @@ class ViajeServiceTest {
     private ViajeRepository viajeRepository;
 
     @Mock
+    private com.example.movilidadmdq.repository.DireccionFavoritaRepository direccionFavoritaRepository;
+
+    @Mock
     private UberDeepLinkService uberDeepLinkService;
 
     @Mock

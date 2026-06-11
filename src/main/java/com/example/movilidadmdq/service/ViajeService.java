@@ -9,6 +9,7 @@ import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -26,8 +27,15 @@ public class ViajeService
     // === Inyecciones ===
     private final GoogleMapsService googleMapsService;
     private final WeatherService weatherService;
+    private final TarifaService tarifaService;
+    private final UberDeepLinkService uberDeepLinkService;
+    private final DidiDeepLinkService didiDeepLinkService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
+    private final com.example.movilidadmdq.repository.DireccionFavoritaRepository direccionFavoritaRepository;
+
+    @Value("${taxi.telefono:+542234941010}")
+    private String telefonoTaxi;
 
     public List<OpcionTransporteResponse> calcularViaje(CalculoViajeRequest request, Long usuarioId)
     {
@@ -156,28 +164,12 @@ public class ViajeService
     // =========================
     private BigDecimal calcularTaxi(double distanciaKm)
     {
-        boolean esNocturno = esHorarioNocturno();
+        com.example.movilidadmdq.model.Tarifa tarifa = tarifaService.obtenerTarifaTaxi();
+        BigDecimal precioBase = tarifa.getPrecioBase();
+        BigDecimal precioPorKm = tarifa.getPrecioPorKm();
 
-        BigDecimal bajadaBandera = esNocturno ? BigDecimal.valueOf(2700) : BigDecimal.valueOf(2250);
-        BigDecimal valorFicha = esNocturno ? BigDecimal.valueOf(180) : BigDecimal.valueOf(150);
-
-        double metrosPorFicha = 160;
-        double distanciaMetros = distanciaKm * 1000;
-
-        // calcular fichas
-        int fichas = (int) Math.ceil(distanciaMetros / metrosPorFicha);
-
-        // calcular precio por fichas
-        BigDecimal precioFichas = valorFicha.multiply(BigDecimal.valueOf(fichas));
-
-        // precio final: bajada de bandera + fichas calculadas
-        return bajadaBandera.add(precioFichas);
-    }
-
-    private boolean esHorarioNocturno()
-    {
-        int hora = LocalTime.now().getHour();
-        return hora >= 22 || hora < 6;
+        return precioBase.add(precioPorKm.multiply(BigDecimal.valueOf(distanciaKm)))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin, long distanciaMetros)
@@ -234,7 +226,7 @@ public class ViajeService
                 precioMax.setScale(2, RoundingMode.HALF_UP),
                 tiempoMin,
                 distanciaMetros,
-                generarUrlDidi()
+                generarUrlDidi(null) // Pasamos null si no hay request específico para didi aún
         );
     }
 
@@ -243,67 +235,30 @@ public class ViajeService
     // =========================
     private String generarUrlTaxi()
     {
-        return "tel:+5492233126129"; // num de Ciro para pruebas. Despues cambiar al de TAXI
+        return "tel:" + telefonoTaxi;
     }
 
     private String generarUrlUber(CalculoViajeRequest request)
     {
-        // Fallback: si el frontend no envía coordenadas/place data, usar el deep link simple.
-        if (
-                request.origenLat() == null ||
-                        request.origenLng() == null ||
-                        request.destinoLat() == null ||
-                        request.destinoLng() == null
-        ) {
-            return "https://m.uber.com/ul/?action=setPickup"
-                    + "&pickup[formatted_address]=" + encode(request.origen())
-                    + "&dropoff[formatted_address]=" + encode(request.destino());
+        if (request.origenLat() != null && request.origenLng() != null &&
+            request.destinoLat() != null && request.destinoLng() != null) {
+            return uberDeepLinkService.generarDeepLink(
+                request.origen(), request.origenLat(), request.origenLng(),
+                request.destino(), request.destinoLat(), request.destinoLng()
+            );
         }
-
-        // Formato usado por m.uber.com/go/drop para precargar origen y destino.
-        String pickupJson = """
-                {
-                  "addressLine1": "%s",
-                  "addressLine2": "%s",
-                  "id": "%s",
-                  "source": "SEARCH",
-                  "latitude": %s,
-                  "longitude": %s,
-                  "provider": "google_places"
-                }
-                """.formatted(
-                escapeJson(valorOTexto(request.origenAddressLine1(), request.origen())),
-                escapeJson(valorOTexto(request.origenAddressLine2(), request.origen())),
-                escapeJson(valorOTexto(request.origenPlaceId(), "")),
-                request.origenLat(),
-                request.origenLng()
-        );
-
-        String dropJson = """
-                {
-                  "addressLine1": "%s",
-                  "addressLine2": "%s",
-                  "id": "%s",
-                  "source": "SEARCH",
-                  "latitude": %s,
-                  "longitude": %s,
-                  "provider": "google_places"
-                }
-                """.formatted(
-                escapeJson(valorOTexto(request.destinoAddressLine1(), request.destino())),
-                escapeJson(valorOTexto(request.destinoAddressLine2(), request.destino())),
-                escapeJson(valorOTexto(request.destinoPlaceId(), "")),
-                request.destinoLat(),
-                request.destinoLng()
-        );
-
-        return "https://m.uber.com/go/drop"
-                + "?pickup=" + encode(pickupJson)
-                + "&drop%5B0%5D=" + encode(dropJson);
+        return "https://m.uber.com/";
     }
 
-    private String generarUrlDidi()
+    private String generarUrlDidi(CalculoViajeRequest request)
     {
+        if (request != null && request.origenLat() != null && request.origenLng() != null &&
+            request.destinoLat() != null && request.destinoLng() != null) {
+            return didiDeepLinkService.generarDeepLink(
+                request.origen(), request.origenLat(), request.origenLng(),
+                request.destino(), request.destinoLat(), request.destinoLng()
+            );
+        }
         return "https://www.didiglobal.com/";
     }
 
@@ -361,45 +316,87 @@ public class ViajeService
             throw new RuntimeException("No tienes permiso para modificar este viaje");
         }
 
-        viaje.setFavorito(!viaje.isFavorito());
-
+        boolean nuevoEstado = !viaje.isFavorito();
+        viaje.setFavorito(nuevoEstado);
         viajeRepository.save(viaje);
+
+        if (nuevoEstado) {
+            // Al marcar como favorito, aseguramos que las direcciones estén en la tabla de favoritos
+            syncDireccionFavorita(viaje.getOrigen(), viaje.getOrigenPlaceId(), viaje.getOrigenLat(), viaje.getOrigenLng(), usuarioId);
+            syncDireccionFavorita(viaje.getDestino(), viaje.getDestinoPlaceId(), viaje.getDestinoLat(), viaje.getDestinoLng(), usuarioId);
+        }
     }
+
+    private void syncDireccionFavorita(String direccion, String placeId, Double lat, Double lng, Long usuarioId) {
+        if (direccion == null) return;
+
+        java.util.Optional<com.example.movilidadmdq.model.DireccionFavorita> existing = (placeId != null && !placeId.isBlank())
+                ? direccionFavoritaRepository.findByUsuarioIdAndPlaceId(usuarioId, placeId)
+                : direccionFavoritaRepository.findByUsuarioIdAndDireccion(usuarioId, direccion);
+
+        if (existing.isEmpty()) {
+            com.example.movilidadmdq.model.DireccionFavorita df = new com.example.movilidadmdq.model.DireccionFavorita();
+            df.setDireccion(direccion);
+            df.setPlaceId(placeId);
+            df.setLat(lat);
+            df.setLng(lng);
+            df.setUsuario(usuarioRepository.getReferenceById(usuarioId));
+            direccionFavoritaRepository.save(df);
+        }
+    }
+
     public List<Viaje> obtenerFavoritos(Long usuarioId) {
         return viajeRepository.findByUsuarioIdAndFavoritoTrue(usuarioId);
     }
 
+    @Transactional
     public List<DireccionFavoritaResponse> obtenerDireccionesFavoritas(Long usuarioId) {
-        List<Viaje> favoritos = obtenerFavoritos(usuarioId);
-        
-        // Usamos un mapa para evitar duplicados basado en la dirección o el placeId
-        java.util.Map<String, DireccionFavoritaResponse> direcciones = new java.util.LinkedHashMap<>();
+        List<com.example.movilidadmdq.model.DireccionFavorita> saved = direccionFavoritaRepository.findByUsuarioId(usuarioId);
 
-        for (Viaje v : favoritos) {
-            // Procesar Origen
-            if (v.getOrigen() != null) {
-                String key = v.getOrigenPlaceId() != null ? v.getOrigenPlaceId() : v.getOrigen();
-                direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
-                        v.getOrigen(),
-                        v.getOrigenPlaceId(),
-                        v.getOrigenLat(),
-                        v.getOrigenLng()
-                ));
+        if (saved.isEmpty()) {
+            // Migración inicial: si no hay nada en la tabla nueva, buscar en los viajes favoritos
+            List<Viaje> favoritos = obtenerFavoritos(usuarioId);
+            for (Viaje v : favoritos) {
+                syncDireccionFavorita(v.getOrigen(), v.getOrigenPlaceId(), v.getOrigenLat(), v.getOrigenLng(), usuarioId);
+                syncDireccionFavorita(v.getDestino(), v.getDestinoPlaceId(), v.getDestinoLat(), v.getDestinoLng(), usuarioId);
             }
-
-            // Procesar Destino
-            if (v.getDestino() != null) {
-                String key = v.getDestinoPlaceId() != null ? v.getDestinoPlaceId() : v.getDestino();
-                direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
-                        v.getDestino(),
-                        v.getDestinoPlaceId(),
-                        v.getDestinoLat(),
-                        v.getDestinoLng()
-                ));
-            }
+            saved = direccionFavoritaRepository.findByUsuarioId(usuarioId);
         }
 
-        return new java.util.ArrayList<>(direcciones.values());
+        return saved.stream()
+                .map(df -> new DireccionFavoritaResponse(
+                        df.getId(),
+                        df.getNombre(),
+                        df.getDireccion(),
+                        df.getPlaceId(),
+                        df.getLat(),
+                        df.getLng()))
+                .toList();
+    }
+
+    @Transactional
+    public void renombrarDireccionFavorita(Long id, String nuevoNombre, Long usuarioId) {
+        com.example.movilidadmdq.model.DireccionFavorita df = direccionFavoritaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Dirección favorita no encontrada"));
+
+        if (!df.getUsuario().getId().equals(usuarioId)) {
+            throw new RuntimeException("No tienes permiso para modificar este favorito");
+        }
+
+        df.setNombre(nuevoNombre);
+        direccionFavoritaRepository.save(df);
+    }
+
+    @Transactional
+    public void eliminarDireccionFavorita(Long id, Long usuarioId) {
+        com.example.movilidadmdq.model.DireccionFavorita df = direccionFavoritaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Dirección favorita no encontrada"));
+
+        if (!df.getUsuario().getId().equals(usuarioId)) {
+            throw new RuntimeException("No tienes permiso para eliminar este favorito");
+        }
+
+        direccionFavoritaRepository.delete(df);
     }
 
     public ViajeHistorialResponse toResponse(Viaje viaje) {
