@@ -49,6 +49,18 @@ CREATE TABLE IF NOT EXISTS viajes (
     CONSTRAINT fk_viaje_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 4. Tabla de Direcciones Favoritas
+CREATE TABLE IF NOT EXISTS direcciones_favoritas (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100), -- Alias personalizado (Casa, Trabajo, etc.)
+    direccion VARCHAR(255) NOT NULL,
+    place_id VARCHAR(255),
+    lat DOUBLE,
+    lng DOUBLE,
+    usuario_id BIGINT NOT NULL,
+    CONSTRAINT fk_direccion_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ==========================================
 -- DATOS INICIALES DE EJEMPLO
 -- ==========================================
