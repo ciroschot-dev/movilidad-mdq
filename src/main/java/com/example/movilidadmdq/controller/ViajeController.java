@@ -1,6 +1,7 @@
 package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
+import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
@@ -13,10 +14,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Tag(name = "Viajes", description = "Cálculo y comparación de opciones de transporte.")
@@ -27,6 +31,20 @@ public class ViajeController
 {
     private final ViajeService viajeService;
     private final UsuarioRepository usuarioRepository;
+
+    @Operation(summary = "Obtener destinos más buscados (ADMIN)", description = "Devuelve una lista de destinos populares con filtros por fecha y zona. Solo accesible por administradores.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista obtenida con éxito"),
+            @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
+    })
+    @GetMapping("/admin/destinos-populares")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<DestinoPopularResponse>> getDestinosPopulares(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
+            @RequestParam(required = false) String zona) {
+        return ResponseEntity.ok(viajeService.obtenerDestinosPopulares(desde, hasta, zona));
+    }
 
     @Operation(
             summary = "Calcular viaje",

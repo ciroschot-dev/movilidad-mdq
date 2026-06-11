@@ -1,6 +1,7 @@
 package com.example.movilidadmdq.service;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
+import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
@@ -33,6 +35,11 @@ public class ViajeService
     private final TarifaService tarifaService;
     private final UberDeepLinkService uberDeepLinkService;
     private final DidiDeepLinkService didiDeepLinkService;
+
+    public List<DestinoPopularResponse> obtenerDestinosPopulares(LocalDateTime desde, LocalDateTime hasta, String zona)
+    {
+        return viajeRepository.findPopularDestinations(desde, hasta, zona, PageRequest.of(0, 10));
+    }
 
     public List<OpcionTransporteResponse> calcularViaje(CalculoViajeRequest request, Long usuarioId)
     {

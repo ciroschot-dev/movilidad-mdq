@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, AlertCircle, CheckCircle2, ArrowLeft, Settings, Search, UserMinus, User } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, ArrowLeft, Settings, Search, UserMinus, User, BarChart3, Calendar, MapPin } from 'lucide-react';
 
 interface AdminDashboardProps {
   session: {
@@ -15,6 +15,11 @@ interface UsuarioEncontrado {
   username: string;
   email: string;
   role: string;
+}
+
+interface DestinoPopular {
+  destino: string;
+  cantidad: number;
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl }) => {
@@ -32,6 +37,45 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Estados para destinos populares
+  const [destinos, setDestinos] = useState<DestinoPopular[]>([]);
+  const [filtrosDestinos, setFiltrosDestinos] = useState({
+    desde: '',
+    hasta: '',
+    zona: ''
+  });
+  const [destinosLoading, setDestinosLoading] = useState(false);
+  const [destinosError, setDestinosError] = useState<string | null>(null);
+
+  const fetchDestinosPopulares = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setDestinosLoading(true);
+    setDestinosError(null);
+
+    try {
+      const params = new URLSearchParams();
+      if (filtrosDestinos.desde) params.append('desde', `${filtrosDestinos.desde}T00:00:00`);
+      if (filtrosDestinos.hasta) params.append('hasta', `${filtrosDestinos.hasta}T23:59:59`);
+      if (filtrosDestinos.zona.trim()) params.append('zona', filtrosDestinos.zona.trim());
+
+      const response = await fetch(`${apiUrl}/viajes/admin/destinos-populares?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${session.token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Error al cargar destinos');
+      const data = await response.json();
+      setDestinos(data);
+    } catch (err) {
+      setDestinosError(err instanceof Error ? err.message : 'Error de conexión');
+    } finally {
+      setDestinosLoading(false);
+    }
+  };
+
+  // Eliminamos el useEffect que cargaba datos al inicio
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,6 +322,115 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl
             </div>
           </motion.div>
         )}
+      </div>
+
+      {/* Análisis de Destinos */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl shadow-gray-200/50 dark:shadow-black/40 border border-transparent dark:border-gray-800">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl">
+            <BarChart3 size={20} />
+          </div>
+          <h2 className="text-xl font-black text-gray-900 dark:text-white">Destinos Populares</h2>
+        </div>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6">
+          Zonas con mayor demanda de viajes en Mar del Plata.
+        </p>
+
+        <form onSubmit={fetchDestinosPopulares} className="space-y-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Desde</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <input
+                  type="date"
+                  value={filtrosDestinos.desde}
+                  onChange={(e) => setFiltrosDestinos({ ...filtrosDestinos, desde: e.target.value })}
+                  className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 py-2.5 pl-9 pr-3 text-xs font-bold outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Hasta</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <input
+                  type="date"
+                  value={filtrosDestinos.hasta}
+                  onChange={(e) => setFiltrosDestinos({ ...filtrosDestinos, hasta: e.target.value })}
+                  className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 py-2.5 pl-9 pr-3 text-xs font-bold outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Zona</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                <input
+                  type="text"
+                  placeholder="Ej: Playa Grande, Centro, Puerto..."
+                  value={filtrosDestinos.zona}
+                  onChange={(e) => setFiltrosDestinos({ ...filtrosDestinos, zona: e.target.value })}
+                  className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 py-2.5 pl-9 pr-3 text-xs font-bold outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                />
+              </div>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={destinosLoading}
+                className="w-full sm:w-32 bg-black dark:bg-white text-white dark:text-black h-[38px] rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-opacity disabled:bg-gray-400"
+              >
+                {destinosLoading ? '...' : 'FILTRAR'}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {destinosError && (
+          <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-bold flex items-center gap-2">
+            <AlertCircle size={14} /> {destinosError}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {destinos.length > 0 ? (
+            destinos.slice(0, 10).map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center text-gray-400 shadow-sm">
+                    <MapPin size={16} />
+                  </div>
+                  <span className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate pr-4">
+                    {item.destino}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Búsquedas</span>
+                  <div className="bg-black dark:bg-white text-white dark:text-black px-2.5 py-1 rounded-lg text-xs font-black min-w-[32px] text-center">
+                    {item.cantidad}
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : !destinosLoading && (
+            <div className="text-center py-12">
+              <div className="inline-flex p-4 rounded-3xl bg-gray-50 dark:bg-gray-800 text-gray-300 dark:text-gray-600 mb-4">
+                <BarChart3 size={32} />
+              </div>
+              <p className="text-sm font-bold text-gray-400">Aplica un filtro para ver estadísticas</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="rounded-3xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 p-5">
