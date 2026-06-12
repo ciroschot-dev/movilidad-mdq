@@ -8,7 +8,6 @@ import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
 import com.example.movilidadmdq.exception.OperacionNoPermitidaException;
 import com.example.movilidadmdq.exception.RecursoNoEncontradoException;
-import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
@@ -33,7 +32,7 @@ public class ViajeService
     private final WeatherService weatherService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
-    private final TarifaService tarifaService;
+    private final CalculadoraTaxiService calculadoraTaxiService;
     private final UberDeepLinkService uberDeepLinkService;
     private final DidiDeepLinkService didiDeepLinkService;
 
@@ -77,7 +76,7 @@ public class ViajeService
             System.err.println("Error Google Maps API: " + e.getMessage());
         }
 
-        BigDecimal precioTaxi = calcularTaxi(distanciaKm);
+        BigDecimal precioTaxi = calculadoraTaxiService.calcularPrecio(distanciaKm);
         double factorClima = obtenerFactorClima();
 
         OpcionTransporteResponse taxi = construirTaxi(precioTaxi, tiempoMin, (long) (distanciaKm * 1000));
@@ -157,93 +156,6 @@ public class ViajeService
                 && matrix.rows[0].elements[0].duration != null;
     }
 
-    // =========================
-    // 🚕 TAXI (tarifa real)
-    // =========================
-    //
-    // Como cobra el taxi en Mar del Plata:
-    //
-    //     precio_total = bajada_de_bandera + (cantidad_de_fichas * valor_de_ficha)
-    //
-    // - Bajada de bandera: monto fijo que se cobra al subir al taxi.
-    //   Es mas cara de noche que de dia.
-    // - Ficha: unidad de cobro por distancia recorrida. Cada N metros (160
-    //   por defecto) suma una ficha. Si el viaje sobra aunque sea un metro,
-    //   se cobra la ficha completa (por eso usamos Math.ceil mas abajo).
-    // - Valor de ficha: precio de cada ficha. Tambien es mas caro de noche.
-    //
-    // Los 5 valores se leen de la entidad Tarifa (tabla "tarifas"), asi un
-    // admin puede actualizarlos desde el endpoint PUT /admin/tarifas/taxi
-    // sin necesidad de redeploy.
-    //
-    // Si la DB tiene esos campos en NULL (por ejemplo cuando recien se
-    // agregan las columnas en una DB de produccion ya existente), se cae a
-    // los valores por defecto de abajo para que la app no rompa.
-
-    // Tarifas vigentes en Mar del Plata 2026 (fallback si la DB no tiene valores)
-    private static final BigDecimal DEFAULT_BAJADA_DIA       = BigDecimal.valueOf(2250);
-    private static final BigDecimal DEFAULT_BAJADA_NOCHE     = BigDecimal.valueOf(2700);
-    private static final BigDecimal DEFAULT_FICHA_DIA        = BigDecimal.valueOf(150);
-    private static final BigDecimal DEFAULT_FICHA_NOCHE      = BigDecimal.valueOf(180);
-    private static final int        DEFAULT_METROS_POR_FICHA = 160;
-
-    private BigDecimal calcularTaxi(double distanciaKm)
-    {
-        // 1. Traer la tarifa vigente del taxi desde la base de datos
-        Tarifa tarifa = tarifaService.obtenerTarifaTaxi();
-        boolean esNocturno = esHorarioNocturno();
-
-        // 2. Elegir que valores aplicar segun el horario
-        BigDecimal bajadaBandera = obtenerBajadaBandera(tarifa, esNocturno);
-        BigDecimal valorFicha    = obtenerValorFicha(tarifa, esNocturno);
-        int metrosPorFicha       = obtenerMetrosPorFicha(tarifa);
-
-        // 3. Calcular cuantas fichas suma el viaje.
-        //    Math.ceil garantiza que cualquier fraccion de ficha se cobre como ficha entera.
-        double distanciaMetros = distanciaKm * 1000;
-        int cantidadDeFichas   = (int) Math.ceil(distanciaMetros / metrosPorFicha);
-
-        // 4. Precio final = bajada de bandera + (fichas * valor de cada ficha)
-        BigDecimal precioPorFichas = valorFicha.multiply(BigDecimal.valueOf(cantidadDeFichas));
-        return bajadaBandera.add(precioPorFichas);
-    }
-
-    private BigDecimal obtenerBajadaBandera(Tarifa tarifa, boolean esNocturno)
-    {
-        if (esNocturno) {
-            return valorOrDefault(tarifa.getBajadaBanderaNoche(), DEFAULT_BAJADA_NOCHE);
-        }
-        return valorOrDefault(tarifa.getBajadaBanderaDia(), DEFAULT_BAJADA_DIA);
-    }
-
-    private BigDecimal obtenerValorFicha(Tarifa tarifa, boolean esNocturno)
-    {
-        if (esNocturno) {
-            return valorOrDefault(tarifa.getValorFichaNoche(), DEFAULT_FICHA_NOCHE);
-        }
-        return valorOrDefault(tarifa.getValorFichaDia(), DEFAULT_FICHA_DIA);
-    }
-
-    private int obtenerMetrosPorFicha(Tarifa tarifa)
-    {
-        return tarifa.getMetrosPorFicha() != null
-                ? tarifa.getMetrosPorFicha()
-                : DEFAULT_METROS_POR_FICHA;
-    }
-
-    // Devuelve el valor si no es null, sino el por defecto. Sirve para que
-    // calcularTaxi nunca falle si la DB todavia no tiene los campos cargados.
-    private BigDecimal valorOrDefault(BigDecimal valor, BigDecimal porDefecto)
-    {
-        return valor != null ? valor : porDefecto;
-    }
-
-    private boolean esHorarioNocturno()
-    {
-        int hora = LocalTime.now().getHour();
-        return hora >= 22 || hora < 6;
-    }
-
     private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin, long distanciaMetros)
     {
         return new OpcionTransporteResponse(
@@ -256,9 +168,6 @@ public class ViajeService
         );
     }
 
-    // =========================
-    // 🚗 UBER
-    // =========================
     private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, CalculoViajeRequest request, double factorClima, long distanciaMetros)
     {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85)); // base más barato que taxi
@@ -279,9 +188,6 @@ public class ViajeService
         );
     }
 
-    // =========================
-    // 🚙 DIDI
-    // =========================
     private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima, long distanciaMetros)
     {
         BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
