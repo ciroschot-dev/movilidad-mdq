@@ -118,6 +118,12 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const [historialError, setHistorialError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formInitialData, setFormInitialData] = useState<{
+    origen: string;
+    destino: string;
+    origenPlace?: LugarSeleccionado;
+    destinoPlace?: LugarSeleccionado;
+  } | null>(null);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -287,9 +293,15 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         }
     };
 
-    const repetirViaje = (origen: string, destino: string) => {
+    const repetirViaje = (
+        origen: string,
+        destino: string,
+        origenPlace?: LugarSeleccionado,
+        destinoPlace?: LugarSeleccionado
+    ) => {
+        setFormInitialData({ origen, destino, origenPlace, destinoPlace });
         setActiveView('calculo');
-        void handleCalculate(origen, destino);
+        void handleCalculate(origen, destino, origenPlace, destinoPlace);
     };
 
     const toggleFavorito = async (viajeId: number) => {
@@ -767,6 +779,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                     loading={loading} 
                     onInputChange={() => setError(null)} 
                     favoritos={favoritos || []}
+                    initialData={formInitialData || undefined}
                   />
               </section>
 
@@ -911,7 +924,24 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                           <div className="mt-4 grid grid-cols-2 gap-2">
                             <button
                                 type="button"
-                                onClick={() => repetirViaje(viaje.origen, viaje.destino)}
+                                onClick={() => repetirViaje(
+                                    viaje.origen, 
+                                    viaje.destino,
+                                    viaje.origenPlaceId ? {
+                                        addressLine1: viaje.origen,
+                                        addressLine2: viaje.origen,
+                                        placeId: viaje.origenPlaceId,
+                                        latitude: viaje.origenLat ?? 0,
+                                        longitude: viaje.origenLng ?? 0
+                                    } : undefined,
+                                    viaje.destinoPlaceId ? {
+                                        addressLine1: viaje.destino,
+                                        addressLine2: viaje.destino,
+                                        placeId: viaje.destinoPlaceId,
+                                        latitude: viaje.destinoLat ?? 0,
+                                        longitude: viaje.destinoLng ?? 0
+                                    } : undefined
+                                )}
                                 className="flex items-center justify-center gap-2 rounded-2xl bg-black dark:bg-white px-3 py-3 text-sm font-black text-white dark:text-black transition-all hover:bg-gray-800 dark:hover:bg-gray-200"
                             >
                                 <Repeat size={16} />

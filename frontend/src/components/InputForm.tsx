@@ -21,6 +21,12 @@ interface InputFormProps {
   loading: boolean;
   onInputChange?: () => void;
   favoritos: DireccionFavorita[];
+  initialData?: {
+    origen: string;
+    destino: string;
+    origenPlace?: LugarSeleccionado;
+    destinoPlace?: LugarSeleccionado;
+  };
 }
 
 interface Prediction {
@@ -28,11 +34,20 @@ interface Prediction {
   placeId: string;
 }
 
-const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChange, favoritos }) => {
+const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChange, favoritos, initialData }) => {
   const [origen, setOrigen] = useState('');
   const [destino, setDestino] = useState('');
   const [origenPlace, setOrigenPlace] = useState<LugarSeleccionado>();
   const [destinoPlace, setDestinoPlace] = useState<LugarSeleccionado>();
+
+  useEffect(() => {
+    if (initialData) {
+      setOrigen(initialData.origen);
+      setDestino(initialData.destino);
+      setOrigenPlace(initialData.origenPlace);
+      setDestinoPlace(initialData.destinoPlace);
+    }
+  }, [initialData]);
 
   const [origenSuggestions, setOrigenSuggestions] = useState<Prediction[]>([]);
   const [destinoSuggestions, setDestinoSuggestions] = useState<Prediction[]>([]);
