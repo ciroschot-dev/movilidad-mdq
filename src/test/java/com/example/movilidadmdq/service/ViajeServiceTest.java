@@ -91,10 +91,12 @@ class ViajeServiceTest {
 
         when(googleMapsService.obtenerDatosViaje(anyString(), anyString())).thenReturn(matrix);
 
-        // Mock Tarifa
+        // Mock Tarifa con sistema de fichas de Mar del Plata
         Tarifa tarifaTaxi = new Tarifa();
-        tarifaTaxi.setPrecioBase(new BigDecimal("2250.00"));
-        tarifaTaxi.setPrecioPorKm(new BigDecimal("937.50"));
+        tarifaTaxi.setBajadaBanderaDia(new BigDecimal("2250.00"));
+        tarifaTaxi.setValorFichaDia(new BigDecimal("150.00"));
+        tarifaTaxi.setMetrosPorFicha(160);
+        
         when(tarifaService.obtenerTarifaTaxi()).thenReturn(tarifaTaxi);
 
         // Mock Clima
