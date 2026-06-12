@@ -91,8 +91,7 @@ public class ViajeService
 
         // --- GUARDAR EN BASE DE DATOS AL FINAL CON PRECIOS REALES ---
         guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
-                taxi.precio(), uber.precio(), uber.precio(),
-                didi.precio(), didi.precio(), usuarioId, request);
+                taxi.precio(), uber.precio(), didi.precio(), usuarioId, request);
 
         List<OpcionTransporteResponse> opciones = List.of(taxi, uber, didi);
 
@@ -103,8 +102,8 @@ public class ViajeService
     }
 
     private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin,
-                                  BigDecimal precioTaxi, BigDecimal uberMin, BigDecimal uberMax,
-                                  BigDecimal didiMin, BigDecimal didiMax, Long usuarioId, CalculoViajeRequest request)
+                                  BigDecimal precioTaxi, BigDecimal precioUber, BigDecimal precioDidi,
+                                  Long usuarioId, CalculoViajeRequest request)
     {
         if (usuarioId == null) return;
 
@@ -118,11 +117,8 @@ public class ViajeService
                 nuevoViaje.setDistanciaEnMetros(distanciaMetros);
                 nuevoViaje.setTiempoEstimadoMin(tiempoMin);
                 nuevoViaje.setPrecioTaxi(precioTaxi);
-
-                nuevoViaje.setPrecioUberMin(uberMin);
-                nuevoViaje.setPrecioUberMax(uberMax);
-                nuevoViaje.setPrecioDidiMin(didiMin);
-                nuevoViaje.setPrecioDidiMax(didiMax);
+                nuevoViaje.setPrecioUber(precioUber);
+                nuevoViaje.setPrecioDidi(precioDidi);
 
                 // Guardar coordenadas y Place IDs para optimización futura
                 nuevoViaje.setOrigenPlaceId(request.origenPlaceId());
@@ -284,10 +280,8 @@ public class ViajeService
                 viaje.getDistanciaEnMetros(),
                 viaje.getTiempoEstimadoMin(),
                 viaje.getPrecioTaxi(),
-                viaje.getPrecioUberMin(),
-                viaje.getPrecioUberMax(),
-                viaje.getPrecioDidiMin(),
-                viaje.getPrecioDidiMax(),
+                viaje.getPrecioUber(),
+                viaje.getPrecioDidi(),
                 viaje.getTipoElegido() != null ? viaje.getTipoElegido().name() : null,
                 viaje.getFechaHora(),
                 viaje.isFavorito(),
