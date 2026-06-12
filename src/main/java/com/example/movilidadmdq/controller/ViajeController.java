@@ -1,5 +1,6 @@
 package com.example.movilidadmdq.controller;
 
+import com.example.movilidadmdq.dto.ActualizarDireccionFavoritaRequest;
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
@@ -116,6 +117,43 @@ public class ViajeController
 
         return usuarioRepository.findByUsername(authentication.getName())
                 .map(usuario -> ResponseEntity.ok(viajeService.obtenerDireccionesFavoritas(usuario.getId())))
+                .orElse(ResponseEntity.status(401).build());
+    }
+
+    @Operation(summary = "Renombrar dirección favorita", description = "Permite asignar un nombre personalizado (alias) a una dirección favorita.")
+    @PutMapping("/direcciones-favoritas/{id}")
+    public ResponseEntity<Void> renombrarDireccionFavorita(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarDireccionFavoritaRequest request,
+            Authentication authentication
+    ) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuario -> {
+                    viajeService.renombrarDireccionFavorita(id, request.nombre(), usuario.getId());
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.status(401).build());
+    }
+
+    @Operation(summary = "Eliminar dirección favorita", description = "Quita una dirección de la lista de favoritos.")
+    @DeleteMapping("/direcciones-favoritas/{id}")
+    public ResponseEntity<Void> eliminarDireccionFavorita(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .map(usuario -> {
+                    viajeService.eliminarDireccionFavorita(id, usuario.getId());
+                    return ResponseEntity.ok().<Void>build();
+                })
                 .orElse(ResponseEntity.status(401).build());
     }
 
