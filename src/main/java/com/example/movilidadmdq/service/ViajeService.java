@@ -28,6 +28,7 @@ public class ViajeService
 {
     // === Inyecciones ===
     private final GoogleMapsService googleMapsService;
+    private final WeatherService weatherService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
     private final com.example.movilidadmdq.repository.DireccionFavoritaRepository direccionFavoritaRepository;
@@ -81,21 +82,23 @@ public class ViajeService
 
         BigDecimal precioTaxi = calculadoraTaxiService.calcularPrecio(distanciaKm);
 
+        // El orquestador junta las señales externas (clima) y se las pasa a los calculadores.
+        double factorClima = weatherService.obtenerFactorClima();
+
         OpcionTransporteResponse taxi = construirTaxi(precioTaxi, tiempoMin, distanciaMetros);
-        List<OpcionTransporteResponse> apps = estimadorPrecioAppService.estimarOpciones(precioTaxi, tiempoMin, request, distanciaMetros);
-        OpcionTransporteResponse uber = apps.get(0);
-        OpcionTransporteResponse didi = apps.get(1);
+        OpcionTransporteResponse uber = estimadorPrecioAppService.estimarUber(precioTaxi, tiempoMin, factorClima, distanciaMetros, request);
+        OpcionTransporteResponse didi = estimadorPrecioAppService.estimarDidi(precioTaxi, tiempoMin, factorClima, distanciaMetros);
 
         // --- GUARDAR EN BASE DE DATOS AL FINAL CON PRECIOS REALES ---
         guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
-                taxi.precioMin(), uber.precioMin(), uber.precioMax(),
-                didi.precioMin(), didi.precioMax(), usuarioId, request);
+                taxi.precio(), uber.precio(), uber.precio(),
+                didi.precio(), didi.precio(), usuarioId, request);
 
         List<OpcionTransporteResponse> opciones = List.of(taxi, uber, didi);
 
         // 💸 ordenar por precio más bajo
         return opciones.stream()
-                .sorted(Comparator.comparing(OpcionTransporteResponse::precioMin))
+                .sorted(Comparator.comparing(OpcionTransporteResponse::precio))
                 .toList();
     }
 
@@ -162,7 +165,6 @@ public class ViajeService
     {
         return new OpcionTransporteResponse(
                 TipoTransporte.TAXI,
-                precioTaxi,
                 precioTaxi,
                 tiempoMin,
                 distanciaMetros,
