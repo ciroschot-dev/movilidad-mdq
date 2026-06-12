@@ -2,6 +2,7 @@ package com.example.movilidadmdq.repository;
 
 import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.model.Viaje;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,5 +26,6 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long>
     List<DestinoPopularResponse> findPopularDestinations(
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta,
-            @Param("zona") String zona);
+            @Param("zona") String zona,
+            Pageable pageable);
 }
