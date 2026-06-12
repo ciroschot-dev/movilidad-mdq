@@ -5,6 +5,10 @@ import com.example.movilidadmdq.config.JwtAuthFilter;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +35,7 @@ import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.repository.TarifaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.math.BigDecimal;
 
 @Configuration
@@ -47,6 +52,12 @@ public class SecurityConfig
 
     @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080,https://movilidad-mdq.vercel.app,https://movilidad-mb6kktce3-mdp-tech.vercel.app}")
     private List<String> allowedOrigins;
+
+    @Value("${app.admin.username:}")
+    private String adminUsername;
+
+    @Value("${app.admin.password:}")
+    private String adminPassword;
 
     @Bean
     public UserDetailsService userDetailsService()
@@ -68,9 +79,29 @@ public class SecurityConfig
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception
+                        // Cuando llega un request sin token o con token invalido a un
+                        // endpoint protegido, Spring Security corta antes de llegar al
+                        // controller. Por defecto devolveria un HTML feo o un 401 vacio:
+                        // forzamos un JSON con el mismo shape de ApiError para que el
+                        // cliente reciba siempre la misma forma de error.
                         .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
-                        )
+                        {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            String json = "{"
+                                    + "\"timestamp\":\"" + LocalDateTime.now() + "\","
+                                    + "\"status\":401,"
+                                    + "\"error\":\"Unauthorized\","
+                                    + "\"message\":\"No autenticado\","
+                                    + "\"path\":\"" + request.getRequestURI() + "\","
+                                    + "\"errores\":null"
+                                    + "}";
+                            try (PrintWriter writer = response.getWriter())
+                            {
+                                writer.write(json);
+                            }
+                        })
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -98,30 +129,71 @@ public class SecurityConfig
         return http.build();
     }
 
+    // Bootstrap inicial del sistema. Corre en cada arranque, pero:
+    //
+    //   - Si YA existe algun usuario con rol ADMIN en la DB, no se hace nada:
+    //     la app arranca normal, las variables APP_ADMIN_USERNAME / _PASSWORD
+    //     pueden estar vacias.
+    //   - Si NO existe ningun admin (primer arranque contra una DB vacia),
+    //     ahi si se exigen las variables y se crea el admin con esos valores.
+    //   - Una vez creado, la password del admin vive en la tabla "usuarios"
+    //     hasheada con BCrypt. Esa es la fuente de verdad: cambiar el .env
+    //     despues NO modifica al admin existente.
+    //   - Para cambiar la password real, se usa el endpoint PUT /usuarios/{id}
+    //     o un UPDATE en la DB con un hash BCrypt nuevo.
+    //
+    // Las credenciales nunca van hardcodeadas en el codigo.
     @Bean
-    CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder) {
-        return args -> {
-            // 1. Asegurar Admin: Si existe lo actualiza, si no lo crea
-            Usuario admin = userRepo.findByUsername("admin").orElse(null);
-            if (admin == null) {
-                admin = new Usuario();
-                admin.setUsername("admin");
-                admin.setPassword(encoder.encode("admin123"));
+    CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder)
+    {
+        return args ->
+        {
+            // 1. Asegurar Admin solo si no hay ninguno en la DB.
+            if (!userRepo.existsByRole(Role.ADMIN))
+            {
+                if (adminUsername == null || adminUsername.isBlank()
+                        || adminPassword == null || adminPassword.isBlank())
+                {
+                    throw new IllegalStateException(
+                            "Primer arranque sin admin en la DB: APP_ADMIN_USERNAME y "
+                                    + "APP_ADMIN_PASSWORD deben estar definidas en el entorno (.env)");
+                }
+
+                Usuario admin = new Usuario();
+                admin.setUsername(adminUsername);
+                admin.setPassword(encoder.encode(adminPassword));
                 admin.setEmail("admin@movilidadmdq.com");
                 admin.setRole(Role.ADMIN);
                 userRepo.save(admin);
-                System.out.println("--- [SISTEMA] Usuario admin creado (admin/admin123) ---");
-            } else if (admin.getRole() != Role.ADMIN) {
-                admin.setRole(Role.ADMIN);
-                userRepo.save(admin);
-                System.out.println("--- [SISTEMA] Usuario admin actualizado a rol ADMIN ---");
+                System.out.println("--- [SISTEMA] Usuario admin creado ---");
             }
 
             // 2. Asegurar Tarifas
-            if (tarifaRepo.count() == 0) {
-                tarifaRepo.save(new Tarifa(null, TipoTransporte.TAXI, new BigDecimal("2250.00"), new BigDecimal("937.50"), null));
-                tarifaRepo.save(new Tarifa(null, TipoTransporte.UBER, BigDecimal.ZERO, BigDecimal.ZERO, null));
-                tarifaRepo.save(new Tarifa(null, TipoTransporte.DIDI, BigDecimal.ZERO, BigDecimal.ZERO, null));
+            if (tarifaRepo.count() == 0)
+            {
+                Tarifa taxi = new Tarifa();
+                taxi.setTipoTransporte(TipoTransporte.TAXI);
+                taxi.setPrecioBase(new BigDecimal("2250.00"));
+                taxi.setPrecioPorKm(new BigDecimal("937.50"));
+                taxi.setBajadaBanderaDia(new BigDecimal("2250.00"));
+                taxi.setBajadaBanderaNoche(new BigDecimal("2700.00"));
+                taxi.setValorFichaDia(new BigDecimal("150.00"));
+                taxi.setValorFichaNoche(new BigDecimal("180.00"));
+                taxi.setMetrosPorFicha(160);
+                tarifaRepo.save(taxi);
+
+                Tarifa uber = new Tarifa();
+                uber.setTipoTransporte(TipoTransporte.UBER);
+                uber.setPrecioBase(BigDecimal.ZERO);
+                uber.setPrecioPorKm(BigDecimal.ZERO);
+                tarifaRepo.save(uber);
+
+                Tarifa didi = new Tarifa();
+                didi.setTipoTransporte(TipoTransporte.DIDI);
+                didi.setPrecioBase(BigDecimal.ZERO);
+                didi.setPrecioPorKm(BigDecimal.ZERO);
+                tarifaRepo.save(didi);
+
                 System.out.println("--- [SISTEMA] Tarifas base cargadas ---");
             }
         };

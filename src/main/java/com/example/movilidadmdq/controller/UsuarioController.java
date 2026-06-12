@@ -50,33 +50,26 @@ public class UsuarioController
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request)
     {
-        try
-        {
-            return ResponseEntity.ok(usuarioService.login(request));
-        }
-        catch (RuntimeException ex)
-        {
-            return ResponseEntity.status(401).build();
-        }
+        // Sin try/catch: si las credenciales son invalidas, Spring Security
+        // tira BadCredentialsException y el GlobalExceptionHandler la traduce
+        // a un 401. Lo unico que hace este metodo es orquestar.
+        return ResponseEntity.ok(usuarioService.login(request));
     }
 
     @Operation(summary = "Registrarse", description = "Se ingresan credenciales para registrarse, devuelve token")
     @ApiResponses(value ={
         @ApiResponse(responseCode = "200", description = "Registro exitoso, devuelve el token"),
-        @ApiResponse(responseCode = "400", description = "Datos inválidos o usuario ya registrado")
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "409", description = "Username o email ya registrados")
     })
 
     @PostMapping("/registro")
     public ResponseEntity<AuthResponse> registrar(@Valid @RequestBody RegistroRequest request)
     {
-        try
-        {
-            return ResponseEntity.ok(usuarioService.registrar(request));
-        }
-        catch (IllegalArgumentException ex)
-        {
-            return ResponseEntity.badRequest().build();
-        }
+        // Sin try/catch: las validaciones de @Valid tiran MethodArgumentNotValid
+        // (400) y los duplicados tiran RecursoDuplicadoException (409). Ambos
+        // los traduce el GlobalExceptionHandler.
+        return ResponseEntity.ok(usuarioService.registrar(request));
     }
 
     @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado ")
@@ -218,5 +211,44 @@ public class UsuarioController
                     }
                     return ResponseEntity.ok(usuarioService.toResponse(usuarioRepository.save(usuario)));
                 }).orElse(ResponseEntity.status(403).build());
+    }
+
+    @Operation(summary = "Buscar usuario por username o email", description = "Devuelve los datos de un usuario buscado. Solo accesible por administradores.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+            @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
+    })
+    @GetMapping("/buscar")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UsuarioResponse> buscarUsuario(@RequestParam String query) {
+        return usuarioRepository.findByUsername(query)
+                .or(() -> usuarioRepository.findByEmail(query))
+                .map(usuarioService::toResponse)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Eliminar cuenta de usuario", description = "Elimina permanentemente la cuenta del usuario. Los usuarios pueden eliminar su propia cuenta, y los administradores pueden eliminar cualquier cuenta.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Cuenta eliminada con éxito"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No tiene permiso para eliminar esta cuenta")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCuenta(@PathVariable Long id, Authentication authentication)
+    {
+        if (authentication == null || authentication.getName() == null)
+        {
+            return ResponseEntity.status(401).build();
+        }
+
+        return usuarioRepository.findByUsername(authentication.getName())
+                .filter(usuario -> usuario.getId().equals(id) || usuario.getRole() == com.example.movilidadmdq.enums.Role.ADMIN)
+                .map(usuario -> {
+                    usuarioService.eliminarUsuario(id);
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElse(ResponseEntity.status(403).build());
     }
 }

@@ -39,8 +39,6 @@ class ViajeRepositoryTest {
         viaje1.setDistanciaEnMetros(1000L);
         viaje1.setTiempoEstimadoMin(10);
         viaje1.setPrecioTaxi(new BigDecimal("1000"));
-        viaje1.setPrecioMinApp(new BigDecimal("800"));
-        viaje1.setPrecioMaxApp(new BigDecimal("1200"));
         viaje1.setUsuario(usuario);
         viajeRepository.save(viaje1);
 
@@ -50,8 +48,6 @@ class ViajeRepositoryTest {
         viaje2.setDistanciaEnMetros(2000L);
         viaje2.setTiempoEstimadoMin(20);
         viaje2.setPrecioTaxi(new BigDecimal("2000"));
-        viaje2.setPrecioMinApp(new BigDecimal("1600"));
-        viaje2.setPrecioMaxApp(new BigDecimal("2400"));
         viaje2.setUsuario(usuario);
         viajeRepository.save(viaje2);
 

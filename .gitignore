@@ -44,3 +44,7 @@ dist/
 .env
 .pem
 movilidad-key.pem
+
+# macOS
+.DS_Store
+**/.DS_Store
