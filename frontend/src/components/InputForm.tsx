@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { MapPin, Navigation, Loader2, Star, Search } from 'lucide-react';
 import MapView from './MapView';
+import type { DireccionFavorita } from '../types';
 
 export interface LugarSeleccionado {
   addressLine1: string;
@@ -8,13 +9,6 @@ export interface LugarSeleccionado {
   placeId: string;
   latitude: number;
   longitude: number;
-}
-
-interface DireccionFavorita {
-  direccion: string;
-  placeId: string;
-  lat: number;
-  lng: number;
 }
 
 interface InputFormProps {
@@ -27,6 +21,12 @@ interface InputFormProps {
   loading: boolean;
   onInputChange?: () => void;
   favoritos: DireccionFavorita[];
+  initialData?: {
+    origen: string;
+    destino: string;
+    origenPlace?: LugarSeleccionado;
+    destinoPlace?: LugarSeleccionado;
+  };
 }
 
 interface Prediction {
@@ -34,11 +34,20 @@ interface Prediction {
   placeId: string;
 }
 
-const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChange, favoritos }) => {
+const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChange, favoritos, initialData }) => {
   const [origen, setOrigen] = useState('');
   const [destino, setDestino] = useState('');
   const [origenPlace, setOrigenPlace] = useState<LugarSeleccionado>();
   const [destinoPlace, setDestinoPlace] = useState<LugarSeleccionado>();
+
+  useEffect(() => {
+    if (initialData) {
+      setOrigen(initialData.origen);
+      setDestino(initialData.destino);
+      setOrigenPlace(initialData.origenPlace);
+      setDestinoPlace(initialData.destinoPlace);
+    }
+  }, [initialData]);
 
   const [origenSuggestions, setOrigenSuggestions] = useState<Prediction[]>([]);
   const [destinoSuggestions, setDestinoSuggestions] = useState<Prediction[]>([]);
@@ -280,8 +289,13 @@ const InputForm: React.FC<InputFormProps> = ({ onCalculate, loading, onInputChan
             </div>
             <div className="flex flex-col overflow-hidden">
               <span className="font-bold text-gray-900 dark:text-gray-100 truncate">
-                {fav.direccion}
+                {fav.nombre || fav.direccion}
               </span>
+              {fav.nombre && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {fav.direccion}
+                </span>
+              )}
               <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-widest">Favorito</span>
             </div>
           </button>

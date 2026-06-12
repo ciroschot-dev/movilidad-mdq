@@ -12,6 +12,7 @@ import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +30,12 @@ public class ViajeService
     private final GoogleMapsService googleMapsService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
+    private final com.example.movilidadmdq.repository.DireccionFavoritaRepository direccionFavoritaRepository;
     private final CalculadoraTaxiService calculadoraTaxiService;
     private final EstimadorPrecioAppService estimadorPrecioAppService;
+
+    @Value("${taxi.telefono:+542234941010}")
+    private String telefonoTaxi;
 
     public List<DestinoPopularResponse> obtenerDestinosPopulares(LocalDateTime desde, LocalDateTime hasta, String zona)
     {
@@ -161,33 +166,50 @@ public class ViajeService
                 precioTaxi,
                 tiempoMin,
                 distanciaMetros,
-                "tel:+5402234941010"
+                "tel:" + telefonoTaxi
         );
     }
 
     @Transactional
     public void toggleFavorito(Long viajeId, Long usuarioId)
     {
-
-        // Caso 1: el viaje no existe en la DB -> 404.
         Viaje viaje = viajeRepository.findById(viajeId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Viaje no encontrado"));
 
-        // Caso 2: el viaje existe pero es de otro usuario -> 403.
-        //
-        // Nota: devolver 403 (distinto del 404) revela al cliente que el viaje
-        // existe. En contextos con datos sensibles eso seria una fuga de info y
-        // se preferiria responder 404 tambien aca. En esta API priorizamos
-        // claridad semantica: el JWT del usuario es valido, lo que falla es la
-        // autorizacion a nivel recurso. "Se quien sos, pero esto no es tuyo".
         if (!viaje.getUsuario().getId().equals(usuarioId))
         {
             throw new OperacionNoPermitidaException("No tienes permiso para modificar este viaje");
         }
 
-        viaje.setFavorito(!viaje.isFavorito());
-
+        boolean nuevoEstado = !viaje.isFavorito();
+        viaje.setFavorito(nuevoEstado);
         viajeRepository.save(viaje);
+
+        if (nuevoEstado)
+        {
+            syncDireccionFavorita(viaje.getOrigen(), viaje.getOrigenPlaceId(), viaje.getOrigenLat(), viaje.getOrigenLng(), usuarioId);
+            syncDireccionFavorita(viaje.getDestino(), viaje.getDestinoPlaceId(), viaje.getDestinoLat(), viaje.getDestinoLng(), usuarioId);
+        }
+    }
+
+    private void syncDireccionFavorita(String direccion, String placeId, Double lat, Double lng, Long usuarioId)
+    {
+        if (direccion == null) return;
+
+        java.util.Optional<com.example.movilidadmdq.model.DireccionFavorita> existing = (placeId != null && !placeId.isBlank())
+                ? direccionFavoritaRepository.findByUsuarioIdAndPlaceId(usuarioId, placeId)
+                : direccionFavoritaRepository.findByUsuarioIdAndDireccion(usuarioId, direccion);
+
+        if (existing.isEmpty())
+        {
+            com.example.movilidadmdq.model.DireccionFavorita df = new com.example.movilidadmdq.model.DireccionFavorita();
+            df.setDireccion(direccion);
+            df.setPlaceId(placeId);
+            df.setLat(lat);
+            df.setLng(lng);
+            df.setUsuario(usuarioRepository.getReferenceById(usuarioId));
+            direccionFavoritaRepository.save(df);
+        }
     }
 
     public List<Viaje> obtenerFavoritos(Long usuarioId)
@@ -195,41 +217,60 @@ public class ViajeService
         return viajeRepository.findByUsuarioIdAndFavoritoTrue(usuarioId);
     }
 
+    @Transactional
     public List<DireccionFavoritaResponse> obtenerDireccionesFavoritas(Long usuarioId)
     {
-        List<Viaje> favoritos = obtenerFavoritos(usuarioId);
+        List<com.example.movilidadmdq.model.DireccionFavorita> saved = direccionFavoritaRepository.findByUsuarioId(usuarioId);
 
-        // Usamos un mapa para evitar duplicados basado en la dirección o el placeId
-        java.util.Map<String, DireccionFavoritaResponse> direcciones = new java.util.LinkedHashMap<>();
-
-        for (Viaje v : favoritos)
+        if (saved.isEmpty())
         {
-            // Procesar Origen
-            if (v.getOrigen() != null)
+            List<Viaje> favoritos = obtenerFavoritos(usuarioId);
+            for (Viaje v : favoritos)
             {
-                String key = v.getOrigenPlaceId() != null ? v.getOrigenPlaceId() : v.getOrigen();
-                direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
-                        v.getOrigen(),
-                        v.getOrigenPlaceId(),
-                        v.getOrigenLat(),
-                        v.getOrigenLng()
-                ));
+                syncDireccionFavorita(v.getOrigen(), v.getOrigenPlaceId(), v.getOrigenLat(), v.getOrigenLng(), usuarioId);
+                syncDireccionFavorita(v.getDestino(), v.getDestinoPlaceId(), v.getDestinoLat(), v.getDestinoLng(), usuarioId);
             }
-
-            // Procesar Destino
-            if (v.getDestino() != null)
-            {
-                String key = v.getDestinoPlaceId() != null ? v.getDestinoPlaceId() : v.getDestino();
-                direcciones.putIfAbsent(key, new DireccionFavoritaResponse(
-                        v.getDestino(),
-                        v.getDestinoPlaceId(),
-                        v.getDestinoLat(),
-                        v.getDestinoLng()
-                ));
-            }
+            saved = direccionFavoritaRepository.findByUsuarioId(usuarioId);
         }
 
-        return new java.util.ArrayList<>(direcciones.values());
+        return saved.stream()
+                .map(df -> new DireccionFavoritaResponse(
+                        df.getId(),
+                        df.getNombre(),
+                        df.getDireccion(),
+                        df.getPlaceId(),
+                        df.getLat(),
+                        df.getLng()))
+                .toList();
+    }
+
+    @Transactional
+    public void renombrarDireccionFavorita(Long id, String nuevoNombre, Long usuarioId)
+    {
+        com.example.movilidadmdq.model.DireccionFavorita df = direccionFavoritaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Dirección favorita no encontrada"));
+
+        if (!df.getUsuario().getId().equals(usuarioId))
+        {
+            throw new RuntimeException("No tienes permiso para modificar este favorito");
+        }
+
+        df.setNombre(nuevoNombre);
+        direccionFavoritaRepository.save(df);
+    }
+
+    @Transactional
+    public void eliminarDireccionFavorita(Long id, Long usuarioId)
+    {
+        com.example.movilidadmdq.model.DireccionFavorita df = direccionFavoritaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Dirección favorita no encontrada"));
+
+        if (!df.getUsuario().getId().equals(usuarioId))
+        {
+            throw new RuntimeException("No tienes permiso para eliminar este favorito");
+        }
+
+        direccionFavoritaRepository.delete(df);
     }
 
     public ViajeHistorialResponse toResponse(Viaje viaje)
