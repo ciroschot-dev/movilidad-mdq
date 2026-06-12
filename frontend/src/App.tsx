@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, useRef, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings, Star, Sun, Moon } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
@@ -124,6 +124,14 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     origenPlace?: LugarSeleccionado;
     destinoPlace?: LugarSeleccionado;
   } | null>(null);
+
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+      if (resultados && resultados.length > 0) {
+          resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+  }, [resultados]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -801,7 +809,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                     <p className="text-gray-400 font-medium">Calculando opciones...</p>
                   </motion.div>
                 ) : resultados ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div ref={resultsRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <div className="flex items-center justify-between mb-4 px-1">
                       <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">Opciones disponibles</h2>
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
