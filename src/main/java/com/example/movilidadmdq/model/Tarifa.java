@@ -40,22 +40,6 @@ public class Tarifa
     @Column(unique = true, nullable = false)
     private TipoTransporte tipoTransporte;
 
-    // === Valores generales (los usan Uber y Didi) ===
-
-    /**
-     * Precio fijo de arranque del viaje.
-     */
-    @NotNull
-    @DecimalMin("0.0")
-    private BigDecimal precioBase;
-
-    /**
-     * Cuánto se suma por cada kilómetro recorrido.
-     */
-    @NotNull
-    @DecimalMin("0.0")
-    private BigDecimal precioPorKm;
-
     // === Valores específicos del taxi de Mar del Plata (sistema de fichas) ===
     // Estos campos son opcionales para que las filas de Uber y Didi puedan
     // dejarlos vacíos sin romper la base de datos.

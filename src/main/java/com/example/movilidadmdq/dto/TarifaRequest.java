@@ -12,14 +12,6 @@ import java.math.BigDecimal;
 // llega con valor: no podemos aceptar precios o metros negativos.
 @Data
 public class TarifaRequest {
-    @Schema(description = "Precio base del viaje en pesos (legacy, modelo lineal)", example = "1500.00")
-    @PositiveOrZero(message = "El precio base no puede ser negativo")
-    BigDecimal precioBase;
-
-    @Schema(description = "Precio por kilómetro recorrido en pesos (legacy, modelo lineal)", example = "350.00")
-    @PositiveOrZero(message = "El precio por km no puede ser negativo")
-    BigDecimal precioPorKm;
-
     @Schema(description = "Bajada de bandera diurna (6:00 a 22:00)", example = "2250.00")
     @PositiveOrZero(message = "La bajada de bandera diurna no puede ser negativa")
     BigDecimal bajadaBanderaDia;

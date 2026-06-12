@@ -28,8 +28,6 @@ public class TarifaService
         Tarifa tarifaTaxi = tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la tarifa de taxi"));
 
-        if (request.getPrecioBase() != null) tarifaTaxi.setPrecioBase(request.getPrecioBase());
-        if (request.getPrecioPorKm() != null) tarifaTaxi.setPrecioPorKm(request.getPrecioPorKm());
         if (request.getBajadaBanderaDia() != null) tarifaTaxi.setBajadaBanderaDia(request.getBajadaBanderaDia());
         if (request.getBajadaBanderaNoche() != null) tarifaTaxi.setBajadaBanderaNoche(request.getBajadaBanderaNoche());
         if (request.getValorFichaDia() != null) tarifaTaxi.setValorFichaDia(request.getValorFichaDia());
