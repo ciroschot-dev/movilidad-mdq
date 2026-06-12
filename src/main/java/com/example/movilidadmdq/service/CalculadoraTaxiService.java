@@ -1,5 +1,6 @@
 package com.example.movilidadmdq.service;
 
+import com.example.movilidadmdq.exception.TarifaIncompletaException;
 import com.example.movilidadmdq.model.Tarifa;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,9 +45,18 @@ public class CalculadoraTaxiService
         // De noche cambian tanto la bajada de bandera como el valor de la ficha.
         BigDecimal bajadaBandera = esNocturno ? tarifa.getBajadaBanderaNoche() : tarifa.getBajadaBanderaDia();
         BigDecimal valorFicha    = esNocturno ? tarifa.getValorFichaNoche()    : tarifa.getValorFichaDia();
+        Integer metrosPorFicha   = tarifa.getMetrosPorFicha();
+
+        // Si falta algún valor, la tarifa no está bien cargada. Avisamos con un
+        // mensaje claro en vez de reventar con un NullPointer más adelante.
+        if (bajadaBandera == null || valorFicha == null || metrosPorFicha == null)
+        {
+            throw new TarifaIncompletaException(
+                    "La tarifa del taxi no está completamente cargada. Configurala en PUT /admin/tarifas/taxi.");
+        }
 
         // Math.ceil: cualquier fracción de ficha se cobra como ficha entera.
-        int cantidadDeFichas = (int) Math.ceil(distanciaKm * 1000 / tarifa.getMetrosPorFicha());
+        int cantidadDeFichas = (int) Math.ceil(distanciaKm * 1000.0 / metrosPorFicha);
 
         return bajadaBandera.add(valorFicha.multiply(BigDecimal.valueOf(cantidadDeFichas)));
     }
