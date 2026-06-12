@@ -17,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -29,12 +27,10 @@ public class ViajeService
 {
     // === Inyecciones ===
     private final GoogleMapsService googleMapsService;
-    private final WeatherService weatherService;
     private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
     private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
     private final CalculadoraTaxiService calculadoraTaxiService;
-    private final UberDeepLinkService uberDeepLinkService;
-    private final DidiDeepLinkService didiDeepLinkService;
+    private final EstimadorPrecioAppService estimadorPrecioAppService;
 
     public List<DestinoPopularResponse> obtenerDestinosPopulares(LocalDateTime desde, LocalDateTime hasta, String zona)
     {
@@ -76,15 +72,16 @@ public class ViajeService
             System.err.println("Error Google Maps API: " + e.getMessage());
         }
 
-        BigDecimal precioTaxi = calculadoraTaxiService.calcularPrecio(distanciaKm);
-        double factorClima = obtenerFactorClima();
+        long distanciaMetros = (long) (distanciaKm * 1000);
 
-        OpcionTransporteResponse taxi = construirTaxi(precioTaxi, tiempoMin, (long) (distanciaKm * 1000));
-        OpcionTransporteResponse uber = construirUber(precioTaxi, tiempoMin, request, factorClima, (long) (distanciaKm * 1000));
-        OpcionTransporteResponse didi = construirDidi(precioTaxi, tiempoMin, factorClima, (long) (distanciaKm * 1000));
+        BigDecimal precioTaxi = calculadoraTaxiService.calcularPrecio(distanciaKm);
+
+        OpcionTransporteResponse taxi = construirTaxi(precioTaxi, tiempoMin, distanciaMetros);
+        List<OpcionTransporteResponse> apps = estimadorPrecioAppService.estimarOpciones(precioTaxi, tiempoMin, request, distanciaMetros);
+        OpcionTransporteResponse uber = apps.get(0);
+        OpcionTransporteResponse didi = apps.get(1);
 
         // --- GUARDAR EN BASE DE DATOS AL FINAL CON PRECIOS REALES ---
-        long distanciaMetros = (long) (distanciaKm * 1000);
         guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
                 taxi.precioMin(), uber.precioMin(), uber.precioMax(),
                 didi.precioMin(), didi.precioMax(), usuarioId, request);
@@ -166,79 +163,6 @@ public class ViajeService
                 distanciaMetros,
                 "tel:+5402234941010"
         );
-    }
-
-    private OpcionTransporteResponse construirUber(BigDecimal precioTaxi, int tiempoMin, CalculoViajeRequest request, double factorClima, long distanciaMetros)
-    {
-        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.85)); // base más barato que taxi
-
-        double factorHorario = obtenerFactorHorario();
-        double factorDemanda = obtenerFactorDemanda();
-
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorHorario * factorClima));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorHorario * factorClima * factorDemanda));
-
-        return new OpcionTransporteResponse(
-                TipoTransporte.UBER,
-                precioMin.setScale(2, RoundingMode.HALF_UP),
-                precioMax.setScale(2, RoundingMode.HALF_UP),
-                tiempoMin,
-                distanciaMetros,
-                uberDeepLinkService.generarUrl(request)
-        );
-    }
-
-    private OpcionTransporteResponse construirDidi(BigDecimal precioTaxi, int tiempoMin, double factorClima, long distanciaMetros)
-    {
-        BigDecimal base = precioTaxi.multiply(BigDecimal.valueOf(0.75));
-
-        double factorHorario = obtenerFactorHorario();
-        double factorDemanda = obtenerFactorDemanda();
-
-        BigDecimal precioMin = base.multiply(BigDecimal.valueOf(factorHorario));
-        BigDecimal precioMax = base.multiply(BigDecimal.valueOf(factorHorario * factorClima * factorDemanda));
-
-        return new OpcionTransporteResponse(
-                TipoTransporte.DIDI,
-                precioMin.setScale(2, RoundingMode.HALF_UP),
-                precioMax.setScale(2, RoundingMode.HALF_UP),
-                tiempoMin,
-                distanciaMetros,
-                didiDeepLinkService.generarUrl()
-        );
-    }
-
-    // Los deep links de Uber y Didi viven en sus propios servicios
-    // (UberDeepLinkService / DidiDeepLinkService). La URL del taxi es un "tel:"
-    // estatico y va inline en construirTaxi().
-
-    // =========================
-    // 📊 FACTORES DINÁMICOS
-    // =========================
-    private double obtenerFactorHorario()
-    {
-        int hora = LocalTime.now().getHour();
-
-        if (hora >= 7 && hora <= 9) return 1.3; // hora pico mañana
-        if (hora >= 17 && hora <= 20) return 1.4; // hora pico tarde
-        if (hora >= 22 || hora < 6) return 1.2; // noche
-
-        return 1.0;
-    }
-
-    private double obtenerFactorClima()
-    {
-        return weatherService.obtenerFactorClima();
-    }
-
-    private double obtenerFactorDemanda()
-    {
-        int autosDisponibles = (int) (Math.random() * 10);
-
-        if (autosDisponibles < 3) return 1.5;
-        if (autosDisponibles < 6) return 1.2;
-
-        return 1.0;
     }
 
     @Transactional
