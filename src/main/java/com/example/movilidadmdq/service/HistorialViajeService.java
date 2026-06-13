@@ -2,7 +2,11 @@ package com.example.movilidadmdq.service;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.DestinoPopularResponse;
+import com.example.movilidadmdq.dto.ViajeFrecuenteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
+import com.example.movilidadmdq.exception.OperacionNoPermitidaException;
+import com.example.movilidadmdq.exception.RecursoNoEncontradoException;
+import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
@@ -18,6 +22,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Persiste y consulta el registro de viajes: guarda cada viaje calculado en el
@@ -91,6 +98,58 @@ public class HistorialViajeService
         return viajeRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
+    /** Devuelve el historial del usuario logueado, ordenado del más reciente al más viejo. */
+    public List<ViajeHistorialResponse> obtenerHistorial(Usuario usuario, Long id)
+    {
+        verificarIdentidad(usuario, id);
+        return viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    /**
+     * Borra un viaje del historial del usuario logueado. El viaje tiene que existir
+     * (404 si no) y pertenecerle (403 si es de otro usuario).
+     */
+    public void borrarViaje(Usuario usuario, Long id, Long viajeId)
+    {
+        verificarIdentidad(usuario, id);
+
+        Viaje viaje = viajeRepository.findById(viajeId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Viaje no encontrado"));
+
+        if (!viaje.getUsuario().getId().equals(usuario.getId()))
+        {
+            throw new OperacionNoPermitidaException("No tenés permiso para borrar un viaje de otro usuario");
+        }
+
+        viajeRepository.delete(viaje);
+    }
+
+    /**
+     * Calcula el viaje frecuente del usuario: el par origen-destino más repetido,
+     * siempre que aparezca más de dos veces. Si no hay ninguno, devuelve vacío.
+     */
+    public Optional<ViajeFrecuenteResponse> obtenerViajeFrecuente(Usuario usuario, Long id)
+    {
+        verificarIdentidad(usuario, id);
+
+        return viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
+                .collect(Collectors.groupingBy(
+                        viaje -> viaje.getOrigen() + "||" + viaje.getDestino(),
+                        Collectors.counting()
+                ))
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() > 2)
+                .max(Map.Entry.comparingByValue())
+                .map(entry ->
+                {
+                    String[] partes = entry.getKey().split("\\|\\|", 2);
+                    return new ViajeFrecuenteResponse(partes[0], partes[1], entry.getValue());
+                });
+    }
+
     /**
      * Guarda el viaje calculado en el historial del usuario. Si no hay usuario
      * logueado (usuarioId null) no guarda nada. Cualquier error al persistir se
@@ -158,5 +217,14 @@ public class HistorialViajeService
                 viaje.getDestinoLat(),
                 viaje.getDestinoLng()
         );
+    }
+
+    // Guard de pertenencia: el id del path tiene que ser el del usuario logueado.
+    private void verificarIdentidad(Usuario usuario, Long id)
+    {
+        if (!usuario.getId().equals(id))
+        {
+            throw new OperacionNoPermitidaException("No tenés permiso para ver los viajes de otro usuario");
+        }
     }
 }
