@@ -4,6 +4,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "Datos necesarios para calcular un viaje")
+
+/**
+        Este DTO es el encargado de transportar los datos desde el formulario de búsqueda
+        del frontend hasta el motor de cálculo del backend.
+
+        IMPORTANCIA:
+        No solo envía texto (direcciones), sino que incluye metadatos geográficos (Place IDs,
+        Latitud, Longitud) obtenidos previamente por el frontend a través de la API de
+        Autocompletado de Google. Esto asegura que el cálculo de distancia sea exacto.
+ */
+
+
 public record CalculoViajeRequest(
         @Schema(description = "Direccion de origen", example = "Paseo Costanera Mar del Plata")
         @NotBlank(message = "El origen es obligatorio")

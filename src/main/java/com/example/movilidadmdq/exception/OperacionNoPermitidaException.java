@@ -1,10 +1,21 @@
 package com.example.movilidadmdq.exception;
 
-// Se lanza cuando un usuario autenticado intenta operar sobre un recurso
-// que no le pertenece (por ejemplo, marcar como favorito el viaje de otro).
-// El GlobalExceptionHandler la traduce a HTTP 403.
+/* 
+   CLASE: OperacionNoPermitidaException
+   
+   Esta excepción se dispara cuando un usuario intenta realizar una acción 
+   que, aunque sea válida técnicamente, viola las reglas de negocio o de 
+   propiedad de datos del sistema.
+   
+   EJEMPLO: 
+   Intentar marcar como "favorito" un viaje que le pertenece a otro usuario.
+*/
 public class OperacionNoPermitidaException extends RuntimeException
 {
+    /* 
+       Constructor para el mensaje de error. 
+       El 'GlobalExceptionHandler' traducirá esta excepción a un código HTTP 403 (Forbidden).
+    */
     public OperacionNoPermitidaException(String mensaje)
     {
         super(mensaje);

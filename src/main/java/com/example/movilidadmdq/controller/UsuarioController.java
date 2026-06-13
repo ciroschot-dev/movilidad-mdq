@@ -23,6 +23,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/*
+   CLASE: UsuarioController
+
+   Centraliza las operaciones del perfil del usuario: registro, login, consulta de
+   su historial de viajes y gestión de su cuenta.
+
+   SEGURIDAD:
+   Inyecta la identidad logueada con @AuthenticationPrincipal Usuario y delega en los
+   services, que validan que cada usuario solo acceda a sus propios datos (evita que
+   el Usuario A vea o borre los viajes del Usuario B).
+*/
+
 @Tag(name = "Usuarios", description = "Registro, login, perfil e historial de viajes del usuario.")
 @RestController
 @RequestMapping("/usuarios")

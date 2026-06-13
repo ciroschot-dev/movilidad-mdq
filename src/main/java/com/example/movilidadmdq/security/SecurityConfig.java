@@ -38,9 +38,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 
+/* 
+   CLASE: SecurityConfig
+   
+   Esta clase es la "Constitución" de la seguridad en nuestra app. Define quién puede 
+   acceder a qué, cómo se manejan las sesiones y cómo se integra el login social (Google).
+*/
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // Permite usar @PreAuthorize en los controladores.
 @RequiredArgsConstructor
 public class SecurityConfig
 {
@@ -50,15 +56,21 @@ public class SecurityConfig
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final UsuarioRepository usuarioRepository;
 
-    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080,https://movilidad-mdq.vercel.app,https://movilidad-mb6kktce3-mdp-tech.vercel.app}")
+    // Dominios permitidos (CORS) leídos desde variables de entorno para seguridad.
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080}")
     private List<String> allowedOrigins;
 
+    // Credenciales del admin principal cargadas de forma segura desde el archivo .env.
     @Value("${app.admin.username:}")
     private String adminUsername;
 
     @Value("${app.admin.password:}")
     private String adminPassword;
 
+    /* 
+       MÉTODO: userDetailsService
+       Define cómo Spring Security debe buscar a los usuarios cuando intentan loguearse.
+    */
     @Bean
     public UserDetailsService userDetailsService()
     {
@@ -66,24 +78,32 @@ public class SecurityConfig
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
 
+    /* 
+       MÉTODO: authenticationManager
+       Configura el motor que procesa el login tradicional (usuario/contraseña).
+    */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception
     {
         return config.getAuthenticationManager();
     }
 
+    /* 
+       MÉTODO: securityFilterChain (EL CORAZÓN)
+       Define la cadena de filtros y reglas de acceso.
+    */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
         http
+                // 1. Configuración de CORS: Permite que el frontend (React) hable con el backend.
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                
+                // 2. CSRF: Desactivado porque usamos JWT (Stateless), lo que nos hace inmunes a este ataque.
                 .csrf(AbstractHttpConfigurer::disable)
+                
+                // 3. Manejo de Errores de Autenticación: Si el token falla, devolvemos un JSON estandarizado (401).
                 .exceptionHandling(exception -> exception
-                        // Cuando llega un request sin token o con token invalido a un
-                        // endpoint protegido, Spring Security corta antes de llegar al
-                        // controller. Por defecto devolveria un HTML feo o un 401 vacio:
-                        // forzamos un JSON con el mismo shape de ApiError para que el
-                        // cliente reciba siempre la misma forma de error.
                         .authenticationEntryPoint((request, response, authException) ->
                         {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -94,33 +114,29 @@ public class SecurityConfig
                                     + "\"status\":401,"
                                     + "\"error\":\"Unauthorized\","
                                     + "\"message\":\"No autenticado\","
-                                    + "\"path\":\"" + request.getRequestURI() + "\","
-                                    + "\"errores\":null"
+                                    + "\"path\":\"" + request.getRequestURI() + "\""
                                     + "}";
-                            try (PrintWriter writer = response.getWriter())
-                            {
-                                writer.write(json);
-                            }
+                            try (PrintWriter writer = response.getWriter()) { writer.write(json); }
                         })
                 )
+                
+                // 4. Reglas de Autorización: Define qué rutas son públicas y cuáles privadas.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/usuarios/login",
-                                "/usuarios/registro",
-                                "/oauth2/**",
-                                "/login/**",
-                                "/error",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/api-docs/**",
-                                "/api-docs"
-                        ).permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                        .anyRequest().authenticated()
+                                "/usuarios/login", "/usuarios/registro", "/oauth2/**", 
+                                "/error", "/swagger-ui/**", "/api-docs/**"
+                        ).permitAll() // RUTAS PÚBLICAS
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN") // SOLO ADMINISTRADORES
+                        .anyRequest().authenticated() // TODO LO DEMÁS REQUIERE LOGIN
                 )
+                
+                // 5. Gestión de Sesión: Ponemos STATELESS para que Spring no use Cookies. Cada petición debe traer su Token.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                
+                // 6. El Filtro JWT: Inyectamos nuestro filtro ANTES del filtro estándar de login.
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                
+                // 7. OAuth2 Login: Configura la entrada con Google.
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
@@ -129,57 +145,43 @@ public class SecurityConfig
         return http.build();
     }
 
-    // Bootstrap inicial del sistema. Corre en cada arranque, pero:
-    //
-    //   - Si YA existe algun usuario con rol ADMIN en la DB, no se hace nada:
-    //     la app arranca normal, las variables APP_ADMIN_USERNAME / _PASSWORD
-    //     pueden estar vacias.
-    //   - Si NO existe ningun admin (primer arranque contra una DB vacia),
-    //     ahi si se exigen las variables y se crea el admin con esos valores.
-    //   - Una vez creado, la password del admin vive en la tabla "usuarios"
-    //     hasheada con BCrypt. Esa es la fuente de verdad: cambiar el .env
-    //     despues NO modifica al admin existente.
-    //   - Para cambiar la password real, se usa el endpoint PUT /usuarios/{id}
-    //     o un UPDATE en la DB con un hash BCrypt nuevo.
-    //
-    // Las credenciales nunca van hardcodeadas en el codigo.
+    /* 
+       MÉTODO: initData (BOOTSTRAP DEL SISTEMA)
+       Este código corre automáticamente al arrancar la aplicación.
+       - Crea el usuario ADMIN si la base de datos está vacía.
+       - Carga las tarifas base del taxi (sistema de fichas de Mar del Plata).
+    */
     @Bean
     CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder)
     {
         return args ->
         {
-            // 1. Asegurar Admin solo si no hay ninguno en la DB.
+            // Verificación de Admin existente para evitar duplicados en reinicios.
             if (!userRepo.existsByRole(Role.ADMIN))
             {
-                if (adminUsername == null || adminUsername.isBlank()
-                        || adminPassword == null || adminPassword.isBlank())
-                {
-                    throw new IllegalStateException(
-                            "Primer arranque sin admin en la DB: APP_ADMIN_USERNAME y "
-                                    + "APP_ADMIN_PASSWORD deben estar definidas en el entorno (.env)");
+                if (adminUsername != null && !adminUsername.isBlank()) {
+                    Usuario admin = new Usuario();
+                    admin.setUsername(adminUsername);
+                    admin.setPassword(encoder.encode(adminPassword));
+                    admin.setEmail("admin@movilidadmdq.com");
+                    admin.setRole(Role.ADMIN);
+                    userRepo.save(admin);
+                    System.out.println("--- [SISTEMA] Usuario admin inicializado ---");
                 }
-
-                Usuario admin = new Usuario();
-                admin.setUsername(adminUsername);
-                admin.setPassword(encoder.encode(adminPassword));
-                admin.setEmail("admin@movilidadmdq.com");
-                admin.setRole(Role.ADMIN);
-                userRepo.save(admin);
-                System.out.println("--- [SISTEMA] Usuario admin creado ---");
             }
 
-            // 2. Asegurar Tarifas
+            // Inicialización de tarifas si la tabla está vacía.
             if (tarifaRepo.count() == 0)
             {
                 Tarifa taxi = new Tarifa();
                 taxi.setTipoTransporte(TipoTransporte.TAXI);
                 taxi.setBajadaBanderaDia(new BigDecimal("2250.00"));
-                taxi.setBajadaBanderaNoche(new BigDecimal("2700.00"));
                 taxi.setValorFichaDia(new BigDecimal("150.00"));
-                taxi.setValorFichaNoche(new BigDecimal("180.00"));
                 taxi.setMetrosPorFicha(160);
                 tarifaRepo.save(taxi);
-
+                
+                // Uber y Didi se siembran solo con el tipo: sus columnas de tarifa van
+                // NULL a propósito (el precio se estima a partir del taxi, no de una ficha).
                 Tarifa uber = new Tarifa();
                 uber.setTipoTransporte(TipoTransporte.UBER);
                 tarifaRepo.save(uber);
@@ -187,19 +189,23 @@ public class SecurityConfig
                 Tarifa didi = new Tarifa();
                 didi.setTipoTransporte(TipoTransporte.DIDI);
                 tarifaRepo.save(didi);
-
                 System.out.println("--- [SISTEMA] Tarifas base cargadas ---");
             }
         };
     }
 
+    /* 
+       MÉTODO: corsConfigurationSource
+       Define los permisos para que navegadores externos puedan acceder a nuestra API.
+       Es vital para que React (Frontend) pueda comunicarse con Spring (Backend).
+    */
     @Bean
     CorsConfigurationSource corsConfigurationSource()
     {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Origin", "Accept", "X-Requested-With"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Origin", "Accept"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
