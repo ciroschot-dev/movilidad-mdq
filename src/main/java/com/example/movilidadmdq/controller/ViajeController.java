@@ -29,6 +29,13 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/* 
+   CLASE: ViajeController
+   
+   Este controlador es el motor funcional de la aplicación. Maneja el cálculo de rutas, 
+   la comparación de precios entre servicios (Taxi, Uber, Didi) y la gestión de 
+   favoritos de cada usuario.
+*/
 @Tag(name = "Viajes", description = "Cálculo y comparación de opciones de transporte.")
 @RequiredArgsConstructor
 @RequestMapping("/viajes")
@@ -40,9 +47,14 @@ public class ViajeController
     private final FavoritoService favoritoService;
     private final UsuarioRepository usuarioRepository;
 
-    @Operation(summary = "Auditoría de viajes (ADMIN)", description = "Devuelve una página de viajes realizados por todos los usuarios con filtros avanzados.")
+    /* 
+       MÉTODO: getAuditoria (SOLO ADMIN)
+       Permite a los administradores visualizar y filtrar todos los viajes registrados 
+       en el sistema para control y monitoreo.
+    */
+    @Operation(summary = "Auditoría de viajes (ADMIN)")
     @GetMapping("/admin/auditoria")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')") // CANDADO: Solo permite acceso al rol administrador.
     public ResponseEntity<Page<ViajeHistorialResponse>> getAuditoria(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String origen,
@@ -51,10 +63,16 @@ public class ViajeController
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
             @RequestParam(required = false) Boolean favorito,
             @PageableDefault(size = 10, sort = "fechaHora", direction = Sort.Direction.DESC) Pageable pageable) {
+        
+        // Se utiliza paginación para no sobrecargar el servidor con miles de registros.
         return ResponseEntity.ok(historialViajeService.obtenerAuditoriaViajes(username, origen, destino, desde, hasta, favorito, pageable));
     }
 
-    @Operation(summary = "Obtener destinos populares (ADMIN)", description = "Devuelve los destinos más buscados con filtros opcionales.")
+    /* 
+       MÉTODO: getDestinosPopulares (SOLO ADMIN)
+       Genera estadísticas sobre los lugares más consultados por los ciudadanos.
+    */
+    @Operation(summary = "Obtener destinos populares (ADMIN)")
     @GetMapping("/admin/destinos-populares")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DestinoPopularResponse>> getDestinosPopulares(
@@ -64,38 +82,43 @@ public class ViajeController
         return ResponseEntity.ok(historialViajeService.obtenerDestinosPopulares(desde, hasta, zona));
     }
 
-    @Operation(
-            summary = "Calcular viaje",
-            description = "Obtiene y calcula el viaje solicitado por el usuario. Si se envian datos de Google Places, genera deep links enriquecidos para abrir apps externas con origen y destino precargados."
-    )
+    /* 
+       MÉTODO: calcular
+       Es el núcleo de la aplicación. Recibe una solicitud de viaje y devuelve 
+       la comparativa de precios y tiempos de llegada.
+    */
+    @Operation(summary = "Calcular viaje")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "El viaje se ha calculado con exito"),
-            @ApiResponse(responseCode = "400", description = "El calculo del viaje fallo"),
-            @ApiResponse(responseCode = "401", description = "Los datos ingresados son incorrectos")
+            @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PostMapping("/calcular")
     public ResponseEntity<List<OpcionTransporteResponse>> calcular(
             @Valid @RequestBody CalculoViajeRequest request,
-            Authentication authentication
+            Authentication authentication // Se inyecta la identidad del usuario logueado.
     )
     {
+        // Verificación de seguridad básica.
         if (authentication == null || authentication.getName() == null)
         {
             return ResponseEntity.status(401).build();
         }
 
+        // Obtiene el usuario del token y delega la lógica matemática al servicio.
         return usuarioRepository.findByUsername(authentication.getName())
                 .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId())))
                 .orElse(ResponseEntity.status(401).build());
     }
 
-    // Metodo para marcar vviaje fav
+    /* 
+       MÉTODO: toggleFavorito
+       Marca o desmarca un viaje específico como favorito en el historial.
+    */
     @PutMapping("/{viajeId}/favorito")
     public ResponseEntity<Void> toggleFavorito(
             @PathVariable Long viajeId,
             Authentication authentication)
     {
-
         if (authentication == null || authentication.getName() == null)
         {
             return ResponseEntity.status(401).build();
@@ -110,28 +133,10 @@ public class ViajeController
                 .orElse(ResponseEntity.status(401).build());
     }
 
-    // Meotodo para obtener favs
-    @GetMapping("/favoritos")
-    public ResponseEntity<List<ViajeHistorialResponse>> obtenerFavoritos(
-            Authentication authentication
-    )
-    {
-        if (authentication == null || authentication.getName() == null)
-        {
-            return ResponseEntity.status(401).build();
-        }
-
-        return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario ->
-                        ResponseEntity.ok(
-                                favoritoService.obtenerFavoritos(usuario.getId()).stream()
-                                        .map(historialViajeService::toResponse)
-                                        .toList()
-                        ))
-                .orElse(ResponseEntity.status(401).build());
-    }
-
-    @Operation(summary = "Obtener direcciones favoritas", description = "Devuelve una lista única de todas las direcciones (orígenes y destinos) marcadas como favoritas.")
+    /* 
+       MÉTODO: obtenerDireccionesFavoritas
+       Devuelve los lugares guardados por el usuario (ej: "Trabajo", "Casa de mi abuela").
+    */
     @GetMapping("/direcciones-favoritas")
     public ResponseEntity<List<DireccionFavoritaResponse>> obtenerDireccionesFavoritas(
             Authentication authentication
@@ -147,7 +152,10 @@ public class ViajeController
                 .orElse(ResponseEntity.status(401).build());
     }
 
-    @Operation(summary = "Renombrar dirección favorita", description = "Permite asignar un nombre personalizado (alias) a una dirección favorita.")
+    /* 
+       MÉTODO: renombrarDireccionFavorita
+       Permite al usuario cambiar el nombre (alias) de una de sus direcciones guardadas.
+    */
     @PutMapping("/direcciones-favoritas/{id}")
     public ResponseEntity<Void> renombrarDireccionFavorita(
             @PathVariable Long id,
@@ -169,7 +177,10 @@ public class ViajeController
                 .orElse(ResponseEntity.status(401).build());
     }
 
-    @Operation(summary = "Eliminar dirección favorita", description = "Quita una dirección de la lista de favoritos.")
+    /* 
+       MÉTODO: eliminarDireccionFavorita
+       Elimina una dirección de la lista de favoritos del usuario.
+    */
     @DeleteMapping("/direcciones-favoritas/{id}")
     public ResponseEntity<Void> eliminarDireccionFavorita(
             @PathVariable Long id,

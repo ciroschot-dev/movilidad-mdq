@@ -28,6 +28,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+
+Este controlador centraliza todas las operaciones relacionadas con el perfil del usuario.
+Desde el registro y login, hasta la consulta de su historial de viajes.
+
+SEGURIDAD:
+Utiliza el objeto 'Authentication' de Spring Security para asegurar que un usuario
+solo pueda ver o borrar sus propios datos (evitando que el Usuario A vea los
+viajes del Usuario B).
+
+*/
+
 @Tag(name = "Usuarios", description = "Registro, login, perfil e historial de viajes del usuario.")
 @RestController
 @RequestMapping("/usuarios")
