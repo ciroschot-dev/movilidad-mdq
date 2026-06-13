@@ -4,13 +4,14 @@ import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.model.Viaje;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface ViajeRepository extends JpaRepository<Viaje, Long>
+public interface ViajeRepository extends JpaRepository<Viaje, Long>, JpaSpecificationExecutor<Viaje>
 {
     List<Viaje> findByUsuarioIdOrderByFechaHoraDesc(Long usuarioId);
 

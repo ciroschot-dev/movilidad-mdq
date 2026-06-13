@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, AlertCircle, CheckCircle2, ArrowLeft, Settings, Search, UserMinus, User, BarChart3, Calendar, MapPin } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, ArrowLeft, Settings, Search, UserMinus, User, BarChart3, Calendar, MapPin, ClipboardList } from 'lucide-react';
 
 interface AdminDashboardProps {
   session: {
     token: string;
   };
   onBack: () => void;
+  onNavigateToAudit: () => void;
   apiUrl: string;
 }
 
@@ -22,7 +23,7 @@ interface DestinoPopular {
   cantidad: number;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, onNavigateToAudit, apiUrl }) => {
   const [formData, setFormData] = useState({
     precioBase: '',
     precioPorKm: '',
@@ -183,8 +184,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl
         >
           <ArrowLeft size={16} /> Volver
         </button>
-        <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full text-xs font-black uppercase tracking-widest">
-          <Settings size={12} /> Panel Admin
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={onNavigateToAudit}
+            className="flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-black uppercase tracking-widest hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all"
+          >
+            <ClipboardList size={12} /> Auditoría
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full text-xs font-black uppercase tracking-widest">
+            <Settings size={12} /> Panel Admin
+          </div>
         </div>
       </div>
 

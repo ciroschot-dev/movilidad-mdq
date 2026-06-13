@@ -12,9 +12,13 @@ import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -45,6 +50,57 @@ public class ViajeService
     public List<DestinoPopularResponse> obtenerDestinosPopulares(LocalDateTime desde, LocalDateTime hasta, String zona)
     {
         return viajeRepository.findPopularDestinations(desde, hasta, zona, PageRequest.of(0, 10));
+    }
+
+    public Page<ViajeHistorialResponse> obtenerAuditoriaViajes(
+            String username,
+            String origen,
+            String destino,
+            LocalDateTime desde,
+            LocalDateTime hasta,
+            Boolean favorito,
+            Pageable pageable)
+    {
+        Specification<Viaje> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (username != null && !username.isBlank()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("usuario").get("username")),
+                        "%" + username.toLowerCase() + "%"
+                ));
+            }
+
+            if (origen != null && !origen.isBlank()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("origen")),
+                        "%" + origen.toLowerCase() + "%"
+                ));
+            }
+
+            if (destino != null && !destino.isBlank()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("destino")),
+                        "%" + destino.toLowerCase() + "%"
+                ));
+            }
+
+            if (desde != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaHora"), desde));
+            }
+
+            if (hasta != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("fechaHora"), hasta));
+            }
+
+            if (favorito != null) {
+                predicates.add(criteriaBuilder.equal(root.get("favorito"), favorito));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return viajeRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     public List<OpcionTransporteResponse> calcularViaje(CalculoViajeRequest request, Long usuarioId)
@@ -444,6 +500,7 @@ public class ViajeService
                 viaje.getTipoElegido() != null ? viaje.getTipoElegido().name() : null,
                 viaje.getFechaHora(),
                 viaje.isFavorito(),
+                viaje.getUsuario() != null ? viaje.getUsuario().getUsername() : null,
                 viaje.getOrigenPlaceId(),
                 viaje.getOrigenLat(),
                 viaje.getOrigenLng(),

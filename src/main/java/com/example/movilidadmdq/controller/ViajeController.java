@@ -15,6 +15,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,18 +37,18 @@ public class ViajeController
     private final ViajeService viajeService;
     private final UsuarioRepository usuarioRepository;
 
-    @Operation(summary = "Obtener destinos más buscados (ADMIN)", description = "Devuelve una lista de destinos populares con filtros por fecha y zona. Solo accesible por administradores.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista obtenida con éxito"),
-            @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
-    })
-    @GetMapping("/admin/destinos-populares")
+    @Operation(summary = "Auditoría de viajes (ADMIN)", description = "Devuelve una página de viajes realizados por todos los usuarios con filtros avanzados.")
+    @GetMapping("/admin/auditoria")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<DestinoPopularResponse>> getDestinosPopulares(
+    public ResponseEntity<Page<ViajeHistorialResponse>> getAuditoria(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String origen,
+            @RequestParam(required = false) String destino,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
-            @RequestParam(required = false) String zona) {
-        return ResponseEntity.ok(viajeService.obtenerDestinosPopulares(desde, hasta, zona));
+            @RequestParam(required = false) Boolean favorito,
+            @PageableDefault(size = 10, sort = "fechaHora", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(viajeService.obtenerAuditoriaViajes(username, origen, destino, desde, hasta, favorito, pageable));
     }
 
     @Operation(
