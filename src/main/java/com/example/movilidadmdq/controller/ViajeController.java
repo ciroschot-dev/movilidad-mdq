@@ -9,6 +9,7 @@ import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.service.FavoritoService;
+import com.example.movilidadmdq.service.HistorialViajeService;
 import com.example.movilidadmdq.service.ViajeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -32,6 +33,7 @@ import java.util.List;
 public class ViajeController
 {
     private final ViajeService viajeService;
+    private final HistorialViajeService historialViajeService;
     private final FavoritoService favoritoService;
     private final UsuarioRepository usuarioRepository;
 
@@ -47,7 +49,7 @@ public class ViajeController
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
             @RequestParam(required = false) String zona)
     {
-        return ResponseEntity.ok(viajeService.obtenerDestinosPopulares(desde, hasta, zona));
+        return ResponseEntity.ok(historialViajeService.obtenerDestinosPopulares(desde, hasta, zona));
     }
 
     @Operation(
@@ -111,7 +113,7 @@ public class ViajeController
                 .map(usuario ->
                         ResponseEntity.ok(
                                 favoritoService.obtenerFavoritos(usuario.getId()).stream()
-                                        .map(viajeService::toResponse)
+                                        .map(historialViajeService::toResponse)
                                         .toList()
                         ))
                 .orElse(ResponseEntity.status(401).build());

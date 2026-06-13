@@ -1,23 +1,26 @@
 package com.example.movilidadmdq.service;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
-import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
-import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
-import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Orquesta el cálculo de un viaje: pide la distancia a Google Maps, delega el
+ * precio del taxi y la estimación de las apps en sus calculadores, ordena las
+ * opciones de más barata a más cara y delega el guardado en el historial.
+ *
+ * <p>No hace cuentas de precio ni habla con la base directamente: solo coordina
+ * a los servicios que sí lo hacen.
+ */
 @Service
 @RequiredArgsConstructor
 public class ViajeService
@@ -25,18 +28,12 @@ public class ViajeService
     // === Inyecciones ===
     private final GoogleMapsService googleMapsService;
     private final WeatherService weatherService;
-    private final com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
-    private final com.example.movilidadmdq.repository.ViajeRepository viajeRepository;
     private final CalculadoraTaxiService calculadoraTaxiService;
     private final EstimadorPrecioAppService estimadorPrecioAppService;
+    private final HistorialViajeService historialViajeService;
 
     @Value("${taxi.telefono:+542234941010}")
     private String telefonoTaxi;
-
-    public List<DestinoPopularResponse> obtenerDestinosPopulares(LocalDateTime desde, LocalDateTime hasta, String zona)
-    {
-        return viajeRepository.findPopularDestinations(desde, hasta, zona, PageRequest.of(0, 10));
-    }
 
     public List<OpcionTransporteResponse> calcularViaje(CalculoViajeRequest request, Long usuarioId)
     {
@@ -84,8 +81,8 @@ public class ViajeService
         OpcionTransporteResponse uber = estimadorPrecioAppService.estimarUber(precioTaxi, tiempoMin, factorClima, distanciaMetros, request);
         OpcionTransporteResponse didi = estimadorPrecioAppService.estimarDidi(precioTaxi, tiempoMin, factorClima, distanciaMetros);
 
-        // --- GUARDAR EN BASE DE DATOS AL FINAL CON PRECIOS REALES ---
-        guardarHistorial(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
+        // Guardar en el historial del usuario (si hay uno logueado).
+        historialViajeService.guardar(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
                 taxi.precio(), uber.precio(), didi.precio(), usuarioId, request);
 
         List<OpcionTransporteResponse> opciones = List.of(taxi, uber, didi);
@@ -94,45 +91,6 @@ public class ViajeService
         return opciones.stream()
                 .sorted(Comparator.comparing(OpcionTransporteResponse::precio))
                 .toList();
-    }
-
-    private void guardarHistorial(String origen, String destino, Long distanciaMetros, int tiempoMin,
-                                  BigDecimal precioTaxi, BigDecimal precioUber, BigDecimal precioDidi,
-                                  Long usuarioId, CalculoViajeRequest request)
-    {
-        if (usuarioId == null) return;
-
-        try
-        {
-            usuarioRepository.findById(usuarioId).ifPresent(usuario ->
-            {
-                com.example.movilidadmdq.model.Viaje nuevoViaje = new com.example.movilidadmdq.model.Viaje();
-                nuevoViaje.setOrigen(origen);
-                nuevoViaje.setDestino(destino);
-                nuevoViaje.setDistanciaEnMetros(distanciaMetros);
-                nuevoViaje.setTiempoEstimadoMin(tiempoMin);
-                nuevoViaje.setPrecioTaxi(precioTaxi);
-                nuevoViaje.setPrecioUber(precioUber);
-                nuevoViaje.setPrecioDidi(precioDidi);
-
-                // Guardar coordenadas y Place IDs para optimización futura
-                nuevoViaje.setOrigenPlaceId(request.origenPlaceId());
-                nuevoViaje.setOrigenLat(request.origenLat());
-                nuevoViaje.setOrigenLng(request.origenLng());
-                nuevoViaje.setDestinoPlaceId(request.destinoPlaceId());
-                nuevoViaje.setDestinoLat(request.destinoLat());
-                nuevoViaje.setDestinoLng(request.destinoLng());
-
-                nuevoViaje.setUsuario(usuario);
-
-                viajeRepository.save(nuevoViaje);
-                System.out.println("Viaje guardado automaticamente en AWS para el usuario: " + usuario.getUsername());
-            });
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error al guardar historial: " + e.getMessage());
-        }
     }
 
     private String normalizarDireccion(String direccion)
@@ -160,29 +118,6 @@ public class ViajeService
                 tiempoMin,
                 distanciaMetros,
                 "tel:" + telefonoTaxi
-        );
-    }
-
-    public ViajeHistorialResponse toResponse(Viaje viaje)
-    {
-        return new ViajeHistorialResponse(
-                viaje.getId(),
-                viaje.getOrigen(),
-                viaje.getDestino(),
-                viaje.getDistanciaEnMetros(),
-                viaje.getTiempoEstimadoMin(),
-                viaje.getPrecioTaxi(),
-                viaje.getPrecioUber(),
-                viaje.getPrecioDidi(),
-                viaje.getTipoElegido() != null ? viaje.getTipoElegido().name() : null,
-                viaje.getFechaHora(),
-                viaje.isFavorito(),
-                viaje.getOrigenPlaceId(),
-                viaje.getOrigenLat(),
-                viaje.getOrigenLng(),
-                viaje.getDestinoPlaceId(),
-                viaje.getDestinoLat(),
-                viaje.getDestinoLng()
         );
     }
 }
