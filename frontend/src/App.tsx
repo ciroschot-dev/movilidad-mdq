@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, useRef, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings, Star, Sun, Moon } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
@@ -6,7 +6,9 @@ import InputForm, { type LugarSeleccionado } from './components/InputForm';
 import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
 import AdminDashboard from './components/AdminDashboard';
-import type { AuthSession } from './types';
+import FavoritesView from './components/FavoritesView';
+import AuditView from './components/AuditView';
+import type { AuthSession, DireccionFavorita } from './types';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '');
 const OAUTH_BASE_URL = (import.meta.env.VITE_OAUTH_BASE_URL ?? 'https://movilidadmdq.ddns.net').replace(/\/$/, '');
@@ -26,8 +28,7 @@ interface UsuarioResponse {
 
 interface OpcionTransporteApi {
   tipo: 'TAXI' | 'UBER' | 'DIDI';
-  precioMin: number;
-  precioMax: number;
+  precio: number;
   tiempoMinutos: number;
   url: string;
 }
@@ -48,12 +49,8 @@ interface ViajeHistorial {
   distanciaEnMetros: number;
   tiempoEstimadoMin: number;
   precioTaxi: number;
-  precioUberMin: number;
-  precioUberMax: number;
-  precioDidiMin: number;
-  precioDidiMax: number;
-  precioMinApp: number;
-  precioMaxApp: number;
+  precioUber: number;
+  precioDidi: number;
   fechaHora: string;
   favorito: boolean;
   origenPlaceId?: string;
@@ -70,15 +67,8 @@ interface ViajeFrecuente {
     cantidad: number;
 }
 
-interface DireccionFavorita {
-  direccion: string;
-  placeId: string;
-  lat: number;
-  lng: number;
-}
-
 type AuthMode = 'login' | 'registro';
-type AppView = 'calculo' | 'historial' | 'perfil' | 'admin';
+type AppView = 'calculo' | 'historial' | 'favoritos' | 'perfil' | 'admin' | 'auditoria';
 
 interface AppContentProps {
   isLoaded: boolean;
@@ -124,6 +114,27 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const [historialError, setHistorialError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formInitialData, setFormInitialData] = useState<{
+    origen: string;
+    destino: string;
+    origenPlace?: LugarSeleccionado;
+    destinoPlace?: LugarSeleccionado;
+  } | null>(null);
+
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scrollear cuando termina la carga (éxito o error)
+    if (!loading && (resultados || error)) {
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' // 'nearest' suele sentirse más natural que 'start' para movimientos cortos
+        });
+      }, 300); // Reducimos un poco el delay para que se sienta más responsivo pero fluido
+      return () => clearTimeout(timer);
+    }
+  }, [resultados, error, loading]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -293,9 +304,15 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         }
     };
 
-    const repetirViaje = (origen: string, destino: string) => {
+    const repetirViaje = (
+        origen: string,
+        destino: string,
+        origenPlace?: LugarSeleccionado,
+        destinoPlace?: LugarSeleccionado
+    ) => {
+        setFormInitialData({ origen, destino, origenPlace, destinoPlace });
         setActiveView('calculo');
-        void handleCalculate(origen, destino);
+        void handleCalculate(origen, destino, origenPlace, destinoPlace);
     };
 
     const toggleFavorito = async (viajeId: number) => {
@@ -330,6 +347,52 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
         }
     };
 
+    const renombrarFavorito = async (id: number, nuevoNombre: string) => {
+        if (!session) return;
+
+        try {
+            const response = await fetch(getApiUrl(`/viajes/direcciones-favoritas/${id}`), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.token}`,
+                },
+                body: JSON.stringify({ nombre: nuevoNombre }),
+            });
+
+            if (!response.ok) throw new Error('No se pudo renombrar el favorito.');
+
+            // Actualización optimista
+            setFavoritos((current) =>
+                current?.map((fav) => (fav.id === id ? { ...fav, nombre: nuevoNombre } : fav)) ?? []
+            );
+        } catch (error) {
+            console.error('Error al renombrar favorito:', error);
+            throw error;
+        }
+    };
+
+    const eliminarFavorito = async (id: number) => {
+        if (!session) return;
+
+        try {
+            const response = await fetch(getApiUrl(`/viajes/direcciones-favoritas/${id}`), {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${session.token}`,
+                },
+            });
+
+            if (!response.ok) throw new Error('No se pudo eliminar el favorito.');
+
+            // Actualización optimista
+            setFavoritos((current) => current?.filter((fav) => fav.id !== id) ?? []);
+        } catch (error) {
+            console.error('Error al eliminar favorito:', error);
+            throw error;
+        }
+    };
+
   useEffect(() => {
     if (session && activeView === 'historial') {
       void cargarHistorial();
@@ -337,7 +400,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   }, [activeView, session?.id]);
 
   useEffect(() => {
-      if (session && activeView === 'calculo') {
+      if (session && (activeView === 'calculo' || activeView === 'favoritos')) {
           void cargarViajeFrecuente();
           void cargarFavoritos();
         }
@@ -454,10 +517,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       const data: OpcionTransporteApi[] = await response.json();
 
       const mappedData: Opcion[] = data.map((item) => {
-        const isSamePrice = item.precioMin === item.precioMax;
-        const precio = isSamePrice
-            ? formatPrecio(item.precioMin)
-            : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
+        const precio = formatPrecio(item.precio);
 
         let config = {
           tipo: 'Taxi',
@@ -642,7 +702,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           </div>
         </header>
 
-        <nav className={`mb-6 grid ${(session.role === 'ADMIN' || session.username === 'admin') ? 'grid-cols-3' : 'grid-cols-2'} gap-3 rounded-3xl bg-white dark:bg-gray-900 p-2 shadow-sm shadow-gray-200/60 dark:shadow-black/40`}>
+        <nav className={`mb-6 grid ${(session.role === 'ADMIN' || session.username === 'admin') ? 'grid-cols-4' : 'grid-cols-3'} gap-3 rounded-3xl bg-white dark:bg-gray-900 p-2 shadow-sm shadow-gray-200/60 dark:shadow-black/40`}>
           <button
             type="button"
             onClick={() => setActiveView('calculo')}
@@ -656,6 +716,13 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
             className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'historial' ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'}`}
           >
             <History size={17} /> Historial
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('favoritos')}
+            className={`flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black transition-all ${activeView === 'favoritos' ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'}`}
+          >
+            <Star size={17} /> Favoritos
           </button>
           {(session.role === 'ADMIN' || session.username === 'admin') && (
             <button
@@ -686,7 +753,20 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           <AdminDashboard
             session={session}
             onBack={() => setActiveView('calculo')}
+            onNavigateToAudit={() => setActiveView('auditoria')}
             apiUrl={API_URL}
+          />
+        ) : activeView === 'auditoria' ? (
+          <AuditView
+            session={session}
+            onBack={() => setActiveView('admin')}
+            apiUrl={API_URL}
+          />
+        ) : activeView === 'favoritos' ? (
+          <FavoritesView 
+            favoritos={favoritos || []}
+            onRename={renombrarFavorito}
+            onRemove={eliminarFavorito}
           />
         ) : activeView === 'calculo' ? (
           <>
@@ -714,10 +794,11 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                     loading={loading} 
                     onInputChange={() => setError(null)} 
                     favoritos={favoritos || []}
+                    initialData={formInitialData || undefined}
                   />
               </section>
 
-            <div className="space-y-4">
+            <div ref={resultsRef} className="space-y-4">
               {error ? (
                 <div className="rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-400">
                   {error}
@@ -843,13 +924,11 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-tighter text-blue-500">Uber</span>
-                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioUberMin)}</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioUber)}</span>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-tighter text-orange-500">Didi</span>
-                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioDidiMin)}</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioDidi)}</span>
                                       </div>
                                     </div>
                                 </div>
@@ -858,7 +937,24 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                           <div className="mt-4 grid grid-cols-2 gap-2">
                             <button
                                 type="button"
-                                onClick={() => repetirViaje(viaje.origen, viaje.destino)}
+                                onClick={() => repetirViaje(
+                                    viaje.origen, 
+                                    viaje.destino,
+                                    viaje.origenPlaceId ? {
+                                        addressLine1: viaje.origen,
+                                        addressLine2: viaje.origen,
+                                        placeId: viaje.origenPlaceId,
+                                        latitude: viaje.origenLat ?? 0,
+                                        longitude: viaje.origenLng ?? 0
+                                    } : undefined,
+                                    viaje.destinoPlaceId ? {
+                                        addressLine1: viaje.destino,
+                                        addressLine2: viaje.destino,
+                                        placeId: viaje.destinoPlaceId,
+                                        latitude: viaje.destinoLat ?? 0,
+                                        longitude: viaje.destinoLng ?? 0
+                                    } : undefined
+                                )}
                                 className="flex items-center justify-center gap-2 rounded-2xl bg-black dark:bg-white px-3 py-3 text-sm font-black text-white dark:text-black transition-all hover:bg-gray-800 dark:hover:bg-gray-200"
                             >
                                 <Repeat size={16} />

@@ -5,16 +5,26 @@ import com.example.movilidadmdq.enums.TipoTransporte;
 
 import java.math.BigDecimal;
 
+/**
+
+
+Esta clase es un DTO (Data Transfer Object) de tipo 'record'.
+Su función es representar una de las alternativas de viaje (Uber, Taxi o Didi)
+que se le muestran al usuario en la pantalla de resultados.
+
+SU IMPORTANCIA:
+Consolida la información proveniente de múltiples fuentes: el motor de cálculos,
+la base de datos de tarifas y los servicios de Deep Linking.
+
+*/
+
 public record OpcionTransporteResponse(
 
         @Schema(description = "Tipo de transporte", example = "Uber")
         TipoTransporte tipo,
 
-        @Schema(description = "Precio minimo del viaje", example = "3400")
-        BigDecimal precioMin,
-
-        @Schema(description = "Precio maximo del viaje", example = "6800")
-        BigDecimal precioMax,
+        @Schema(description = "Precio estimado del viaje", example = "5200")
+        BigDecimal precio,
 
         @Schema(description = "Tiempo en minutos de llegada", example = "6")
         int tiempoMinutos,

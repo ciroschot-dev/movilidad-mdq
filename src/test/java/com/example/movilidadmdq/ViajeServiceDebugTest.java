@@ -51,7 +51,7 @@ class ViajeServiceDebugTest {
         for (OpcionTransporteResponse opcion : resultados) {
             System.out.println(
                     "Tipo: " + opcion.tipo() +
-                            " | Precio: " + opcion.precioMin() + " - " + opcion.precioMax() +
+                            " | Precio: " + opcion.precio() +
                             " | Tiempo: " + opcion.tiempoMinutos() + " min"
             );
         }

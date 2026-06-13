@@ -4,6 +4,18 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+Esta clase es un DTO (Data Transfer Object) de tipo 'record'.
+Su función es capturar los datos necesarios para crear una nueva cuenta de usuario
+en el sistema.
+
+ESTRATEGIA DE SEGURIDAD:
+Al estar definida como un 'record', aseguramos que la información del nuevo usuario
+sea inmutable. Además, utiliza anotaciones de Bean Validation (@NotBlank, @Size,
+@Email) para garantizar la calidad de los datos antes de que lleguen al servicio
+de registro.
+
+*/
 
 public record RegistroRequest(
         @Schema(description = "Nombre de usuario", example = "ciroschot23")

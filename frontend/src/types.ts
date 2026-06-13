@@ -5,3 +5,12 @@ export interface AuthSession {
   token: string;
   role: 'USER' | 'ADMIN';
 }
+
+export interface DireccionFavorita {
+  id: number;
+  nombre: string | null;
+  direccion: string;
+  placeId: string | null;
+  lat: number | null;
+  lng: number | null;
+}
