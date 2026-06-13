@@ -180,8 +180,13 @@ public class SecurityConfig
                 taxi.setMetrosPorFicha(160);
                 tarifaRepo.save(taxi);
                 
-                tarifaRepo.save(new Tarifa(TipoTransporte.UBER));
-                tarifaRepo.save(new Tarifa(TipoTransporte.DIDI));
+                Tarifa uber = new Tarifa();
+                uber.setTipoTransporte(TipoTransporte.UBER);
+                tarifaRepo.save(uber);
+
+                Tarifa didi = new Tarifa();
+                didi.setTipoTransporte(TipoTransporte.DIDI);
+                tarifaRepo.save(didi);
                 System.out.println("--- [SISTEMA] Tarifas base cargadas ---");
             }
         };
