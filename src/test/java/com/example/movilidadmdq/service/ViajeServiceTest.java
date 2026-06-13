@@ -23,8 +23,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +53,12 @@ class ViajeServiceTest {
 
     @Mock
     private DidiDeepLinkService didiDeepLinkService;
+
+    @Mock
+    private com.example.movilidadmdq.service.EstimadorPrecioAppService estimadorPrecioAppService;
+
+    @Mock
+    private com.example.movilidadmdq.service.HistorialViajeService historialViajeService;
 
     @InjectMocks
     private ViajeService viajeService;
@@ -93,6 +98,12 @@ class ViajeServiceTest {
         // Mock Clima
         when(weatherService.obtenerFactorClima()).thenReturn(1.0);
 
+        // Mock Estimadores
+        when(estimadorPrecioAppService.estimarUber(any(), anyInt(), anyDouble(), anyLong(), any()))
+                .thenReturn(new OpcionTransporteResponse(com.example.movilidadmdq.enums.TipoTransporte.UBER, new BigDecimal("6000"), 10, 5000, "url"));
+        when(estimadorPrecioAppService.estimarDidi(any(), anyInt(), anyDouble(), anyLong()))
+                .thenReturn(new OpcionTransporteResponse(com.example.movilidadmdq.enums.TipoTransporte.DIDI, new BigDecimal("5500"), 10, 5000, "url"));
+
         // WHEN
         List<OpcionTransporteResponse> resultados = viajeService.calcularViaje(request, 1L);
 
@@ -106,6 +117,6 @@ class ViajeServiceTest {
                 .findFirst()
                 .orElseThrow();
         
-        assertTrue(taxi.precioMin().compareTo(new BigDecimal("6937")) >= 0);
+        assertTrue(taxi.precio().compareTo(new BigDecimal("6937")) >= 0);
     }
 }
