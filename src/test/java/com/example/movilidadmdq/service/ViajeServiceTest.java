@@ -3,7 +3,6 @@ package com.example.movilidadmdq.service;
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
-import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
 import com.google.maps.model.DistanceMatrix;
@@ -24,6 +23,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -38,7 +38,7 @@ class ViajeServiceTest {
     private WeatherService weatherService;
 
     @Mock
-    private TarifaService tarifaService;
+    private CalculadoraTaxiService calculadoraTaxiService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -57,11 +57,6 @@ class ViajeServiceTest {
 
     @InjectMocks
     private ViajeService viajeService;
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(viajeService, "telefonoTaxi", "+542234941010");
-    }
 
     @Test
     void testCalcularViajeExitoso() {
@@ -91,11 +86,9 @@ class ViajeServiceTest {
 
         when(googleMapsService.obtenerDatosViaje(anyString(), anyString())).thenReturn(matrix);
 
-        // Mock Tarifa
-        Tarifa tarifaTaxi = new Tarifa();
-        tarifaTaxi.setPrecioBase(new BigDecimal("2250.00"));
-        tarifaTaxi.setPrecioPorKm(new BigDecimal("937.50"));
-        when(tarifaService.obtenerTarifaTaxi()).thenReturn(tarifaTaxi);
+        // El precio del taxi es responsabilidad de CalculadoraTaxiService; acá
+        // solo verificamos que ViajeService lo orqueste bien, asi que lo mockeamos.
+        when(calculadoraTaxiService.calcularPrecio(anyDouble())).thenReturn(new BigDecimal("7050"));
 
         // Mock Clima
         when(weatherService.obtenerFactorClima()).thenReturn(1.0);

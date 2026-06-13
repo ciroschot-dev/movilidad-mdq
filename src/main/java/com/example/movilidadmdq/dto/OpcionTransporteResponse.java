@@ -10,11 +10,8 @@ public record OpcionTransporteResponse(
         @Schema(description = "Tipo de transporte", example = "Uber")
         TipoTransporte tipo,
 
-        @Schema(description = "Precio minimo del viaje", example = "3400")
-        BigDecimal precioMin,
-
-        @Schema(description = "Precio maximo del viaje", example = "6800")
-        BigDecimal precioMax,
+        @Schema(description = "Precio estimado del viaje", example = "5200")
+        BigDecimal precio,
 
         @Schema(description = "Tiempo en minutos de llegada", example = "6")
         int tiempoMinutos,

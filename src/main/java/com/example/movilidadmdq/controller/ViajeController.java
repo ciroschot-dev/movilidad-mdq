@@ -8,6 +8,8 @@ import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.repository.UsuarioRepository;
+import com.example.movilidadmdq.service.FavoritoService;
+import com.example.movilidadmdq.service.HistorialViajeService;
 import com.example.movilidadmdq.service.ViajeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,6 +33,8 @@ import java.util.List;
 public class ViajeController
 {
     private final ViajeService viajeService;
+    private final HistorialViajeService historialViajeService;
+    private final FavoritoService favoritoService;
     private final UsuarioRepository usuarioRepository;
 
     @Operation(summary = "Obtener destinos más buscados (ADMIN)", description = "Devuelve una lista de destinos populares con filtros por fecha y zona. Solo accesible por administradores.")
@@ -43,8 +47,9 @@ public class ViajeController
     public ResponseEntity<List<DestinoPopularResponse>> getDestinosPopulares(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
-            @RequestParam(required = false) String zona) {
-        return ResponseEntity.ok(viajeService.obtenerDestinosPopulares(desde, hasta, zona));
+            @RequestParam(required = false) String zona)
+    {
+        return ResponseEntity.ok(historialViajeService.obtenerDestinosPopulares(desde, hasta, zona));
     }
 
     @Operation(
@@ -62,7 +67,8 @@ public class ViajeController
             Authentication authentication
     )
     {
-        if (authentication == null || authentication.getName() == null) {
+        if (authentication == null || authentication.getName() == null)
+        {
             return ResponseEntity.status(401).build();
         }
 
@@ -70,37 +76,44 @@ public class ViajeController
                 .map(usuario -> ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId())))
                 .orElse(ResponseEntity.status(401).build());
     }
+
     // Metodo para marcar vviaje fav
     @PutMapping("/{viajeId}/favorito")
     public ResponseEntity<Void> toggleFavorito(
             @PathVariable Long viajeId,
-            Authentication authentication) {
+            Authentication authentication)
+    {
 
-        if (authentication == null || authentication.getName() == null) {
+        if (authentication == null || authentication.getName() == null)
+        {
             return ResponseEntity.status(401).build();
         }
 
         return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario -> {
-                    viajeService.toggleFavorito(viajeId, usuario.getId());
+                .map(usuario ->
+                {
+                    favoritoService.toggleFavorito(viajeId, usuario.getId());
                     return ResponseEntity.ok().<Void>build();
                 })
                 .orElse(ResponseEntity.status(401).build());
     }
+
     // Meotodo para obtener favs
     @GetMapping("/favoritos")
     public ResponseEntity<List<ViajeHistorialResponse>> obtenerFavoritos(
             Authentication authentication
-    ) {
-        if (authentication == null || authentication.getName() == null) {
+    )
+    {
+        if (authentication == null || authentication.getName() == null)
+        {
             return ResponseEntity.status(401).build();
         }
 
         return usuarioRepository.findByUsername(authentication.getName())
                 .map(usuario ->
                         ResponseEntity.ok(
-                                viajeService.obtenerFavoritos(usuario.getId()).stream()
-                                        .map(viajeService::toResponse)
+                                favoritoService.obtenerFavoritos(usuario.getId()).stream()
+                                        .map(historialViajeService::toResponse)
                                         .toList()
                         ))
                 .orElse(ResponseEntity.status(401).build());
@@ -110,13 +123,15 @@ public class ViajeController
     @GetMapping("/direcciones-favoritas")
     public ResponseEntity<List<DireccionFavoritaResponse>> obtenerDireccionesFavoritas(
             Authentication authentication
-    ) {
-        if (authentication == null || authentication.getName() == null) {
+    )
+    {
+        if (authentication == null || authentication.getName() == null)
+        {
             return ResponseEntity.status(401).build();
         }
 
         return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario -> ResponseEntity.ok(viajeService.obtenerDireccionesFavoritas(usuario.getId())))
+                .map(usuario -> ResponseEntity.ok(favoritoService.obtenerDireccionesFavoritas(usuario.getId())))
                 .orElse(ResponseEntity.status(401).build());
     }
 
@@ -126,14 +141,17 @@ public class ViajeController
             @PathVariable Long id,
             @Valid @RequestBody ActualizarDireccionFavoritaRequest request,
             Authentication authentication
-    ) {
-        if (authentication == null || authentication.getName() == null) {
+    )
+    {
+        if (authentication == null || authentication.getName() == null)
+        {
             return ResponseEntity.status(401).build();
         }
 
         return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario -> {
-                    viajeService.renombrarDireccionFavorita(id, request.nombre(), usuario.getId());
+                .map(usuario ->
+                {
+                    favoritoService.renombrarDireccionFavorita(id, request.nombre(), usuario.getId());
                     return ResponseEntity.ok().<Void>build();
                 })
                 .orElse(ResponseEntity.status(401).build());
@@ -144,14 +162,17 @@ public class ViajeController
     public ResponseEntity<Void> eliminarDireccionFavorita(
             @PathVariable Long id,
             Authentication authentication
-    ) {
-        if (authentication == null || authentication.getName() == null) {
+    )
+    {
+        if (authentication == null || authentication.getName() == null)
+        {
             return ResponseEntity.status(401).build();
         }
 
         return usuarioRepository.findByUsername(authentication.getName())
-                .map(usuario -> {
-                    viajeService.eliminarDireccionFavorita(id, usuario.getId());
+                .map(usuario ->
+                {
+                    favoritoService.eliminarDireccionFavorita(id, usuario.getId());
                     return ResponseEntity.ok().<Void>build();
                 })
                 .orElse(ResponseEntity.status(401).build());

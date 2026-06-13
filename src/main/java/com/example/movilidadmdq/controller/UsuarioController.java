@@ -14,7 +14,7 @@ import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
 import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.service.UsuarioService;
-import com.example.movilidadmdq.service.ViajeService;
+import com.example.movilidadmdq.service.HistorialViajeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -38,7 +38,7 @@ public class UsuarioController
     private final UsuarioRepository usuarioRepository;
     private final ViajeRepository viajeRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ViajeService viajeService;
+    private final HistorialViajeService historialViajeService;
 
     @Operation(summary = "Ingresar", description = "Se ingresan credenciales para iniciar sesion, devuelve token")
     @ApiResponses(value = {
@@ -109,7 +109,7 @@ public class UsuarioController
         return usuarioRepository.findByUsername(authentication.getName())
                 .filter(usuario -> usuario.getId().equals(id))
                 .map(usuario -> viajeRepository.findByUsuarioIdOrderByFechaHoraDesc(usuario.getId()).stream()
-                        .map(viajeService::toResponse)
+                        .map(historialViajeService::toResponse)
                         .toList())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(403).build());

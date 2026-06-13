@@ -58,7 +58,7 @@ public class Viaje
     private Integer tiempoEstimadoMin;
 
     // === Precios por tipo de transporte ===
-    // Las apps cobran por rango (mín/máx) según demanda; el taxi tiene precio fijo.
+    // Un precio estimado por opción (taxi, Uber y Didi).
 
     /**
      * Precio del taxi (tarifa fija calculada por bajada de bandera + fichas).
@@ -67,16 +67,10 @@ public class Viaje
     private BigDecimal precioTaxi;
 
     @Column
-    private BigDecimal precioUberMin;
+    private BigDecimal precioUber;
 
     @Column
-    private BigDecimal precioUberMax;
-
-    @Column
-    private BigDecimal precioDidiMin;
-
-    @Column
-    private BigDecimal precioDidiMax;
+    private BigDecimal precioDidi;
 
     // === Estado del viaje ===
 

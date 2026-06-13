@@ -27,8 +27,7 @@ interface UsuarioResponse {
 
 interface OpcionTransporteApi {
   tipo: 'TAXI' | 'UBER' | 'DIDI';
-  precioMin: number;
-  precioMax: number;
+  precio: number;
   tiempoMinutos: number;
   url: string;
 }
@@ -49,12 +48,8 @@ interface ViajeHistorial {
   distanciaEnMetros: number;
   tiempoEstimadoMin: number;
   precioTaxi: number;
-  precioUberMin: number;
-  precioUberMax: number;
-  precioDidiMin: number;
-  precioDidiMax: number;
-  precioMinApp: number;
-  precioMaxApp: number;
+  precioUber: number;
+  precioDidi: number;
   fechaHora: string;
   favorito: boolean;
   origenPlaceId?: string;
@@ -519,10 +514,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       const data: OpcionTransporteApi[] = await response.json();
 
       const mappedData: Opcion[] = data.map((item) => {
-        const isSamePrice = item.precioMin === item.precioMax;
-        const precio = isSamePrice
-            ? formatPrecio(item.precioMin)
-            : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
+        const precio = formatPrecio(item.precio);
 
         let config = {
           tipo: 'Taxi',
@@ -922,13 +914,11 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-tighter text-blue-500">Uber</span>
-                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioUberMin)}</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioUber)}</span>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-tighter text-orange-500">Didi</span>
-                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioDidiMin)}</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioDidi)}</span>
                                       </div>
                                     </div>
                                 </div>
