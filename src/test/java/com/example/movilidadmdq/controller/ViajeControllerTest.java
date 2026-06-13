@@ -71,7 +71,6 @@ class ViajeControllerTest {
         usuario.setUsername("testuser");
         usuario.setRole(Role.USER);
 
-        when(usuarioRepository.findByUsername("testuser")).thenReturn(java.util.Optional.of(usuario));
         when(viajeService.calcularViaje(any(), eq(1L))).thenReturn(new ArrayList<>());
 
         mockMvc.perform(post("/viajes/calcular")
