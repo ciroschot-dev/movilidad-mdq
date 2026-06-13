@@ -180,6 +180,8 @@ public class SecurityConfig
                 taxi.setMetrosPorFicha(160);
                 tarifaRepo.save(taxi);
                 
+                // Uber y Didi se siembran solo con el tipo: sus columnas de tarifa van
+                // NULL a propósito (el precio se estima a partir del taxi, no de una ficha).
                 Tarifa uber = new Tarifa();
                 uber.setTipoTransporte(TipoTransporte.UBER);
                 tarifaRepo.save(uber);
