@@ -128,10 +128,15 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-      if (resultados && resultados.length > 0) {
-          resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-  }, [resultados]);
+    if (!loading && resultados && resultados.length > 0) {
+      // Usamos un pequeño delay para que la animación de Framer Motion no interfiera
+      // y aseguramos que el scroll ocurra cuando el componente esté plenamente montado.
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [resultados, loading]);
 
   useEffect(() => {
     if (theme === 'dark') {
