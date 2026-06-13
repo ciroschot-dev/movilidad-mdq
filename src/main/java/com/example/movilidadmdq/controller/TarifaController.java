@@ -33,6 +33,19 @@ public class TarifaController
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
 
+    /**
+    Punto de entrada para la actualización de precios del servicio de Taxi.
+    Este método actúa como nexo entre la petición HTTP y la lógica de negocio:
+
+           1. @RequestBody: Convierte automáticamente el JSON que envía el Administrador
+              en un objeto Java de tipo 'TarifaRequest'.
+           2. @Valid: Activa la validación de los campos del DTO (asegura que los precios
+              sean positivos y los campos obligatorios estén presentes).
+           3. Delegación: El controlador no realiza cálculos ni guarda en la DB; simplemente
+              le entrega los datos ya validados al 'tarifaService'.
+           4. Respuesta: Retorna el objeto 'Tarifa' actualizado, el cual Spring transformará
+              nuevamente a JSON para informar al Admin que la operación fue exitosa.  */
+
     public Tarifa actualizarTarifaTaxi(@Valid @RequestBody TarifaRequest request)
     {
         return tarifaService.actualizarTarifaTaxi(request);
