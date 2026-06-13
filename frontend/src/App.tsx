@@ -123,15 +123,17 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loading && resultados && resultados.length > 0) {
-      // Usamos un pequeño delay para que la animación de Framer Motion no interfiera
-      // y aseguramos que el scroll ocurra cuando el componente esté plenamente montado.
+    // Scrollear cuando termina la carga (éxito o error)
+    if (!loading && (resultados || error)) {
       const timer = setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+        resultsRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' // 'nearest' suele sentirse más natural que 'start' para movimientos cortos
+        });
+      }, 300); // Reducimos un poco el delay para que se sienta más responsivo pero fluido
       return () => clearTimeout(timer);
     }
-  }, [resultados, loading]);
+  }, [resultados, error, loading]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -788,7 +790,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                   />
               </section>
 
-            <div className="space-y-4">
+            <div ref={resultsRef} className="space-y-4">
               {error ? (
                 <div className="rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-400">
                   {error}
@@ -806,7 +808,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                     <p className="text-gray-400 font-medium">Calculando opciones...</p>
                   </motion.div>
                 ) : resultados ? (
-                  <motion.div ref={resultsRef} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <div className="flex items-center justify-between mb-4 px-1">
                       <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">Opciones disponibles</h2>
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
