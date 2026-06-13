@@ -88,6 +88,21 @@ public class UsuarioService
     {
         verificarIdentidad(usuario, id);
 
+        // Username y email son únicos. Validamos antes de guardar (excluyendo al propio
+        // usuario) para devolver un 409 claro en vez de un 500 de la capa de persistencia.
+        if (usuarioRepository.findByUsername(datos.username())
+                .filter(otro -> !otro.getId().equals(usuario.getId()))
+                .isPresent())
+        {
+            throw new RecursoDuplicadoException("El username ya esta registrado");
+        }
+        if (usuarioRepository.findByEmail(datos.email())
+                .filter(otro -> !otro.getId().equals(usuario.getId()))
+                .isPresent())
+        {
+            throw new RecursoDuplicadoException("El email ya esta registrado");
+        }
+
         usuario.setUsername(datos.username());
         usuario.setEmail(datos.email());
         if (datos.password() != null && !datos.password().isBlank())

@@ -114,7 +114,8 @@ public class SecurityConfig
                                     + "\"status\":401,"
                                     + "\"error\":\"Unauthorized\","
                                     + "\"message\":\"No autenticado\","
-                                    + "\"path\":\"" + request.getRequestURI() + "\""
+                                    + "\"path\":\"" + request.getRequestURI() + "\","
+                                    + "\"errores\":null"
                                     + "}";
                             try (PrintWriter writer = response.getWriter()) { writer.write(json); }
                         })
@@ -159,7 +160,18 @@ public class SecurityConfig
             // Verificación de Admin existente para evitar duplicados en reinicios.
             if (!userRepo.existsByRole(Role.ADMIN))
             {
-                if (adminUsername != null && !adminUsername.isBlank()) {
+                if (adminUsername != null && !adminUsername.isBlank())
+                {
+                    // Si se configuró un admin, la password tiene que venir sí o sí. Crear una
+                    // cuenta ADMIN con password en blanco la dejaría trivial de comprometer:
+                    // preferimos abortar el arranque y avisar antes que sembrar un admin inseguro.
+                    if (adminPassword == null || adminPassword.isBlank())
+                    {
+                        throw new IllegalStateException(
+                                "APP_ADMIN_USERNAME está definida pero APP_ADMIN_PASSWORD está vacía: "
+                                        + "configurá una password para el admin inicial en el entorno (.env).");
+                    }
+
                     Usuario admin = new Usuario();
                     admin.setUsername(adminUsername);
                     admin.setPassword(encoder.encode(adminPassword));
@@ -173,10 +185,14 @@ public class SecurityConfig
             // Inicialización de tarifas si la tabla está vacía.
             if (tarifaRepo.count() == 0)
             {
+                // Tarifa del taxi completa: día y noche. Si faltaran los valores nocturnos,
+                // CalculadoraTaxiService lanzaría TarifaIncompletaException (503) de noche.
                 Tarifa taxi = new Tarifa();
                 taxi.setTipoTransporte(TipoTransporte.TAXI);
                 taxi.setBajadaBanderaDia(new BigDecimal("2250.00"));
+                taxi.setBajadaBanderaNoche(new BigDecimal("2700.00"));
                 taxi.setValorFichaDia(new BigDecimal("150.00"));
+                taxi.setValorFichaNoche(new BigDecimal("180.00"));
                 taxi.setMetrosPorFicha(160);
                 tarifaRepo.save(taxi);
                 
