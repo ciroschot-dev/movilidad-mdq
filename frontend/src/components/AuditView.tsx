@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
-  ClipboardList, 
-  Search, 
-  User, 
+  ClipboardList,
+  User,
   MapPin, 
   Navigation, 
   Calendar, 
