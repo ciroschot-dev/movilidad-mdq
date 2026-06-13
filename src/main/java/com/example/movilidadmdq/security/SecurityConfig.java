@@ -173,8 +173,6 @@ public class SecurityConfig
             {
                 Tarifa taxi = new Tarifa();
                 taxi.setTipoTransporte(TipoTransporte.TAXI);
-                taxi.setPrecioBase(new BigDecimal("2250.00"));
-                taxi.setPrecioPorKm(new BigDecimal("937.50"));
                 taxi.setBajadaBanderaDia(new BigDecimal("2250.00"));
                 taxi.setBajadaBanderaNoche(new BigDecimal("2700.00"));
                 taxi.setValorFichaDia(new BigDecimal("150.00"));
@@ -184,14 +182,10 @@ public class SecurityConfig
 
                 Tarifa uber = new Tarifa();
                 uber.setTipoTransporte(TipoTransporte.UBER);
-                uber.setPrecioBase(BigDecimal.ZERO);
-                uber.setPrecioPorKm(BigDecimal.ZERO);
                 tarifaRepo.save(uber);
 
                 Tarifa didi = new Tarifa();
                 didi.setTipoTransporte(TipoTransporte.DIDI);
-                didi.setPrecioBase(BigDecimal.ZERO);
-                didi.setPrecioPorKm(BigDecimal.ZERO);
                 tarifaRepo.save(didi);
 
                 System.out.println("--- [SISTEMA] Tarifas base cargadas ---");

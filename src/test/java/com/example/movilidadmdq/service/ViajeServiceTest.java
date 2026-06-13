@@ -3,7 +3,6 @@ package com.example.movilidadmdq.service;
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
-import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.repository.ViajeRepository;
 import com.google.maps.model.DistanceMatrix;
@@ -24,7 +23,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +37,7 @@ class ViajeServiceTest {
     private WeatherService weatherService;
 
     @Mock
-    private TarifaService tarifaService;
+    private CalculadoraTaxiService calculadoraTaxiService;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -55,13 +54,14 @@ class ViajeServiceTest {
     @Mock
     private DidiDeepLinkService didiDeepLinkService;
 
+    @Mock
+    private com.example.movilidadmdq.service.EstimadorPrecioAppService estimadorPrecioAppService;
+
+    @Mock
+    private com.example.movilidadmdq.service.HistorialViajeService historialViajeService;
+
     @InjectMocks
     private ViajeService viajeService;
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(viajeService, "telefonoTaxi", "+542234941010");
-    }
 
     @Test
     void testCalcularViajeExitoso() {
@@ -91,16 +91,18 @@ class ViajeServiceTest {
 
         when(googleMapsService.obtenerDatosViaje(anyString(), anyString())).thenReturn(matrix);
 
-        // Mock Tarifa con sistema de fichas de Mar del Plata
-        Tarifa tarifaTaxi = new Tarifa();
-        tarifaTaxi.setBajadaBanderaDia(new BigDecimal("2250.00"));
-        tarifaTaxi.setValorFichaDia(new BigDecimal("150.00"));
-        tarifaTaxi.setMetrosPorFicha(160);
-        
-        when(tarifaService.obtenerTarifaTaxi()).thenReturn(tarifaTaxi);
+        // El precio del taxi es responsabilidad de CalculadoraTaxiService; acá
+        // solo verificamos que ViajeService lo orqueste bien, asi que lo mockeamos.
+        when(calculadoraTaxiService.calcularPrecio(anyDouble())).thenReturn(new BigDecimal("7050"));
 
         // Mock Clima
         when(weatherService.obtenerFactorClima()).thenReturn(1.0);
+
+        // Mock Estimadores
+        when(estimadorPrecioAppService.estimarUber(any(), anyInt(), anyDouble(), anyLong(), any()))
+                .thenReturn(new OpcionTransporteResponse(com.example.movilidadmdq.enums.TipoTransporte.UBER, new BigDecimal("6000"), 10, 5000, "url"));
+        when(estimadorPrecioAppService.estimarDidi(any(), anyInt(), anyDouble(), anyLong()))
+                .thenReturn(new OpcionTransporteResponse(com.example.movilidadmdq.enums.TipoTransporte.DIDI, new BigDecimal("5500"), 10, 5000, "url"));
 
         // WHEN
         List<OpcionTransporteResponse> resultados = viajeService.calcularViaje(request, 1L);
@@ -115,6 +117,6 @@ class ViajeServiceTest {
                 .findFirst()
                 .orElseThrow();
         
-        assertTrue(taxi.precioMin().compareTo(new BigDecimal("6937")) >= 0);
+        assertTrue(taxi.precio().compareTo(new BigDecimal("6937")) >= 0);
     }
 }

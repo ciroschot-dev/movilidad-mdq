@@ -24,17 +24,11 @@ public record ViajeHistorialResponse(
         @Schema(description = "Precio estimado en taxi", example = "4800.00")
         BigDecimal precioTaxi,
 
-        @Schema(description = "Precio mínimo estimado en Uber", example = "3200.00")
-        BigDecimal precioUberMin,
+        @Schema(description = "Precio estimado en Uber", example = "4200.00")
+        BigDecimal precioUber,
 
-        @Schema(description = "Precio máximo estimado en Uber", example = "4200.00")
-        BigDecimal precioUberMax,
-
-        @Schema(description = "Precio mínimo estimado en Didi", example = "3100.00")
-        BigDecimal precioDidiMin,
-
-        @Schema(description = "Precio máximo estimado en Didi", example = "4100.00")
-        BigDecimal precioDidiMax,
+        @Schema(description = "Precio estimado en Didi", example = "4100.00")
+        BigDecimal precioDidi,
 
         @Schema(description = "Tipo de transporte elegido", example = "UBER")
         String tipoElegido,
@@ -44,6 +38,9 @@ public record ViajeHistorialResponse(
 
         @Schema(description = "Indica si el viaje está marcado como favorito", example = "true")
         boolean favorito,
+
+        @Schema(description = "Username del usuario que realizó el viaje", example = "juan.perez")
+        String username,
 
         @Schema(description = "Place ID de origen")
         String origenPlaceId,

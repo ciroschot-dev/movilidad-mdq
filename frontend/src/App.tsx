@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, useRef, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Car, Smartphone, CreditCard, LogOut, User, Mail, LockKeyhole, History, Home, MapPin, Navigation, RefreshCw, Trash2, Repeat, Settings, Star, Sun, Moon } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
@@ -7,6 +7,7 @@ import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
 import AdminDashboard from './components/AdminDashboard';
 import FavoritesView from './components/FavoritesView';
+import AuditView from './components/AuditView';
 import type { AuthSession, DireccionFavorita } from './types';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '');
@@ -27,8 +28,7 @@ interface UsuarioResponse {
 
 interface OpcionTransporteApi {
   tipo: 'TAXI' | 'UBER' | 'DIDI';
-  precioMin: number;
-  precioMax: number;
+  precio: number;
   tiempoMinutos: number;
   url: string;
 }
@@ -49,12 +49,8 @@ interface ViajeHistorial {
   distanciaEnMetros: number;
   tiempoEstimadoMin: number;
   precioTaxi: number;
-  precioUberMin: number;
-  precioUberMax: number;
-  precioDidiMin: number;
-  precioDidiMax: number;
-  precioMinApp: number;
-  precioMaxApp: number;
+  precioUber: number;
+  precioDidi: number;
   fechaHora: string;
   favorito: boolean;
   origenPlaceId?: string;
@@ -72,7 +68,7 @@ interface ViajeFrecuente {
 }
 
 type AuthMode = 'login' | 'registro';
-type AppView = 'calculo' | 'historial' | 'favoritos' | 'perfil' | 'admin';
+type AppView = 'calculo' | 'historial' | 'favoritos' | 'perfil' | 'admin' | 'auditoria';
 
 interface AppContentProps {
   isLoaded: boolean;
@@ -124,6 +120,21 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
     origenPlace?: LugarSeleccionado;
     destinoPlace?: LugarSeleccionado;
   } | null>(null);
+
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scrollear cuando termina la carga (éxito o error)
+    if (!loading && (resultados || error)) {
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' // 'nearest' suele sentirse más natural que 'start' para movimientos cortos
+        });
+      }, 300); // Reducimos un poco el delay para que se sienta más responsivo pero fluido
+      return () => clearTimeout(timer);
+    }
+  }, [resultados, error, loading]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -506,10 +517,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
       const data: OpcionTransporteApi[] = await response.json();
 
       const mappedData: Opcion[] = data.map((item) => {
-        const isSamePrice = item.precioMin === item.precioMax;
-        const precio = isSamePrice
-            ? formatPrecio(item.precioMin)
-            : `${formatPrecio(item.precioMin)} - ${formatPrecio(item.precioMax)}`;
+        const precio = formatPrecio(item.precio);
 
         let config = {
           tipo: 'Taxi',
@@ -745,6 +753,13 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           <AdminDashboard
             session={session}
             onBack={() => setActiveView('calculo')}
+            onNavigateToAudit={() => setActiveView('auditoria')}
+            apiUrl={API_URL}
+          />
+        ) : activeView === 'auditoria' ? (
+          <AuditView
+            session={session}
+            onBack={() => setActiveView('admin')}
             apiUrl={API_URL}
           />
         ) : activeView === 'favoritos' ? (
@@ -783,7 +798,7 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                   />
               </section>
 
-            <div className="space-y-4">
+            <div ref={resultsRef} className="space-y-4">
               {error ? (
                 <div className="rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm font-semibold text-red-700 dark:text-red-400">
                   {error}
@@ -909,13 +924,11 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-tighter text-blue-500">Uber</span>
-                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioUberMin)}</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioUber)}</span>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase tracking-tighter text-orange-500">Didi</span>
-                                        <span className="text-[10px] font-medium text-gray-400 lowercase italic">desde</span>
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioDidiMin)}</span>
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{formatPrecio(viaje.precioDidi)}</span>
                                       </div>
                                     </div>
                                 </div>

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, AlertCircle, CheckCircle2, ArrowLeft, Settings, Search, UserMinus, User, BarChart3, Calendar, MapPin } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, ArrowLeft, Settings, Search, UserMinus, User, BarChart3, Calendar, MapPin, ClipboardList } from 'lucide-react';
 
 interface AdminDashboardProps {
   session: {
     token: string;
   };
   onBack: () => void;
+  onNavigateToAudit: () => void;
   apiUrl: string;
 }
 
@@ -22,10 +23,13 @@ interface DestinoPopular {
   cantidad: number;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, onNavigateToAudit, apiUrl }) => {
   const [formData, setFormData] = useState({
-    precioBase: '',
-    precioPorKm: '',
+    bajadaBanderaDia: '',
+    bajadaBanderaNoche: '',
+    valorFichaDia: '',
+    valorFichaNoche: '',
+    metrosPorFicha: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,8 +156,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl
           Authorization: `Bearer ${session.token}`,
         },
         body: JSON.stringify({
-          precioBase: parseFloat(formData.precioBase),
-          precioPorKm: parseFloat(formData.precioPorKm),
+          bajadaBanderaDia: parseFloat(formData.bajadaBanderaDia),
+          bajadaBanderaNoche: parseFloat(formData.bajadaBanderaNoche),
+          valorFichaDia: parseFloat(formData.valorFichaDia),
+          valorFichaNoche: parseFloat(formData.valorFichaNoche),
+          metrosPorFicha: parseInt(formData.metrosPorFicha, 10),
         }),
       });
 
@@ -183,46 +190,60 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ session, onBack, apiUrl
         >
           <ArrowLeft size={16} /> Volver
         </button>
-        <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full text-xs font-black uppercase tracking-widest">
-          <Settings size={12} /> Panel Admin
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={onNavigateToAudit}
+            className="flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-black uppercase tracking-widest hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all"
+          >
+            <ClipboardList size={12} /> Auditoría
+          </button>
+          <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full text-xs font-black uppercase tracking-widest">
+            <Settings size={12} /> Panel Admin
+          </div>
         </div>
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-xl shadow-gray-200/50 dark:shadow-black/40 border border-transparent dark:border-gray-800">
         <h2 className="text-xl font-black text-gray-900 dark:text-white mb-2">Configuración de Tarifa</h2>
         <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6">
-          Ajusta los valores base del Taxi para toda la plataforma.
+          Ajustá la tarifa del taxi (bajada de bandera, fichas y metros) para toda la plataforma.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Precio Base (Bajada de bandera)</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold">$</span>
-              <input
-                type="number"
-                step="0.01"
-                required
-                value={formData.precioBase}
-                onChange={(e) => setFormData({ ...formData, precioBase: e.target.value })}
-                className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 py-4 pl-8 pr-4 text-gray-900 dark:text-gray-100 font-bold outline-none transition-all focus:ring-2 focus:ring-black dark:focus:ring-white"
-                placeholder="Ej: 2250"
-              />
+          {([
+            { key: 'bajadaBanderaDia', label: 'Bajada de bandera (día)', placeholder: 'Ej: 2250' },
+            { key: 'bajadaBanderaNoche', label: 'Bajada de bandera (noche)', placeholder: 'Ej: 2700' },
+            { key: 'valorFichaDia', label: 'Valor de ficha (día)', placeholder: 'Ej: 150' },
+            { key: 'valorFichaNoche', label: 'Valor de ficha (noche)', placeholder: 'Ej: 180' },
+          ] as const).map((campo) => (
+            <div key={campo.key} className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">{campo.label}</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={formData[campo.key]}
+                  onChange={(e) => setFormData({ ...formData, [campo.key]: e.target.value })}
+                  className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 py-4 pl-8 pr-4 text-gray-900 dark:text-gray-100 font-bold outline-none transition-all focus:ring-2 focus:ring-black dark:focus:ring-white"
+                  placeholder={campo.placeholder}
+                />
+              </div>
             </div>
-          </div>
+          ))}
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Precio por Kilómetro</label>
+            <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Metros por ficha</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold">$</span>
               <input
                 type="number"
-                step="0.01"
+                step="1"
                 required
-                value={formData.precioPorKm}
-                onChange={(e) => setFormData({ ...formData, precioPorKm: e.target.value })}
-                className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 py-4 pl-8 pr-4 text-gray-900 dark:text-gray-100 font-bold outline-none transition-all focus:ring-2 focus:ring-black dark:focus:ring-white"
-                placeholder="Ej: 937.50"
+                value={formData.metrosPorFicha}
+                onChange={(e) => setFormData({ ...formData, metrosPorFicha: e.target.value })}
+                className="w-full rounded-2xl bg-gray-50 dark:bg-gray-800 py-4 px-4 text-gray-900 dark:text-gray-100 font-bold outline-none transition-all focus:ring-2 focus:ring-black dark:focus:ring-white"
+                placeholder="Ej: 160"
               />
             </div>
           </div>

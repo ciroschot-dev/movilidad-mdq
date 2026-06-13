@@ -70,6 +70,15 @@ public class GlobalExceptionHandler
         return construir(HttpStatus.BAD_REQUEST, "El cuerpo de la peticion no es un JSON valido", req, null);
     }
 
+    // La tarifa del taxi no esta completamente cargada en la base -> 503.
+    // Es un problema de configuracion de datos: devolvemos el mensaje real
+    // (que dice como resolverlo) en vez del 500 generico por NullPointer.
+    @ExceptionHandler(TarifaIncompletaException.class)
+    public ResponseEntity<ApiError> manejarTarifaIncompleta(TarifaIncompletaException ex, HttpServletRequest req)
+    {
+        return construir(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), req, null);
+    }
+
     // Red de seguridad: cualquier cosa que no matchee con los handlers
     // anteriores cae aca y se devuelve como 500 sin filtrar el stacktrace.
     @ExceptionHandler(Exception.class)
