@@ -7,6 +7,7 @@ import ResultadoCard from './components/ResultadoCard';
 import ProfileView from './components/ProfileView';
 import AdminDashboard from './components/AdminDashboard';
 import FavoritesView from './components/FavoritesView';
+import AuditView from './components/AuditView';
 import type { AuthSession, DireccionFavorita } from './types';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '');
@@ -67,7 +68,7 @@ interface ViajeFrecuente {
 }
 
 type AuthMode = 'login' | 'registro';
-type AppView = 'calculo' | 'historial' | 'favoritos' | 'perfil' | 'admin';
+type AppView = 'calculo' | 'historial' | 'favoritos' | 'perfil' | 'admin' | 'auditoria';
 
 interface AppContentProps {
   isLoaded: boolean;
@@ -752,6 +753,13 @@ function AppContent({ isLoaded, loadError }: AppContentProps) {
           <AdminDashboard
             session={session}
             onBack={() => setActiveView('calculo')}
+            onNavigateToAudit={() => setActiveView('auditoria')}
+            apiUrl={API_URL}
+          />
+        ) : activeView === 'auditoria' ? (
+          <AuditView
+            session={session}
+            onBack={() => setActiveView('admin')}
             apiUrl={API_URL}
           />
         ) : activeView === 'favoritos' ? (

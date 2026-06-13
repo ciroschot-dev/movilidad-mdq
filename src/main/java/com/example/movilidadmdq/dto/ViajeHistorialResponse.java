@@ -39,6 +39,9 @@ public record ViajeHistorialResponse(
         @Schema(description = "Indica si el viaje está marcado como favorito", example = "true")
         boolean favorito,
 
+        @Schema(description = "Username del usuario que realizó el viaje", example = "juan.perez")
+        String username,
+
         @Schema(description = "Place ID de origen")
         String origenPlaceId,
         @Schema(description = "Latitud de origen")

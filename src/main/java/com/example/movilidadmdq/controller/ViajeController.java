@@ -6,7 +6,6 @@ import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
-import com.example.movilidadmdq.model.Viaje;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import com.example.movilidadmdq.service.FavoritoService;
 import com.example.movilidadmdq.service.HistorialViajeService;
@@ -17,6 +16,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,18 +40,27 @@ public class ViajeController
     private final FavoritoService favoritoService;
     private final UsuarioRepository usuarioRepository;
 
-    @Operation(summary = "Obtener destinos más buscados (ADMIN)", description = "Devuelve una lista de destinos populares con filtros por fecha y zona. Solo accesible por administradores.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista obtenida con éxito"),
-            @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
-    })
+    @Operation(summary = "Auditoría de viajes (ADMIN)", description = "Devuelve una página de viajes realizados por todos los usuarios con filtros avanzados.")
+    @GetMapping("/admin/auditoria")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<ViajeHistorialResponse>> getAuditoria(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String origen,
+            @RequestParam(required = false) String destino,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
+            @RequestParam(required = false) Boolean favorito,
+            @PageableDefault(size = 10, sort = "fechaHora", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(historialViajeService.obtenerAuditoriaViajes(username, origen, destino, desde, hasta, favorito, pageable));
+    }
+
+    @Operation(summary = "Obtener destinos populares (ADMIN)", description = "Devuelve los destinos más buscados con filtros opcionales.")
     @GetMapping("/admin/destinos-populares")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DestinoPopularResponse>> getDestinosPopulares(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
-            @RequestParam(required = false) String zona)
-    {
+            @RequestParam(required = false) String zona) {
         return ResponseEntity.ok(historialViajeService.obtenerDestinosPopulares(desde, hasta, zona));
     }
 
