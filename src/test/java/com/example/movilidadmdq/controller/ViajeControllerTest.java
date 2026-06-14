@@ -5,6 +5,7 @@ import com.example.movilidadmdq.enums.Role;
 import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.service.ViajeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -26,10 +28,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
         "spring.datasource.driver-class-name=org.h2.Driver",
-        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+        "spring.config.import="
 })
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Slf4j
 class ViajeControllerTest {
 
     @Autowired
@@ -46,6 +50,8 @@ class ViajeControllerTest {
 
     @Test
     void testCalcularViajeSinAuthDeberiaDar401() throws Exception {
+        log.info("INICIO TEST: testCalcularViajeSinAuthDeberiaDar401 - Valida que el acceso a /viajes/calcular sin token sea denegado (401).");
+
         CalculoViajeRequest request = new CalculoViajeRequest(
                 "Origen", "Destino",
                 null, null, null, null, null,
@@ -56,10 +62,14 @@ class ViajeControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+                
+        log.info("FIN TEST: testCalcularViajeSinAuthDeberiaDar401 - PASÓ EXITOSAMENTE");
     }
 
     @Test
     void testCalcularViajeConAuthDeberiaDar200() throws Exception {
+        log.info("INICIO TEST: testCalcularViajeConAuthDeberiaDar200 - Valida que el acceso a /viajes/calcular con token válido sea permitido (200).");
+
         CalculoViajeRequest request = new CalculoViajeRequest(
                 "Origen", "Destino",
                 null, null, null, null, null,
@@ -72,11 +82,14 @@ class ViajeControllerTest {
         usuario.setRole(Role.USER);
 
         when(viajeService.calcularViaje(any(), eq(1L))).thenReturn(new ArrayList<>());
+        when(usuarioRepository.findByUsername("testuser")).thenReturn(Optional.of(usuario));
 
         mockMvc.perform(post("/viajes/calcular")
                 .with(user(usuario)) // Simula el principal como objeto Usuario
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
+                
+        log.info("FIN TEST: testCalcularViajeConAuthDeberiaDar200 - PASÓ EXITOSAMENTE");
     }
 }

@@ -10,7 +10,7 @@ import com.google.maps.model.DistanceMatrixElement;
 import com.google.maps.model.DistanceMatrixRow;
 import com.google.maps.model.Distance;
 import com.google.maps.model.Duration;
-import org.junit.jupiter.api.BeforeEach;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
+@Slf4j
 class ViajeServiceTest {
 
     @Mock
@@ -65,6 +66,8 @@ class ViajeServiceTest {
 
     @Test
     void testCalcularViajeExitoso() {
+        log.info("INICIO TEST: testCalcularViajeExitoso - Valida que el ViajeService coordine correctamente la obtención de distancia, clima y precios.");
+        
         // GIVEN
         CalculoViajeRequest request = new CalculoViajeRequest(
                 "Plaza Mitre", "Estadio Minella",
@@ -118,5 +121,7 @@ class ViajeServiceTest {
                 .orElseThrow();
         
         assertTrue(taxi.precio().compareTo(new BigDecimal("6937")) >= 0);
+        
+        log.info("FIN TEST: testCalcularViajeExitoso - PASÓ EXITOSAMENTE");
     }
 }
