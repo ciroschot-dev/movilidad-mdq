@@ -5,12 +5,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Un lugar que el usuario guardó con un alias para reusarlo rápido.
+ * <p>
+ * Por ejemplo "Casa" o "Trabajo": guardamos la dirección junto con el place id
+ * y las coordenadas de Google para poder reabrirla en el mapa sin volver a
+ * buscarla. Cada dirección favorita pertenece a un usuario.
+ */
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "direcciones_favoritas")
-public class DireccionFavorita {
+public class DireccionFavorita
+{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
