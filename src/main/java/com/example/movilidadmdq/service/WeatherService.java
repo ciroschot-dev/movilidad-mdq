@@ -7,17 +7,13 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Map;
 import java.util.List;
 
-/* 
-   CLASE: WeatherService
-   
-   Este servicio se encarga de consultar la API de OpenWeather para obtener 
-   el estado meteorológico actual en Mar del Plata.
-   
-   SU FUNCIÓN:
-   Determinar un "factor multiplicador" de precio. Si las condiciones son adversas 
-   (lluvia, tormenta), el sistema aplica un aumento al precio base del viaje 
-   para compensar la dificultad de transporte.
-*/
+/**
+ * Consulta el clima actual de Mar del Plata en la API de OpenWeather.
+ * <p>
+ * Con eso devuelve un "factor multiplicador" de precio: si el clima es adverso
+ * (lluvia, tormenta) el viaje sale más caro, para compensar que cuesta más
+ * conseguir transporte.
+ */
 @Service
 public class WeatherService
 {
@@ -30,16 +26,13 @@ public class WeatherService
     private final RestTemplate restTemplate = new RestTemplate();
     private final String CITY = "Mar del Plata,AR";
 
-    /* 
-       MÉTODO: obtenerFactorClima
-       Consulta el clima y devuelve un multiplicador para el precio.
-       
-       LÓGICA:
-       - Si llueve o hay tormenta, el precio aumenta (factor > 1.0).
-       - Si hay buen clima, el precio se mantiene normal (factor 1.0).
-       - Si la API de clima falla, el servicio es "tolerante a fallos": 
-         devuelve 1.0 en lugar de romper toda la aplicación.
-    */
+    /**
+     * Consulta el clima y devuelve el multiplicador de precio.
+     * <p>
+     * Con lluvia o tormenta da un factor mayor a 1.0; con buen clima, 1.0. Es
+     * tolerante a fallos: si la API no responde devuelve 1.0 en vez de romper
+     * el cálculo del viaje.
+     */
     public double obtenerFactorClima()
     {
         try

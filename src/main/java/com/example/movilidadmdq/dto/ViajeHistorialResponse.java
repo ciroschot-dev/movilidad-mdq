@@ -5,48 +5,33 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/* 
-   CLASE: ViajeHistorialResponse
-   
-   Este DTO de tipo 'record' es la representación detallada de un viaje guardado.
-   Se utiliza para enviarle al usuario su bitácora de movimientos y para la 
-   auditoría del administrador.
-   
-   IMPORTANCIA:
-   Contiene la "foto" del viaje en el momento que se realizó: precios de aquel entonces, 
-   el transporte elegido y todos los metadatos geográficos para poder re-visualizar 
-   el trayecto en un mapa.
-*/
+/**
+ * La "foto" de un viaje guardado, tal como quedó al momento de consultarlo.
+ * <p>
+ * Se usa para mostrarle al usuario su historial y para la auditoría del
+ * administrador. Guarda los precios de aquel momento, el transporte elegido y
+ * los datos geográficos necesarios para volver a dibujar la ruta en el mapa.
+ */
 public record ViajeHistorialResponse(
-        /* 
-           ID único del registro en la tabla de viajes.
-        */
+        /** ID del registro en la tabla de viajes. */
         @Schema(description = "ID del viaje", example = "123")
         Long id,
 
-        /* 
-           Descripción textual del origen y destino (ej: "Plaza Mitre").
-        */
+        /** Origen y destino tal como se consultaron. */
         @Schema(description = "Origen del viaje", example = "Plaza Mitre")
         String origen,
 
         @Schema(description = "Destino del viaje", example = "Estadio José María Minella")
         String destino,
 
-        /* 
-           DATOS DEL TRAYECTO:
-           Distancia en metros y tiempo en minutos obtenidos originalmente de Google Maps.
-        */
+        // === Datos del trayecto (distancia y tiempo que dio Google Maps) ===
         @Schema(description = "Distancia del viaje en metros", example = "8200")
         Long distanciaEnMetros,
 
         @Schema(description = "Tiempo estimado del viaje en minutos", example = "18")
         Integer tiempoEstimadoMin,
 
-        /* 
-           COMPARATIVA DE PRECIOS HISTÓRICA:
-           Guarda cuánto salía cada opción en el momento de la consulta.
-        */
+        // === Comparativa de precios al momento de la consulta ===
         @Schema(description = "Precio estimado en taxi", example = "4800.00")
         BigDecimal precioTaxi,
 
@@ -56,40 +41,24 @@ public record ViajeHistorialResponse(
         @Schema(description = "Precio estimado en Didi", example = "4100.00")
         BigDecimal precioDidi,
 
-        /* 
-           ELECCIÓN DEL USUARIO:
-           Si el usuario seleccionó una opción para viajar, aquí se guarda cuál fue.
-        */
+        /** Transporte que el usuario eligió, si llegó a elegir uno. */
         @Schema(description = "Tipo de transporte elegido", example = "UBER")
         String tipoElegido,
 
-        /* 
-           MARCA TEMPORAL:
-           Fecha y hora exacta de la consulta. Crucial para el ordenamiento cronológico.
-        */
+        /** Fecha y hora de la consulta. Se usa para ordenar el historial. */
         @Schema(description = "Fecha y hora en que se calculó el viaje", example = "2026-06-03T14:30:00")
         LocalDateTime fechaHora,
 
-        /* 
-           ESTADO DE FAVORITO:
-           Indica si el usuario marcó este trayecto específico como preferido.
-        */
+        /** Si el usuario marcó este viaje como favorito. */
         @Schema(description = "Indica si el viaje está marcado como favorito", example = "true")
         boolean favorito,
 
-        /* 
-           AUDITORÍA:
-           Nombre del usuario que realizó el viaje. Se usa principalmente en el Panel de Admin.
-        */
+        /** Quién hizo el viaje. Se usa sobre todo en el panel de admin. */
         @Schema(description = "Username del usuario que realizó el viaje", example = "juan.perez")
         String username,
 
-        /* 
-           METADATOS GEOGRÁFICOS COMPLETOS:
-           Place IDs y Coordenadas. 
-           Permiten que el Frontend reconstruya la ruta exacta en el mapa 
-           sin necesidad de que el usuario vuelva a buscar las direcciones.
-        */
+        // === Datos geográficos (place id + coordenadas) para redibujar la ruta
+        //     en el mapa sin que el usuario vuelva a buscar las direcciones ===
         @Schema(description = "Place ID de origen")
         String origenPlaceId,
         @Schema(description = "Latitud de origen")

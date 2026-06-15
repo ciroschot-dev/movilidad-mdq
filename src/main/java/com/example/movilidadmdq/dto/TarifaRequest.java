@@ -8,17 +8,12 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
-
-
-Este DTO es el encargado de capturar los nuevos valores de precios para el servicio
-de Taxi. Se utiliza exclusivamente en el Panel de Administración.
-
-ESTRATEGIA DE ACTUALIZACIÓN:
-A diferencia de los otros DTOs, este permite campos nulos. Esto es útil para
-actualizaciones parciales: si el Admin solo quiere cambiar el precio de la
-'ficha nocturna', solo envía ese campo y el resto permanece igual en la base de datos.
-
-*/
+ * Lo que manda el administrador para actualizar las tarifas del taxi.
+ * <p>
+ * A diferencia de los otros DTOs, permite campos en null para hacer
+ * actualizaciones parciales: si el admin solo quiere cambiar la ficha nocturna,
+ * manda solo ese campo y el resto queda igual en la base.
+ */
 @Data
 public class TarifaRequest {
     @Schema(description = "Bajada de bandera diurna (6:00 a 22:00)", example = "2250.00")

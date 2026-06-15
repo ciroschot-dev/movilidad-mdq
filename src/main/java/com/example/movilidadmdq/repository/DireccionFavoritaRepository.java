@@ -7,38 +7,27 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/* 
-   INTERFAZ: DireccionFavoritaRepository
-   
-   Esta interfaz gestiona los puntos geográficos que los usuarios deciden guardar 
-   con un alias (ej: "Casa", "Trabajo").
-   
-   ESTRATEGIA DE DATOS:
-   Permite desacoplar las direcciones del historial de viajes, facilitando que 
-   el usuario gestione sus lugares frecuentes de forma independiente y eficiente.
-*/
+/**
+ * Acceso a la base de datos para las direcciones favoritas.
+ * <p>
+ * Son los lugares que el usuario guarda con un alias (ej: "Casa", "Trabajo").
+ * Viven aparte del historial de viajes para que el usuario los gestione por su
+ * cuenta.
+ */
 @Repository
 public interface DireccionFavoritaRepository extends JpaRepository<DireccionFavorita, Long> {
-    
-    /* 
-       MÉTODO: findByUsuarioId
-       Recupera la lista completa de direcciones guardadas por un usuario específico.
-    */
+
+    /** Todas las direcciones guardadas por un usuario. */
     List<DireccionFavorita> findByUsuarioId(Long usuarioId);
 
-    /* 
-       MÉTODO: findByUsuarioIdAndDireccion
-       Busca si una dirección textual ya fue guardada por el usuario. 
-       Se utiliza principalmente para evitar duplicados cuando el usuario intenta 
-       guardar una ubicación nueva.
-    */
+    /** Busca por texto de dirección. Se usa para no guardar duplicados. */
     Optional<DireccionFavorita> findByUsuarioIdAndDireccion(Long usuarioId, String direccion);
 
-    /* 
-       MÉTODO: findByUsuarioIdAndPlaceId
-       Busca un favorito basado en el ID único de Google Maps. 
-       Es el método más preciso de verificación, ya que el PlaceID es invariable 
-       aunque cambie el nombre textual de la calle.
-    */
+    /**
+     * Busca por el place id de Google.
+     * <p>
+     * Es la forma más confiable de detectar duplicados: el place id no cambia
+     * aunque cambie el texto de la calle.
+     */
     Optional<DireccionFavorita> findByUsuarioIdAndPlaceId(Long usuarioId, String placeId);
 }

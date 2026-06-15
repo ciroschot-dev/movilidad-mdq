@@ -3,16 +3,13 @@ package com.example.movilidadmdq.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
- /*
 
-        Este DTO se utiliza cuando un usuario ya registrado desea modificar sus datos
-        personales.
-        Al ser un 'record', el objeto es inmutable, lo que garantiza que los datos no se
-        alteren
-        durante el viaje desde el controlador hasta el servicio.*/
-
-
-
+/**
+ * Datos que manda un usuario ya registrado para modificar su perfil.
+ * <p>
+ * Al ser un record es inmutable, así los datos no se alteran en el camino del
+ * controlador al service.
+ */
 public record ActualizarUsuarioRequest(
         @NotBlank(message = "El username es obligatorio")
         String username,

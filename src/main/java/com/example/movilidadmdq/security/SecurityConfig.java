@@ -38,12 +38,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 
-/* 
-   CLASE: SecurityConfig
-   
-   Esta clase es la "Constitución" de la seguridad en nuestra app. Define quién puede 
-   acceder a qué, cómo se manejan las sesiones y cómo se integra el login social (Google).
-*/
+/**
+ * Define toda la seguridad de la app: es su "constitución".
+ * <p>
+ * Establece quién puede acceder a cada ruta, cómo se manejan las sesiones (sin
+ * estado, con JWT) y cómo se integra el login con Google. Además, al arrancar
+ * deja cargados el admin inicial y las tarifas base.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity // Permite usar @PreAuthorize en los controladores.
@@ -67,10 +68,7 @@ public class SecurityConfig
     @Value("${app.admin.password:}")
     private String adminPassword;
 
-    /* 
-       MÉTODO: userDetailsService
-       Define cómo Spring Security debe buscar a los usuarios cuando intentan loguearse.
-    */
+    /** Le dice a Spring Security cómo buscar un usuario por su nombre al loguearse. */
     @Bean
     public UserDetailsService userDetailsService()
     {
@@ -78,20 +76,20 @@ public class SecurityConfig
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
 
-    /* 
-       MÉTODO: authenticationManager
-       Configura el motor que procesa el login tradicional (usuario/contraseña).
-    */
+    /** Motor que procesa el login tradicional de usuario y contraseña. */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception
     {
         return config.getAuthenticationManager();
     }
 
-    /* 
-       MÉTODO: securityFilterChain (EL CORAZÓN)
-       Define la cadena de filtros y reglas de acceso.
-    */
+    /**
+     * El corazón de la seguridad: arma la cadena de filtros y las reglas de acceso.
+     * <p>
+     * Habilita CORS para el frontend, desactiva CSRF (no hace falta con JWT),
+     * define qué rutas son públicas y cuáles requieren login o rol admin, fuerza
+     * sesiones sin estado y suma el filtro JWT y el login con Google.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
@@ -146,12 +144,13 @@ public class SecurityConfig
         return http.build();
     }
 
-    /* 
-       MÉTODO: initData (BOOTSTRAP DEL SISTEMA)
-       Este código corre automáticamente al arrancar la aplicación.
-       - Crea el usuario ADMIN si la base de datos está vacía.
-       - Carga las tarifas base del taxi (sistema de fichas de Mar del Plata).
-    */
+    /**
+     * Deja el sistema listo al arrancar (bootstrap).
+     * <p>
+     * Si todavía no hay ningún admin, crea el admin inicial con las credenciales
+     * del entorno; y si la tabla de tarifas está vacía, carga las tarifas base
+     * del taxi (el sistema de fichas de Mar del Plata).
+     */
     @Bean
     CommandLineRunner initData(UsuarioRepository userRepo, TarifaRepository tarifaRepo, PasswordEncoder encoder)
     {
@@ -210,11 +209,12 @@ public class SecurityConfig
         };
     }
 
-    /* 
-       MÉTODO: corsConfigurationSource
-       Define los permisos para que navegadores externos puedan acceder a nuestra API.
-       Es vital para que React (Frontend) pueda comunicarse con Spring (Backend).
-    */
+    /**
+     * Permisos de CORS para que el navegador deje al frontend hablar con la API.
+     * <p>
+     * Sin esto, el React de otro origen (otro puerto/dominio) no podría
+     * comunicarse con el backend de Spring.
+     */
     @Bean
     CorsConfigurationSource corsConfigurationSource()
     {

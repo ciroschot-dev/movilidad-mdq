@@ -11,13 +11,12 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 
-/* 
-   CLASE: GoogleMapsService
-   
-   Este servicio es la interfaz directa con la API de Google Maps. 
-   Su única responsabilidad es realizar consultas técnicas de geolocalización 
-   y devolver datos precisos de rutas (distancia y tiempo estimado).
-*/
+/**
+ * Habla directamente con la API de Google Maps.
+ * <p>
+ * Su única responsabilidad es consultar una ruta y devolver datos de
+ * geolocalización: distancia y tiempo estimado entre origen y destino.
+ */
 @Service
 public class GoogleMapsService {
 
@@ -28,11 +27,12 @@ public class GoogleMapsService {
     // El objeto de contexto que mantiene la conexión y configuración con los servidores de Google.
     private GeoApiContext context;
 
-    /* 
-       MÉTODO: init
-       Se ejecuta automáticamente después de que Spring crea el servicio (@PostConstruct).
-       Configura el cliente de Google inyectando nuestra clave de acceso.
-    */
+    /**
+     * Arma el cliente de Google con nuestra clave apenas Spring crea el servicio.
+     * <p>
+     * Corre solo, por la anotación {@code @PostConstruct} (justo después de
+     * construir el bean), así la clave ya está cargada cuando se inyecta.
+     */
     @PostConstruct
     public void init() {
         context = new GeoApiContext.Builder()
@@ -40,16 +40,12 @@ public class GoogleMapsService {
                 .build();
     }
 
-    /* 
-       MÉTODO: obtenerDatosViaje
-       Realiza una petición a la API 'Distance Matrix' de Google.
-       
-       LÓGICA:
-       1. DistanceMatrixApi.getDistanceMatrix: Prepara la consulta de origen a destino.
-       2. .mode(TravelMode.DRIVING): Especifica que el viaje es en automóvil (considera el tráfico).
-       3. .units(Unit.METRIC): Asegura que la distancia venga en metros/kilómetros.
-       4. .await(): Realiza la llamada de forma sincrónica, esperando la respuesta oficial de Google.
-    */
+    /**
+     * Pide a Google la distancia y el tiempo en auto entre origen y destino.
+     * <p>
+     * Usa la API "Distance Matrix" en modo manejo (considera el tráfico) y
+     * unidades métricas, y espera la respuesta de forma sincrónica.
+     */
     public DistanceMatrix obtenerDatosViaje(String origen, String destino) {
         try {
             DistanceMatrixApiRequest req = DistanceMatrixApi.getDistanceMatrix(context, 

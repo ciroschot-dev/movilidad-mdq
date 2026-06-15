@@ -19,17 +19,15 @@ import java.io.IOException;
 
 
 /**
-
-Esta clase es un componente de seguridad que actúa como un filtro "puente".
-Su función es interceptar CADA petición HTTP que llega al servidor para verificar
-si el usuario tiene un Token JWT válido.
-
-¿POR QUÉ HEREDA DE OncePerRequestFilter?:
-Para garantizar que el filtro se ejecute exactamente una vez por cada petición
-del usuario, evitando procesar el token múltiples veces en flujos complejos.
-
-*/
-
+ * Filtro que revisa cada pedido para ver si trae un token JWT válido.
+ * <p>
+ * Intercepta toda petición HTTP que llega al servidor: si el token es válido,
+ * deja al usuario autenticado para el resto del flujo; si no, el pedido sigue
+ * como anónimo y la seguridad lo rebotará al entrar a una ruta privada.
+ * <p>
+ * Hereda de {@code OncePerRequestFilter} para correr una sola vez por pedido y
+ * no procesar el token varias veces en flujos complejos.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter
@@ -44,10 +42,9 @@ public class JwtAuthFilter extends OncePerRequestFilter
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException
     {
-        /* === 1. EXTRACCIÓN Y VALIDACIÓN INICIAL DEL HEADER ===
-        Buscamos el token en los encabezados. Si no existe o no es tipo
-        "Bearer", dejamos que el pedido siga su camino sin autenticar al usuario.*/
-
+        // === 1. Extracción y validación inicial del header ===
+        // Buscamos el token en los encabezados. Si no existe o no es tipo
+        // "Bearer", dejamos que el pedido siga su camino sin autenticar al usuario.
         final String authHeader = request.getHeader("Authorization");
         final String jwtToken;
         final String username;
@@ -123,15 +120,3 @@ public class JwtAuthFilter extends OncePerRequestFilter
         filterChain.doFilter(request, response);
     }
 }
-
-/*¿Qué pasa si hay un error (Punto 5)?: Es lo más importante. Si el token falla, el
-     catch asegura que no quede ninguna sesión activa (clearContext). La petición NO
-     se detiene ahí, pero seguirá su camino como un "desconocido". Luego, el sistema
-     de seguridad lo rebotará con un 401 cuando intente entrar a una ruta privada.
-   * ¿Por qué el Punto 6 es vital?: El comando filterChain.doFilter tiene que
-     ejecutarse siempre. Si te olvidás de ponerlo o no se ejecuta, el navegador del
-     usuario se quedaría "colgado" esperando una respuesta que nunca llega, porque el
-     pedido se "perdió" dentro del filtro.
-   * El concepto de "Sello" (Punto 4): Una vez que hacés el setAuthentication, ese
-     usuario "existe" para los Controllers. Sin ese paso, aunque el token sea válido,
-     el sistema no sabría quién es.*/
