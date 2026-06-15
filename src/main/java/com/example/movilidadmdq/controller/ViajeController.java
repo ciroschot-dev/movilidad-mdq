@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,28 +30,27 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/*
-   CLASE: ViajeController
-
-   Este controlador es el motor funcional de la aplicación. Maneja el cálculo de rutas,
-   la comparación de precios entre servicios (Taxi, Uber, Didi) y la gestión de
-   favoritos de cada usuario.
-*/
+/**
+ * Motor funcional de la app: calcular viajes y gestionar favoritos.
+ * <p>
+ * Expone el cálculo de rutas con comparación de precios entre taxi, Uber y Didi,
+ * el marcado de viajes favoritos y la administración de las direcciones
+ * favoritas de cada usuario.
+ */
 @Tag(name = "Viajes", description = "Cálculo y comparación de opciones de transporte.")
 @RequiredArgsConstructor
 @RequestMapping("/viajes")
 @RestController
+@Slf4j
 public class ViajeController
 {
     private final ViajeService viajeService;
     private final HistorialViajeService historialViajeService;
     private final FavoritoService favoritoService;
 
-    /*
-       MÉTODO: getAuditoria (SOLO ADMIN)
-       Permite a los administradores visualizar y filtrar todos los viajes registrados
-       en el sistema para control y monitoreo.
-    */
+    /**
+     * Lista y filtra todos los viajes del sistema, para control y monitoreo (solo admin).
+     */
     @Operation(summary = "Auditoría de viajes (ADMIN)")
     @GetMapping("/admin/auditoria")
     @PreAuthorize("hasRole('ADMIN')") // CANDADO: Solo permite acceso al rol administrador.
@@ -67,10 +67,7 @@ public class ViajeController
         return ResponseEntity.ok(historialViajeService.obtenerAuditoriaViajes(username, origen, destino, desde, hasta, favorito, pageable));
     }
 
-    /*
-       MÉTODO: getDestinosPopulares (SOLO ADMIN)
-       Genera estadísticas sobre los lugares más consultados por los ciudadanos.
-    */
+    /** Estadística de los lugares más consultados por los ciudadanos (solo admin). */
     @Operation(summary = "Obtener destinos populares (ADMIN)")
     @GetMapping("/admin/destinos-populares")
     @PreAuthorize("hasRole('ADMIN')")
@@ -82,11 +79,10 @@ public class ViajeController
         return ResponseEntity.ok(historialViajeService.obtenerDestinosPopulares(desde, hasta, zona));
     }
 
-    /*
-       MÉTODO: calcular
-       Es el núcleo de la aplicación. Recibe una solicitud de viaje y devuelve
-       la comparativa de precios y tiempos de llegada.
-    */
+    /**
+     * Núcleo de la app: recibe un viaje y devuelve la comparativa de precios y
+     * tiempos de llegada de cada opción de transporte.
+     */
     @Operation(summary = "Calcular viaje")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "El viaje se ha calculado con exito"),
@@ -98,13 +94,22 @@ public class ViajeController
             @AuthenticationPrincipal Usuario usuario
     )
     {
+        log.info("""
+
+        🗺️ INICIANDO FLUJO CONSULTAR VIAJE:
+        -> 1. ViajeController.calcular: Recibe request y autentica.
+        -> 2. ViajeService.calcularViaje: Orquesta el flujo completo.
+        -> 3. GoogleMapsService.obtenerDatosViaje: API Externa (Distancia/Tiempo).
+        -> 4. WeatherService.obtenerFactorClima: API Externa (Precios dinámicos).
+        -> 5. CalculadoraTaxiService / EstimadorApp: Cálculo matemático.
+        -> 6. HistorialViajeService.guardar: Persistencia en MySQL.
+        -> 7. Retorno: Lista de opciones ordenadas por precio.
+        """);
+
         return ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId()));
     }
 
-    /*
-       MÉTODO: toggleFavorito
-       Marca o desmarca un viaje específico como favorito en el historial.
-    */
+    /** Marca o desmarca un viaje del historial como favorito. */
     @PutMapping("/{viajeId}/favorito")
     public ResponseEntity<Void> toggleFavorito(
             @PathVariable Long viajeId,
@@ -114,10 +119,7 @@ public class ViajeController
         return ResponseEntity.ok().build();
     }
 
-    /*
-       MÉTODO: obtenerFavoritos
-       Devuelve todos los viajes que el usuario marcó como favoritos.
-    */
+    /** Devuelve todos los viajes que el usuario marcó como favoritos. */
     @GetMapping("/favoritos")
     public ResponseEntity<List<ViajeHistorialResponse>> obtenerFavoritos(
             @AuthenticationPrincipal Usuario usuario
@@ -130,10 +132,7 @@ public class ViajeController
         );
     }
 
-    /*
-       MÉTODO: obtenerDireccionesFavoritas
-       Devuelve los lugares guardados por el usuario (ej: "Trabajo", "Casa de mi abuela").
-    */
+    /** Devuelve los lugares guardados por el usuario (ej: "Trabajo", "Casa de mi abuela"). */
     @Operation(summary = "Obtener direcciones favoritas", description = "Devuelve una lista única de todas las direcciones (orígenes y destinos) marcadas como favoritas.")
     @GetMapping("/direcciones-favoritas")
     public ResponseEntity<List<DireccionFavoritaResponse>> obtenerDireccionesFavoritas(
@@ -143,10 +142,7 @@ public class ViajeController
         return ResponseEntity.ok(favoritoService.obtenerDireccionesFavoritas(usuario.getId()));
     }
 
-    /*
-       MÉTODO: renombrarDireccionFavorita
-       Permite al usuario cambiar el nombre (alias) de una de sus direcciones guardadas.
-    */
+    /** Cambia el alias de una de las direcciones guardadas del usuario. */
     @PutMapping("/direcciones-favoritas/{id}")
     public ResponseEntity<Void> renombrarDireccionFavorita(
             @PathVariable Long id,
@@ -158,10 +154,7 @@ public class ViajeController
         return ResponseEntity.ok().build();
     }
 
-    /*
-       MÉTODO: eliminarDireccionFavorita
-       Elimina una dirección de la lista de favoritos del usuario.
-    */
+    /** Elimina una dirección de la lista de favoritos del usuario. */
     @DeleteMapping("/direcciones-favoritas/{id}")
     public ResponseEntity<Void> eliminarDireccionFavorita(
             @PathVariable Long id,

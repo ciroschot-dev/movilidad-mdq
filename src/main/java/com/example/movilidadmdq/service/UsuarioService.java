@@ -18,6 +18,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Maneja todo lo que tiene que ver con la cuenta del usuario.
+ * <p>
+ * Registro y login (devolviendo el token para autenticarse), edición del
+ * propio perfil y eliminación de cuentas. Cada operación que toca datos de un
+ * usuario valida primero que quien la pide sea el dueño (o un admin), así nadie
+ * modifica ni borra la cuenta de otro.
+ */
 @Service
 @RequiredArgsConstructor
 public class UsuarioService
@@ -65,18 +73,6 @@ public class UsuarioService
     public UsuarioResponse toResponse(Usuario usuario)
     {
         return new UsuarioResponse(usuario.getId(), usuario.getUsername(), usuario.getEmail(), usuario.getRole());
-    }
-
-    public void eliminarUsuario(Long id)
-    {
-        usuarioRepository.findById(id)
-                .ifPresentOrElse(
-                        usuarioRepository::delete,
-                        () ->
-                        {
-                            throw new RecursoNoEncontradoException("Usuario no encontrado");
-                        }
-                );
     }
 
     /**
@@ -136,6 +132,20 @@ public class UsuarioService
             throw new OperacionNoPermitidaException("No tenés permiso para eliminar esta cuenta");
         }
         eliminarUsuario(id);
+    }
+
+    // Borra el usuario de la base. Privado: el control de permisos ya lo hizo
+    // eliminarCuenta(), este helper solo se encarga del borrado en sí.
+    private void eliminarUsuario(Long id)
+    {
+        usuarioRepository.findById(id)
+                .ifPresentOrElse(
+                        usuarioRepository::delete,
+                        () ->
+                        {
+                            throw new RecursoNoEncontradoException("Usuario no encontrado");
+                        }
+                );
     }
 
     // Guard de pertenencia: el id del path tiene que ser el del usuario logueado.

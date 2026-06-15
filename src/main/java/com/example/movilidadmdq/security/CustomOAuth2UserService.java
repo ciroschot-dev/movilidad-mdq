@@ -4,6 +4,7 @@ import com.example.movilidadmdq.enums.Role;
 import com.example.movilidadmdq.model.Usuario;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -13,32 +14,36 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-/* 
-   CLASE: CustomOAuth2UserService
-   
-   Esta clase extiende el servicio base de Spring para OAuth2. Su misión es 
-   personalizar el proceso de obtención de datos del usuario desde Google.
-   
-   LÓGICA ESTRATÉGICA:
-   Implementa el "Just-In-Time Provisioning" (Creación justo a tiempo). Si un 
-   usuario de Google entra por primera vez, el sistema le crea una cuenta 
-   local automáticamente sin que tenga que llenar un formulario de registro.
-*/
+/**
+ * Personaliza la obtención de datos del usuario cuando entra con Google.
+ * <p>
+ * Extiende el servicio base de Spring para OAuth2 y aplica "creación justo a
+ * tiempo": si alguien entra con Google por primera vez, le crea la cuenta local
+ * en el momento, sin pedirle que complete un formulario de registro.
+ */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomOAuth2UserService extends DefaultOAuth2UserService
 {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /* 
-       MÉTODO: loadUser
-       Se ejecuta cuando el usuario termina de poner su clave en la ventanita de Google.
-    */
+    /**
+     * Trae los datos del usuario desde Google y se asegura de que exista
+     * localmente. Corre cuando la persona termina de autenticarse en Google.
+     */
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException
     {
+        log.info("""
+
+        🔐 LOGIN GOOGLE - OBTENIENDO DATOS:
+        -> 1. CustomOAuth2UserService.loadUser: Recibiendo datos de Google.
+        -> 2. Verificando si el email existe en nuestra base de datos.
+        """);
+
         // 1. Llamamos al proceso estándar de Spring para obtener los datos de Google.
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
@@ -81,6 +86,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService
             
             // Guardamos el registro para que en el futuro el OAuth2SuccessHandler lo encuentre.
             usuarioRepository.save(usuario);
+            log.info("-> Nuevo usuario registrado automáticamente mediante Google: {}", email);
         }
 
         return oAuth2User;

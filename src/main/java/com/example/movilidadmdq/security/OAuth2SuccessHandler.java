@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -18,19 +19,16 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-/* 
-   CLASE: OAuth2SuccessHandler
-   
-   Este componente se activa automáticamente cuando un usuario se loguea 
-   con éxito a través de Google (OAuth2).
-   
-   SU FUNCIÓN:
-   Actuar como puente. Google nos dice "esta persona es real", y nosotros 
-   debemos transformarla en un usuario de nuestra plataforma enviándole 
-   un Token JWT propio para que pueda seguir navegando en nuestra API.
-*/
+/**
+ * Se activa cuando alguien termina de loguearse con Google y hace de puente.
+ * <p>
+ * Google confirma que la persona es real; este handler la convierte en un
+ * usuario de nuestra plataforma generándole un token JWT propio y redirigiéndolo
+ * al frontend con ese token, para que pueda seguir usando la API.
+ */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
 {
 
@@ -41,13 +39,21 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
     @Value("${app.oauth2.redirect-uri:http://localhost:5173/oauth2/redirect}")
     private String redirectUri;
 
-    /* 
-       MÉTODO: onAuthenticationSuccess
-       Se ejecuta justo después de que el proveedor externo (Google) valida la identidad.
-    */
+    /**
+     * Corre apenas Google valida la identidad: si el usuario existe en nuestra
+     * base le arma el token y lo manda al frontend; si no, redirige con un error.
+     */
     @Override
     public void onAuthenticationSuccess(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, Authentication authentication) throws IOException, ServletException
     {
+        log.info("""
+
+        ✅ LOGIN GOOGLE EXITOSO:
+        -> 3. OAuth2SuccessHandler.onAuthenticationSuccess: Identidad validada por Google.
+        -> 4. JwtService.generateToken: Creando token JWT para el usuario.
+        -> 5. Redirigiendo al Frontend con el token en la URL.
+        """);
+
         // 1. Obtenemos los datos que nos envió Google (principalmente el email).
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
@@ -77,11 +83,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
         getRedirectStrategy().sendRedirect(request, response, urlExito);
     }
 
-    /* 
-       MÉTODO AUXILIAR: construirUrl
-       Se encarga de concatenar parámetros a la URL de forma segura, 
-       manejando la codificación de caracteres especiales.
-    */
+    // Concatena un parámetro a la URL de forma segura, codificando los
+    // caracteres especiales del valor.
     private String construirUrl(String base, String clave, String valor)
     {
         String separador = base.contains("?") ? "&" : "?";

@@ -15,6 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Endpoint de administración para ajustar las tarifas del taxi.
+ * <p>
+ * Solo lo usan los administradores para actualizar los precios con los que
+ * después se calculan los viajes. El controlador no hace cálculos ni toca la
+ * base: recibe el pedido, lo valida y se lo pasa al {@code TarifaService}.
+ */
 @Tag(name = "Tarifas - Admin", description = "Gestión de tarifas de transporte. Solo accesible por administradores.")
 @RestController
 @RequestMapping("/admin/tarifas/taxi")
@@ -23,29 +30,25 @@ public class TarifaController
 {
     private final TarifaService tarifaService;
 
-    @Operation(summary = "Actualizar tarifa taxi", description = "Actualiza el precio base y el precio por km del servicio taxi. Solo accesible por administradores.")
+    /**
+     * Actualiza los valores del sistema de fichas del taxi (solo admin).
+     * <p>
+     * Recibe la bajada de bandera (día/noche), el valor de cada ficha
+     * (día/noche) y los metros que equivalen a una ficha. Admite cambios
+     * parciales: el admin manda solo los campos que quiere tocar.
+     * <p>
+     * Spring convierte el JSON en un {@link TarifaRequest} y {@code @Valid}
+     * chequea que los valores sean válidos antes de delegar en el service.
+     * Devuelve la tarifa ya actualizada.
+     */
+    @Operation(summary = "Actualizar tarifa taxi", description = "Actualiza el sistema de fichas del taxi: bajada de bandera y valor de ficha (día y noche) y metros por ficha. Admite actualización parcial. Solo accesible por administradores.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tarifa actualizada correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos invalidos"),
             @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
     })
-
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
-
-    /**
-    Punto de entrada para la actualización de precios del servicio de Taxi.
-    Este método actúa como nexo entre la petición HTTP y la lógica de negocio:
-
-           1. @RequestBody: Convierte automáticamente el JSON que envía el Administrador
-              en un objeto Java de tipo 'TarifaRequest'.
-           2. @Valid: Activa la validación de los campos del DTO (asegura que los precios
-              sean positivos y los campos obligatorios estén presentes).
-           3. Delegación: El controlador no realiza cálculos ni guarda en la DB; simplemente
-              le entrega los datos ya validados al 'tarifaService'.
-           4. Respuesta: Retorna el objeto 'Tarifa' actualizado, el cual Spring transformará
-              nuevamente a JSON para informar al Admin que la operación fue exitosa.  */
-
     public Tarifa actualizarTarifaTaxi(@Valid @RequestBody TarifaRequest request)
     {
         return tarifaService.actualizarTarifaTaxi(request);

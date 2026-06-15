@@ -6,20 +6,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-/* 
-   INTERFAZ: TarifaRepository
-   
-   Gestiona la persistencia de las tablas de precios del sistema.
-   Aunque actualmente solo manejamos tarifas de TAXI, el diseño permite 
-   escalar a otros tipos de transporte fácilmente.
-*/
+/**
+ * Acceso a la base de datos para las tarifas (tablas de precios).
+ * <p>
+ * Hoy solo se usa la del taxi, pero el diseño deja lugar para otros tipos de
+ * transporte sin cambios.
+ */
 public interface TarifaRepository extends JpaRepository<Tarifa, Long>
 {
-    /* 
-       MÉTODO: findByTipoTransporte
-       Busca la configuración de precios para un servicio específico (ej: TAXI).
-       Es el método que consulta el 'ViajeService' cada vez que un usuario 
-       pide una cotización para obtener la bajada de bandera y el valor de la ficha.
-    */
+    /**
+     * Trae la configuración de precios de un transporte (ej: TAXI).
+     * <p>
+     * La consulta el {@code ViajeService} en cada cotización para tomar la
+     * bajada de bandera y el valor de la ficha.
+     */
     Optional<Tarifa> findByTipoTransporte(TipoTransporte tipoTransporte);
 }

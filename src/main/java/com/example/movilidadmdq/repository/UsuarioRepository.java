@@ -6,39 +6,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-/* 
-   INTERFAZ: UsuarioRepository
-   
-   Esta interfaz utiliza Spring Data JPA para gestionar la persistencia de los usuarios.
-   Hereda de JpaRepository, lo que nos otorga automáticamente métodos CRUD básicos como 
-   save(), delete() y findById() sin escribir una sola línea de SQL.
-   
-   ¿POR QUÉ INTERFAZ?:
-   Spring Boot detecta esta interfaz y genera automáticamente la implementación necesaria 
-   en tiempo de ejecución basándose en los nombres de los métodos.
-*/
+/**
+ * Acceso a la base de datos para los usuarios.
+ * <p>
+ * Al heredar de {@link JpaRepository}, Spring Data genera solo la
+ * implementación (con los métodos básicos como guardar, borrar y buscar por id)
+ * a partir de los nombres de los métodos, sin escribir SQL a mano.
+ */
 public interface UsuarioRepository extends JpaRepository<Usuario, Long>
 {
-    /* 
-       MÉTODO: findByUsername
-       Busca un usuario por su nombre de usuario único.
-       Se usa principalmente en el proceso de Login y en el filtro de seguridad JWT.
-       Retorna un 'Optional' para evitar errores de puntero nulo si el usuario no existe.
-    */
+    /** Busca por nombre de usuario. Lo usan el login y el filtro de seguridad JWT. */
     Optional<Usuario> findByUsername(String username);
 
-    /* 
-       MÉTODO: findByEmail
-       Busca un usuario por su dirección de correo.
-       Se utiliza en el registro de nuevos usuarios para garantizar que no haya emails duplicados.
-    */
+    /** Busca por email. Lo usa el registro para no permitir emails repetidos. */
     Optional<Usuario> findByEmail(String email);
 
-    /* 
-       MÉTODO: existsByRole
-       Verifica de forma eficiente si existe en la base de datos algún usuario con un rol dado.
-       Es fundamental para el arranque del sistema (Bootstrap): si no existe ningún ADMIN, 
-       la app crea uno por defecto.
-    */
+    /**
+     * Indica si ya existe algún usuario con ese rol.
+     * <p>
+     * Lo usa el arranque: si no hay ningún ADMIN, la app crea uno por defecto.
+     */
     boolean existsByRole(Role role);
 }

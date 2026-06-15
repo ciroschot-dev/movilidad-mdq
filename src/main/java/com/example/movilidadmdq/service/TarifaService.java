@@ -7,18 +7,13 @@ import com.example.movilidadmdq.model.Tarifa;
 import com.example.movilidadmdq.repository.TarifaRepository;
 import org.springframework.stereotype.Service;
 
-/* 
-   CLASE: TarifaService
-   
-   Este servicio es el encargado de gestionar la configuración de precios para el 
-   servicio de Taxi en Mar del Plata.
-   
-   SU FUNCIÓN:
-   - Recuperar los valores vigentes desde la base de datos para que el 'ViajeService' 
-     pueda calcular los presupuestos.
-   - Procesar las actualizaciones enviadas por el Administrador, aplicando cambios 
-     parciales (si el Admin solo cambia un valor, el resto permanece intacto).
-*/
+/**
+ * Gestiona la configuración de precios del taxi de Mar del Plata.
+ * <p>
+ * Recupera los valores vigentes para que el {@code ViajeService} pueda cotizar,
+ * y aplica las actualizaciones del administrador permitiendo cambios parciales
+ * (si solo manda un valor, el resto queda intacto).
+ */
 @Service
 public class TarifaService
 {
@@ -29,27 +24,22 @@ public class TarifaService
         this.tarifaRepository = tarifaRepository;
     }
 
-    /* 
-       MÉTODO: obtenerTarifaTaxi
-       Recupera la configuración actual de tarifas para el taxi desde la base de datos.
-       Si no existen tarifas cargadas, lanza una excepción 'RecursoNoEncontradoException'
-       que el 'GlobalExceptionHandler' traduce a una respuesta de error adecuada.
-    */
+    /**
+     * Trae la tarifa vigente del taxi. Si no hay ninguna cargada, lanza 404
+     * ({@code RecursoNoEncontradoException}).
+     */
     public Tarifa obtenerTarifaTaxi()
     {
         return tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la tarifa del taxi"));
     }
 
-    /* 
-       MÉTODO: actualizarTarifaTaxi
-       Aplica los cambios enviados por el Administrador.
-       
-       LÓGICA DE ACTUALIZACIÓN PARCIAL:
-       El método verifica si cada campo del request es distinto de 'null'. 
-       Esto permite que el Administrador pueda actualizar solo un campo específico 
-       (ej: valor de la ficha diurna) sin tener que enviar nuevamente todos los otros valores.
-    */
+    /**
+     * Aplica los cambios de tarifa que manda el administrador.
+     * <p>
+     * Solo pisa los campos que vienen distintos de null, así el admin puede
+     * tocar un único valor (ej: la ficha diurna) sin reenviar todos los demás.
+     */
     public Tarifa actualizarTarifaTaxi(TarifaRequest request)
     {
         Tarifa tarifaTaxi = tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)

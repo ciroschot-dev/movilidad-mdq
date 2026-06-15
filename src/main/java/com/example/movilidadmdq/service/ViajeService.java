@@ -13,20 +13,19 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 
-/* 
-   CLASE: ViajeService
-   
-   Este servicio es el "Director de Orquesta" del núcleo del sistema. 
-   Su misión es coordinar múltiples fuentes de datos para ofrecer al usuario 
-   una comparativa de transporte precisa y en tiempo real.
-   
-   ¿A QUIÉN COORDINA?:
-   1. GoogleMapsService: Para obtener la distancia y el tiempo real del tráfico.
-   2. WeatherService: Para saber si el clima afecta los precios (factor lluvia).
-   3. CalculadoraTaxiService: Para aplicar las tarifas legales de Mar del Plata.
-   4. EstimadorPrecioAppService: Para calcular los precios dinámicos de Uber y Didi.
-   5. HistorialViajeService: Para registrar la consulta en la base de datos.
-*/
+/**
+ * Coordina el cálculo de un viaje: es el "director de orquesta" del núcleo.
+ * <p>
+ * Junta los datos de varios servicios especialistas para devolver la
+ * comparativa de transporte en tiempo real:
+ * <ul>
+ *   <li>{@code GoogleMapsService}: distancia y tiempo según el tráfico.</li>
+ *   <li>{@code WeatherService}: si el clima encarece el viaje (factor lluvia).</li>
+ *   <li>{@code CalculadoraTaxiService}: la tarifa legal del taxi de MDQ.</li>
+ *   <li>{@code EstimadorPrecioAppService}: los precios estimados de Uber y Didi.</li>
+ *   <li>{@code HistorialViajeService}: guarda la consulta en la base.</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 public class ViajeService
@@ -42,11 +41,13 @@ public class ViajeService
     @Value("${taxi.telefono:+542234941010}")
     private String telefonoTaxi;
 
-    /* 
-       MÉTODO: calcularViaje
-       Es el algoritmo principal que se dispara cuando el usuario consulta un trayecto.
-       Orquesta todo el flujo: desde que se pide la distancia hasta que se guarda el resultado.
-    */
+    /**
+     * Calcula y compara las opciones de transporte para un trayecto.
+     * <p>
+     * Es el flujo principal que se dispara cuando el usuario consulta un viaje:
+     * pide la distancia, aplica el clima, calcula los precios, guarda la
+     * consulta y devuelve las opciones ordenadas de más barata a más cara.
+     */
     public List<OpcionTransporteResponse> calcularViaje(CalculoViajeRequest request, Long usuarioId)
     {
         String origen = request.origen();
@@ -112,11 +113,8 @@ public class ViajeService
                 .toList();
     }
 
-    /* 
-       MÉTODO INTERNO: normalizarDireccion
-       Agrega el contexto de la ciudad y país si el usuario no lo escribió, 
-       optimizando los resultados de búsqueda de Google.
-    */
+    // Agrega ", Mar del Plata, Argentina" si el usuario no lo escribió, para que
+    // Google no busque la calle en otra ciudad.
     private String normalizarDireccion(String direccion)
     {
         if (direccion == null || direccion.isBlank()) return "";
@@ -124,10 +122,8 @@ public class ViajeService
         return direccion + ", Mar del Plata, Argentina";
     }
 
-    /* 
-       MÉTODO INTERNO: esRespuestaValida
-       Valida que el objeto devuelto por Google tenga todos los datos necesarios.
-    */
+    // Chequea que la respuesta de Google traiga distancia y tiempo válidos
+    // antes de leerlos, para no caer en un NullPointer.
     private boolean esRespuestaValida(DistanceMatrix matrix)
     {
         return matrix != null
@@ -138,11 +134,8 @@ public class ViajeService
                 && matrix.rows[0].elements[0].duration != null;
     }
 
-    /* 
-       MÉTODO INTERNO: construirTaxi
-       Prepara la respuesta del taxi, incluyendo un Deep Link de tipo 'tel:' 
-       para que el usuario pueda llamar a la central directamente.
-    */
+    // Arma la opción del taxi. El "deep link" es un tel: para que el usuario
+    // pueda llamar a la central tocando el resultado.
     private OpcionTransporteResponse construirTaxi(BigDecimal precioTaxi, int tiempoMin, long distanciaMetros)
     {
         return new OpcionTransporteResponse(

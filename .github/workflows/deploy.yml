@@ -21,3 +21,20 @@ jobs:
             sudo docker-compose down
             sudo docker-compose up -d --build
             sudo docker system prune -af
+
+            # Healthcheck: el deploy no se da por exitoso hasta confirmar que el backend
+            # levanto sano Y esta sirviendo el codigo nuevo (el schema expone "precio").
+            # Sin esto, "docker-compose up -d" devuelve 0 aunque el contenedor crashee al
+            # arrancar o el "git pull" no haya avanzado: eso da un "success" enganoso que
+            # solo se descubre probando en produccion.
+            echo "Healthcheck: esperando a que el backend responda con el contrato nuevo..."
+            for i in $(seq 1 30); do
+              if curl -fs --max-time 5 http://localhost:8080/api-docs | grep -q '"precio"'; then
+                echo "OK: backend sano y en la version nueva (expone 'precio')."
+                exit 0
+              fi
+              sleep 5
+            done
+            echo "ERROR: el backend no quedo sano tras 150s. Ultimos logs del contenedor:"
+            sudo docker-compose logs --tail=50 app
+            exit 1

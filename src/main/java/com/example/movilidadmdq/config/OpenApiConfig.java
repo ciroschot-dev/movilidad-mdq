@@ -21,6 +21,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Configura la documentación interactiva de la API (Swagger UI).
+ * <p>
+ * Arma la portada (título, versión, contacto) y deja activado el login por
+ * token: en Swagger aparece el botón "Authorize" para pegar el JWT y probar
+ * los endpoints protegidos.
+ * <p>
+ * Además unifica cómo se ven los errores: hace que todas las respuestas 4xx y
+ * 5xx muestren el formato real de {@link ApiError}, con un ejemplo acorde a
+ * cada código, sin tener que repetirlo en cada controller.
+ */
 @Configuration
 public class OpenApiConfig
 {

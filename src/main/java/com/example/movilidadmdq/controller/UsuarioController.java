@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,22 +24,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/*
-   CLASE: UsuarioController
-
-   Centraliza las operaciones del perfil del usuario: registro, login, consulta de
-   su historial de viajes y gestión de su cuenta.
-
-   SEGURIDAD:
-   Inyecta la identidad logueada con @AuthenticationPrincipal Usuario y delega en los
-   services, que validan que cada usuario solo acceda a sus propios datos (evita que
-   el Usuario A vea o borre los viajes del Usuario B).
-*/
-
+/**
+ * Operaciones de la cuenta del usuario: registro, login, perfil e historial.
+ * <p>
+ * Toma la identidad logueada con {@code @AuthenticationPrincipal Usuario} y
+ * delega en los services, que validan que cada usuario acceda solo a sus propios
+ * datos (que el usuario A no vea ni borre los viajes del usuario B).
+ */
 @Tag(name = "Usuarios", description = "Registro, login, perfil e historial de viajes del usuario.")
 @RestController
 @RequestMapping("/usuarios")
 @RequiredArgsConstructor
+@Slf4j
 public class UsuarioController
 {
     private final UsuarioService usuarioService;
@@ -54,6 +51,15 @@ public class UsuarioController
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request)
     {
+        log.info("""
+
+        🔐 INICIANDO FLUJO LOGIN:
+        -> 1. UsuarioController.login: Recibe credenciales.
+        -> 2. UsuarioService.login: Valida credenciales y busca usuario.
+        -> 3. JwtService.generateToken: Crea token JWT firmado.
+        -> 4. Retorno: Se envía AuthResponse al frontend.
+        """);
+
         // Sin try/catch: si las credenciales son invalidas, Spring Security
         // tira BadCredentialsException y el GlobalExceptionHandler la traduce
         // a un 401. Lo unico que hace este metodo es orquestar.
