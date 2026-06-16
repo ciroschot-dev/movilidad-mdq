@@ -37,7 +37,7 @@
 |---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | 🌐 **Frontend desplegado (Vercel)**         | https://movilidad-mdq.vercel.app/                                                                                            |
 | 🛰️ **Backend desplegado (AWS EC2)**        | https://movilidadmdq.ddns.net *(ver nota abajo)*                                                                             |
-| 📘 **Documentación de la API (Swagger UI)** | https://movilidadmdq.ddns.net/swagger-ui.html ← **punto de entrada del backend**                                             |
+| 📘 **Documentación de la API (Swagger UI)** | https://movilidadmdq.ddns.net/swagger-ui/index.html ← **punto de entrada del backend**                                             |
 | 📄 **OpenAPI JSON**                         | https://movilidadmdq.ddns.net/api-docs                                                                                       |
 | 🧪 **Cómo crear un usuario de prueba**      | `POST /usuarios/registro` con `{ "username": "...", "password": "...", "email": "..." }` o el botón **Registrarse** en la UI |
 
