@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://movilidadmdq.ddns.net/$1" },
+    { "source": "/api/(.*)", "destination": "https://movilidad-mdq-backend.onrender.com/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

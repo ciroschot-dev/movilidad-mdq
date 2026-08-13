@@ -4,37 +4,61 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy en EC2
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: BACKEND_URL
+          command_timeout: 20m
           script: |
-            cd ~/movilidad-mdq
-            git pull origin main
-            sudo docker-compose down
-            sudo docker-compose up -d --build
-            sudo docker system prune -af
+            set -eu
 
-            # Healthcheck: el deploy no se da por exitoso hasta confirmar que el backend
-            # levanto sano Y esta sirviendo el codigo nuevo (el schema expone "precio").
-            # Sin esto, "docker-compose up -d" devuelve 0 aunque el contenedor crashee al
-            # arrancar o el "git pull" no haya avanzado: eso da un "success" enganoso que
-            # solo se descubre probando en produccion.
-            echo "Healthcheck: esperando a que el backend responda con el contrato nuevo..."
-            for i in $(seq 1 30); do
-              if curl -fs --max-time 5 http://localhost:8080/api-docs | grep -q '"precio"'; then
-                echo "OK: backend sano y en la version nueva (expone 'precio')."
-                exit 0
+            if [ -z "$BACKEND_URL" ]; then
+              echo "ERROR: falta la variable BACKEND_URL en GitHub Actions."
+              exit 1
+            fi
+
+            cd ~/movilidad-mdq
+            git checkout main
+            git pull --ff-only origin main
+
+            sudo docker compose --profile production config --quiet
+            sudo docker compose build app
+            sudo docker compose --profile production up -d --remove-orphans
+
+            echo "Healthcheck: esperando HTTPS en $BACKEND_URL..."
+            HEALTHY=false
+            for i in $(seq 1 60); do
+              if curl -fsS --max-time 10 "${BACKEND_URL%/}/api-docs" | grep -q '"precio"'; then
+                HEALTHY=true
+                break
               fi
               sleep 5
             done
-            echo "ERROR: el backend no quedo sano tras 150s. Ultimos logs del contenedor:"
-            sudo docker-compose logs --tail=50 app
-            exit 1
+
+            if [ "$HEALTHY" != "true" ]; then
+              echo "ERROR: el backend no respondio correctamente tras 300s."
+              sudo docker compose ps
+              sudo docker compose logs --tail=100 app caddy
+              exit 1
+            fi
+
+            echo "OK: backend sano y publicado mediante HTTPS."
+            sudo docker image prune -f

@@ -1,0 +1,39 @@
+# render.yaml — Blueprint para desplegar el backend en Render
+# Docs: https://docs.render.com/blueprint-spec
+services:
+  - type: web
+    name: movilidad-mdq-backend
+    runtime: docker
+    repo: https://github.com/ciroschot-dev/movilidad-mdq
+    branch: ciro
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api-docs
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: GOOGLE_MAPS_KEY
+        sync: false
+      - key: WEATHER_API_KEY
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: APP_CORS_ALLOWED_ORIGINS
+        value: "https://movilidad-mdq.vercel.app,http://localhost:5173"
+      - key: APP_OAUTH2_REDIRECT_URI
+        value: "https://movilidad-mdq.vercel.app/oauth2/redirect"
+      - key: APP_ADMIN_USERNAME
+        value: "admin"
+      - key: APP_ADMIN_PASSWORD
+        sync: false

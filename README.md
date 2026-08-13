@@ -4,10 +4,10 @@
 > viajes por usuario y permite iniciar sesión con email/contraseña o con Google.
 
 ![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4-6DB33F?logo=springboot&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?logo=springboot&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-AWS%20RDS-4479A1?logo=mysql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 ![Swagger](https://img.shields.io/badge/OpenAPI-Swagger%20UI-85EA2D?logo=swagger&logoColor=black)
 
 ---
@@ -21,6 +21,7 @@
 - [Estructura del proyecto](#-estructura-del-proyecto)
 - [Entidades principales](#-entidades-principales)
 - [Cómo ejecutar el proyecto en local](#-cómo-ejecutar-el-proyecto-en-local)
+- [Deploy independiente en AWS](docs/deploy-aws.md)
 - [Autenticación y autorización](#-autenticación-y-autorización)
 - [Endpoints](#-endpoints)
 - [Ejemplos de requests y responses](#-ejemplos-de-requests-y-responses)
@@ -36,16 +37,17 @@
 | Recurso                                     | Enlace                                                                                                                       |
 |---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | 🌐 **Frontend desplegado (Vercel)**         | https://movilidad-mdq.vercel.app/                                                                                            |
-| 🛰️ **Backend desplegado (AWS EC2)**        | https://movilidadmdq.ddns.net *(ver nota abajo)*                                                                             |
-| 📘 **Documentación de la API (Swagger UI)** | https://movilidadmdq.ddns.net/swagger-ui/index.html ← **punto de entrada del backend**                                             |
-| 📄 **OpenAPI JSON**                         | https://movilidadmdq.ddns.net/api-docs                                                                                       |
+| 🛰️ **Backend desplegado (Render)**         | https://movilidad-mdq-backend.duckdns.org <!-- NOTA: Se actualizará tras deploy -->                                          |
+| 📘 **Documentación de la API (Swagger UI)** | https://movilidad-mdq-backend.duckdns.org/swagger-ui/index.html ← **punto de entrada del backend**                            |
+| 📄 **OpenAPI JSON**                         | https://movilidad-mdq-backend.duckdns.org/api-docs                                                                           |
 | 🧪 **Cómo crear un usuario de prueba**      | `POST /usuarios/registro` con `{ "username": "...", "password": "...", "email": "..." }` o el botón **Registrarse** en la UI |
 
 **Aclaraciones importantes**:
 
-- **No hace falta levantar nada local** para probar la app: el frontend (Vercel) ya está conectado al backend (EC2 con
+- ⚠️ **Nota:** Las URLs del backend (actualmente duckdns.org) se actualizarán tras finalizar la migración a Render.
+- **No hace falta levantar nada local** para probar la app: el frontend (Vercel) ya está conectado al backend (Render con
   HTTPS). Solo entrá a https://movilidad-mdq.vercel.app/ y registrate.
-- ℹ️ Si abrís https://movilidadmdq.ddns.net en el navegador vas a ver una **"Whitelabel Error Page" con status 401** —
+- ℹ️ Si abrís https://movilidad-mdq-backend.duckdns.org en el navegador vas a ver una **"Whitelabel Error Page" con status 401** —
   eso es **esperado**: el backend no tiene mapeo en la ruta raíz y Spring Security la protege. Para explorar la API usá
   **Swagger UI** (link de arriba) o pegale directo a un endpoint específico (ej. `/usuarios/login`).
 - Si querés correr todo en local de todas formas, seguí los pasos
@@ -79,7 +81,7 @@ La app combina:
 - **Tarifa de taxi oficial** parametrizable desde la base de datos (precio base + precio por km).
 - **Estimación de precios** para apps de movilidad (Uber/Didi) con rangos mínimo y máximo.
 - **Clima actual** del destino con **OpenWeather**.
-- **Historial personal de viajes**, guardado por usuario en una base **MySQL en AWS RDS**.
+- **Historial personal de viajes**, guardado por usuario en una base **PostgreSQL en Neon**.
 - **Autenticación dual**: registro/login clásico con JWT + opción **"Continuar con Google"** (OAuth2).
 
 Está pensada como proyecto académico para la materia **Programación 3 (UTN)**, pero el código sigue prácticas reales de
@@ -92,9 +94,6 @@ un backend Spring Boot moderno y un frontend React + TypeScript.
 | Integrante       | GitHub                                                                     |
 |------------------|----------------------------------------------------------------------------|
 | Ciro Schot       | [@ciroschot-dev](https://github.com/ciroschot-dev)                         |
-| Morena Hidalgo   | [@morehidalgg0](https://github.com/morehidalgg0)                           |
-| Anibal Bustos    | [@anibaldb](https://github.com/anibaldb)                                   |
-| Franco Bavaresco | [@FrancoBavaresco](https://github.com/FrancoBavaresco)                     |
 | Tiago Fueyo      | [@tiagofueyovuillermoz-beep](https://github.com/tiagofueyovuillermoz-beep) |
 
 ---
@@ -104,7 +103,7 @@ un backend Spring Boot moderno y un frontend React + TypeScript.
 **Backend**
 
 - Java 21
-- Spring Boot 4 (Web, Data JPA, Validation)
+- Spring Boot 3.4 (Web, Data JPA, Validation)
 - Spring Security + JWT (`jjwt`)
 - Spring Security OAuth2 Client (Google)
 - springdoc-openapi (Swagger UI)
@@ -119,7 +118,7 @@ un backend Spring Boot moderno y un frontend React + TypeScript.
 
 **Base de datos**
 
-- MySQL 8 (alojada en AWS RDS)
+- PostgreSQL (alojada en Neon, serverless)
 
 **APIs externas**
 
@@ -129,8 +128,9 @@ un backend Spring Boot moderno y un frontend React + TypeScript.
 
 **Infraestructura / DevOps**
 
-- Docker + `docker-compose.yml` (opcional para correr el backend en contenedor)
+- Docker (backend en contenedor con HTTPS automático via Render)
 - Despliegue del frontend en **Vercel**
+- Backend en **Render** (Docker) y PostgreSQL en **Neon** (serverless)
 
 ---
 
@@ -153,9 +153,9 @@ movilidadMDQ/
 │       └── resources/
 │           └── application.properties
 ├── frontend/                   # App React + TS + Vite (la que se usa)
-├── schema.sql                  # Script DDL inicial + datos de ejemplo
 ├── Dockerfile                  # Imagen del backend
-├── docker-compose.yml          # Orquestación opcional
+├── Caddyfile                   # Proxy reverso (solo para deploy con Caddy)
+├── docker-compose.yml          # Backend + proxy reverso
 ├── pom.xml                     # Maven
 ├── mvnw / mvnw.cmd             # Maven Wrapper
 ├── .env.example                # Plantilla de variables del backend
@@ -217,7 +217,7 @@ Permite parametrizar los precios sin tocar el código. Una fila por tipo de tran
 
 - **Java 21** (`java -version` debe mostrar 21.x).
 - **Node.js 18+** y **npm**.
-- Acceso a una base **MySQL** (local o la de AWS RDS provista por el equipo).
+- Acceso a una base **PostgreSQL** (local o la de Neon provista por el equipo).
 - **API key de Google Maps** con las APIs activas: *Distance Matrix*, *Places*, *Maps JavaScript*.
 - **API key de OpenWeather** (gratuita).
 - **OAuth Client de Google** (solo si querés probar "Continuar con Google").
@@ -233,8 +233,8 @@ GOOGLE_MAPS_KEY=tu_google_maps_key
 # OpenWeather
 WEATHER_API_KEY=tu_openweather_key
 
-# Base de datos (AWS RDS o MySQL local)
-SPRING_DATASOURCE_URL=jdbc:mysql://tu-rds.amazonaws.com:3306/movilidadmdq
+# Base de datos (Neon o PostgreSQL local)
+SPRING_DATASOURCE_URL=jdbc:postgresql://tu-host.neon.tech:5432/movilidadmdq?sslmode=require
 DB_USER=tu_usuario
 DB_PASSWORD=tu_password
 
@@ -248,6 +248,9 @@ GOOGLE_OAUTH_CLIENT_SECRET=tu_client_secret_google
 
 # CORS
 APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
+
+# Destino del login con Google
+APP_OAUTH2_REDIRECT_URI=http://localhost:5173/oauth2/redirect
 ```
 
 Para generar un `JWT_SECRET` seguro:
@@ -264,6 +267,7 @@ Copiá `frontend/.env.example` a `frontend/.env`:
 
 ```env
 VITE_API_URL=http://localhost:8080
+VITE_OAUTH_BASE_URL=http://localhost:8080
 VITE_GOOGLE_MAPS_API_KEY=tu_google_maps_key_para_browser
 ```
 
@@ -297,13 +301,8 @@ http://localhost:5173/oauth2/redirect?token=...
 
 ### 5. Base de datos
 
-Si arrancás con una DB vacía, ejecutá el script:
-
-```bash
-mysql -h <host> -u <user> -p < schema.sql
-```
-
-Esto crea las tablas `usuarios`, `tarifas` y `viajes`, e inserta las tarifas iniciales de Mar del Plata.
+El proyecto utiliza PostgreSQL (no MySQL). No hace falta ejecutar un script SQL. Hibernate crea y actualiza las tablas al arrancar, y el bootstrap de seguridad
+carga las tarifas iniciales si la tabla está vacía.
 
 ### 6. Levantar el backend
 
@@ -326,7 +325,7 @@ Queda en `http://localhost:5173`. Abrilo en el navegador.
 ### Alternativa con Docker (opcional)
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ---
@@ -500,8 +499,8 @@ curl http://localhost:8080/usuarios/3/historial \
 
 **Producción (EC2)**:
 
-- **Swagger UI** → https://movilidadmdq.ddns.net/swagger-ui.html
-- **OpenAPI JSON** → https://movilidadmdq.ddns.net/api-docs
+- **Swagger UI** → https://movilidad-mdq-backend.duckdns.org/swagger-ui/index.html
+- **OpenAPI JSON** → https://movilidad-mdq-backend.duckdns.org/api-docs
 
 **Local**:
 
@@ -541,7 +540,7 @@ cd frontend && npm run build
 | Google Maps no carga  | `VITE_GOOGLE_MAPS_API_KEY` en `frontend/.env`                                        |
 | Distance Matrix falla | `GOOGLE_MAPS_KEY` en `.env` raíz y APIs habilitadas en Google Cloud                  |
 | OAuth2 falla          | Redirect URI y JavaScript origins en Google Cloud                                    |
-| No conecta a AWS      | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y reglas del Security Group de RDS |
+| No conecta a Neon     | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y cadena de conexión de Neon       |
 | CORS bloqueado        | Revisar `APP_CORS_ALLOWED_ORIGINS` en `.env` raíz                                    |
 
 ---

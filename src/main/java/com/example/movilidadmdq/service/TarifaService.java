@@ -52,7 +52,7 @@ public class TarifaService
         if (request.getValorFichaNoche() != null) tarifaTaxi.setValorFichaNoche(request.getValorFichaNoche());
         if (request.getMetrosPorFicha() != null) tarifaTaxi.setMetrosPorFicha(request.getMetrosPorFicha());
 
-        // Persiste los cambios actualizados en la base de datos MySQL.
+        // Persiste los cambios actualizados en la base de datos PostgreSQL.
         return tarifaRepository.save(tarifaTaxi);
     }
 }

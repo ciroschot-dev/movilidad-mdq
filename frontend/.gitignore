@@ -56,3 +56,4 @@ dist-ssr
 .zencoder/
 git status --ignored
 .env
+.vercel

@@ -11,7 +11,7 @@ import AuditView from './components/AuditView';
 import type { AuthSession, DireccionFavorita } from './types';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '');
-const OAUTH_BASE_URL = (import.meta.env.VITE_OAUTH_BASE_URL ?? 'https://movilidadmdq.ddns.net').replace(/\/$/, '');
+const OAUTH_BASE_URL = (import.meta.env.VITE_OAUTH_BASE_URL ?? 'https://movilidad-mdq-backend.onrender.com').replace(/\/$/, '');
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 const SESSION_STORAGE_KEY = 'movilidadmdq.auth.v1';
 const THEME_STORAGE_KEY = 'movilidadmdq.theme.v1';

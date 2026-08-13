@@ -6,7 +6,7 @@ de errores HTTP. Pensada para la defensa del TP UTN.
 ## 0. URLs
 
 - **Local:** `http://localhost:8080/swagger-ui.html`
-- **Producción:** `https://movilidadmdq.ddns.net/swagger-ui/index.html`
+- **Producción:** `https://movilidad-mdq-backend.onrender.com/swagger-ui/index.html`
 
 > ⚠️ Si vas a probar contra prod, asegurate de haber pusheado los
 > cambios y que el servidor ya esté con la versión nueva.

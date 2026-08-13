@@ -38,10 +38,12 @@ Copiá `.env.example` a `.env` y completá:
 
 ```env
 VITE_API_URL=http://localhost:8080
+VITE_OAUTH_BASE_URL=http://localhost:8080
 VITE_GOOGLE_MAPS_API_KEY=tu_google_maps_key_para_browser
 ```
 
-> Para apuntar al backend de producción, usar `VITE_API_URL=https://movilidadmdq.ddns.net`.
+> Para producción, `VITE_API_URL` y `VITE_OAUTH_BASE_URL` apuntan a la URL del
+> backend en Render (ej. `https://movilidad-mdq-backend.onrender.com`).
 
 > En Google Cloud conviene restringir la key por referer a `http://localhost:5173/*` y al dominio del deploy.
 
@@ -88,7 +90,8 @@ frontend/
 Está configurado mediante `vercel.json`. En el dashboard de Vercel, las variables que hay que definir son las mismas del
 `.env`:
 
-- `VITE_API_URL` → `https://movilidadmdq.ddns.net`
+- `VITE_API_URL` → la URL del backend en Render (ej. `https://movilidad-mdq-backend.onrender.com`)
+- `VITE_OAUTH_BASE_URL` → misma URL del backend en Render
 - `VITE_GOOGLE_MAPS_API_KEY` → la key de Google Maps (con el dominio de Vercel permitido)
 
 ---

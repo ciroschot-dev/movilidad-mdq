@@ -102,7 +102,7 @@ public class ViajeController
         -> 3. GoogleMapsService.obtenerDatosViaje: API Externa (Distancia/Tiempo).
         -> 4. WeatherService.obtenerFactorClima: API Externa (Precios dinámicos).
         -> 5. CalculadoraTaxiService / EstimadorApp: Cálculo matemático.
-        -> 6. HistorialViajeService.guardar: Persistencia en MySQL.
+        -> 6. HistorialViajeService.guardar: Persistencia en PostgreSQL.
         -> 7. Retorno: Lista de opciones ordenadas por precio.
         """);
 
