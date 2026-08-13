@@ -21,14 +21,12 @@
 - [Estructura del proyecto](#-estructura-del-proyecto)
 - [Entidades principales](#-entidades-principales)
 - [Cómo ejecutar el proyecto en local](#-cómo-ejecutar-el-proyecto-en-local)
-- [Deploy independiente en AWS](docs/deploy-aws.md)
 - [Autenticación y autorización](#-autenticación-y-autorización)
 - [Endpoints](#-endpoints)
 - [Ejemplos de requests y responses](#-ejemplos-de-requests-y-responses)
 - [Documentación navegable (Swagger UI)](#-documentación-navegable-swagger-ui)
 - [Verificar que todo compile](#-verificar-que-todo-compile)
 - [Problemas comunes](#-problemas-comunes)
-- [Notas para el equipo](#-notas-para-el-equipo)
 
 ---
 
@@ -37,18 +35,18 @@
 | Recurso                                     | Enlace                                                                                                                       |
 |---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | 🌐 **Frontend desplegado (Vercel)**         | https://movilidad-mdq.vercel.app/                                                                                            |
-| 🛰️ **Backend desplegado (Render)**         | https://movilidad-mdq-backend.onrender.com                                                                                    |
-| 📘 **Documentación de la API (Swagger UI)** | https://movilidad-mdq-backend.onrender.com/swagger-ui/index.html ← **punto de entrada del backend**                            |
-| 📄 **OpenAPI JSON**                         | https://movilidad-mdq-backend.onrender.com/api-docs                                                                           |
+| 🛰️ **Backend desplegado (Render)**          | https://movilidad-mdq-backend.onrender.com                                                                                   |
+| 📘 **Documentación de la API (Swagger UI)** | https://movilidad-mdq-backend.onrender.com/swagger-ui/index.html ← **punto de entrada del backend**                          |
+| 📄 **OpenAPI JSON**                         | https://movilidad-mdq-backend.onrender.com/api-docs                                                                          |
 | 🧪 **Cómo crear un usuario de prueba**      | `POST /usuarios/registro` con `{ "username": "...", "password": "...", "email": "..." }` o el botón **Registrarse** en la UI |
 
 **Aclaraciones importantes**:
 
-- **No hace falta levantar nada local** para probar la app: el frontend (Vercel) ya está conectado al backend (Render con
-  HTTPS). Solo entrá a https://movilidad-mdq.vercel.app/ y registrate.
-- ℹ️ Si abrís https://movilidad-mdq-backend.onrender.com en el navegador vas a ver una **"Whitelabel Error Page" con status 401** —
-  eso es **esperado**: el backend no tiene mapeo en la ruta raíz y Spring Security la protege. Para explorar la API usá
-  **Swagger UI** (link de arriba) o pegale directo a un endpoint específico (ej. `/usuarios/login`).
+- **No hace falta levantar nada local** para probar la app: el frontend (Vercel) ya está conectado al backend (Render
+  con HTTPS). Solo entrá a https://movilidad-mdq.vercel.app/ y registrate.
+- ℹ️ Si abrís https://movilidad-mdq-backend.onrender.com en el navegador vas a ver una **"Whitelabel Error Page" con
+  status 401** — eso es **esperado**: el backend no tiene mapeo en la ruta raíz y Spring Security la protege. Para
+  explorar la API usá **Swagger UI** (link de arriba) o pegale directo a un endpoint específico (ej. `/usuarios/login`).
 - Si querés correr todo en local de todas formas, seguí los pasos
   de [Cómo ejecutar el proyecto](#-cómo-ejecutar-el-proyecto-en-local).
 - La carpeta `frontend/` es la app vigente; cualquier referencia a `frontend-demo/` es legado y no se usa.
@@ -90,10 +88,10 @@ un backend Spring Boot moderno y un frontend React + TypeScript.
 
 ## 👥 Integrantes del grupo
 
-| Integrante       | GitHub                                                                     |
-|------------------|----------------------------------------------------------------------------|
-| Ciro Schot       | [@ciroschot-dev](https://github.com/ciroschot-dev)                         |
-| Tiago Fueyo      | [@tiagofueyovuillermoz-beep](https://github.com/tiagofueyovuillermoz-beep) |
+| Integrante  | GitHub                                                                     |
+|-------------|----------------------------------------------------------------------------|
+| Ciro Schot  | [@ciroschot-dev](https://github.com/ciroschot-dev)                         |
+| Tiago Fueyo | [@tiagofueyovuillermoz-beep](https://github.com/tiagofueyovuillermoz-beep) |
 
 ---
 
@@ -300,8 +298,8 @@ http://localhost:5173/oauth2/redirect?token=...
 
 ### 5. Base de datos
 
-El proyecto utiliza PostgreSQL (no MySQL). No hace falta ejecutar un script SQL. Hibernate crea y actualiza las tablas al arrancar, y el bootstrap de seguridad
-carga las tarifas iniciales si la tabla está vacía.
+El proyecto utiliza PostgreSQL (no MySQL). No hace falta ejecutar un script SQL. Hibernate crea y actualiza las tablas
+al arrancar, y el bootstrap de seguridad carga las tarifas iniciales si la tabla está vacía.
 
 ### 6. Levantar el backend
 
@@ -367,8 +365,8 @@ La API usa **JWT (JSON Web Tokens)** para autenticar las requests, con soporte a
 
 Todos los endpoints están documentados (con schemas y ejemplos) en **Swagger UI**.
 
-| Método   | Endpoint                             | Auth      | Descripción                                |
-|----------|--------------------------------------|-----------|--------------------------------------------|
+| Método   | Endpoint                             | Auth       | Descripción                                |
+|----------|--------------------------------------|------------|--------------------------------------------|
 | `POST`   | `/usuarios/registro`                 | ❌         | Crear usuario y devolver JWT               |
 | `POST`   | `/usuarios/login`                    | ❌         | Login clásico y devolver JWT               |
 | `GET`    | `/usuarios/me`                       | ✅         | Datos del usuario autenticado              |
@@ -532,21 +530,14 @@ cd frontend && npm run build
 
 ## 🧯 Problemas comunes
 
-| Problema              | Qué revisar                                                                          |
-|-----------------------|--------------------------------------------------------------------------------------|
-| No encuentra Java     | Instalar **Java 21** y verificar con `java -version`                                 |
-| Error 401 al calcular | Falta iniciar sesión o el token venció                                               |
-| Google Maps no carga  | `VITE_GOOGLE_MAPS_API_KEY` en `frontend/.env`                                        |
-| Distance Matrix falla | `GOOGLE_MAPS_KEY` en `.env` raíz y APIs habilitadas en Google Cloud                  |
-| OAuth2 falla          | Redirect URI y JavaScript origins en Google Cloud                                    |
-| No conecta a Neon     | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y cadena de conexión de Neon       |
-| CORS bloqueado        | Revisar `APP_CORS_ALLOWED_ORIGINS` en `.env` raíz                                    |
+| Problema              | Qué revisar                                                                    |
+|-----------------------|--------------------------------------------------------------------------------|
+| No encuentra Java     | Instalar **Java 21** y verificar con `java -version`                           |
+| Error 401 al calcular | Falta iniciar sesión o el token venció                                         |
+| Google Maps no carga  | `VITE_GOOGLE_MAPS_API_KEY` en `frontend/.env`                                  |
+| Distance Matrix falla | `GOOGLE_MAPS_KEY` en `.env` raíz y APIs habilitadas en Google Cloud            |
+| OAuth2 falla          | Redirect URI y JavaScript origins en Google Cloud                              |
+| No conecta a Neon     | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y cadena de conexión de Neon |
+| CORS bloqueado        | Revisar `APP_CORS_ALLOWED_ORIGINS` en `.env` raíz                              |
 
 ---
-
-## 🧠 Notas para el equipo
-
-- 🔒 No commitear `.env` ni claves reales.
-- ✅ `frontend/` es la app vigente; ignorar cualquier carpeta legada.
-- 🚀 En producción, restringir CORS y API keys al dominio real.
-- 🧪 Antes de cada entrega, correr `./mvnw test` y `npm run build`.
