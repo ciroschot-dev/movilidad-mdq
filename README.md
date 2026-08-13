@@ -37,17 +37,16 @@
 | Recurso                                     | Enlace                                                                                                                       |
 |---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | 🌐 **Frontend desplegado (Vercel)**         | https://movilidad-mdq.vercel.app/                                                                                            |
-| 🛰️ **Backend desplegado (Render)**         | https://movilidad-mdq-backend.duckdns.org <!-- NOTA: Se actualizará tras deploy -->                                          |
-| 📘 **Documentación de la API (Swagger UI)** | https://movilidad-mdq-backend.duckdns.org/swagger-ui/index.html ← **punto de entrada del backend**                            |
-| 📄 **OpenAPI JSON**                         | https://movilidad-mdq-backend.duckdns.org/api-docs                                                                           |
+| 🛰️ **Backend desplegado (Render)**         | https://movilidad-mdq-backend.onrender.com                                                                                    |
+| 📘 **Documentación de la API (Swagger UI)** | https://movilidad-mdq-backend.onrender.com/swagger-ui/index.html ← **punto de entrada del backend**                            |
+| 📄 **OpenAPI JSON**                         | https://movilidad-mdq-backend.onrender.com/api-docs                                                                           |
 | 🧪 **Cómo crear un usuario de prueba**      | `POST /usuarios/registro` con `{ "username": "...", "password": "...", "email": "..." }` o el botón **Registrarse** en la UI |
 
 **Aclaraciones importantes**:
 
-- ⚠️ **Nota:** Las URLs del backend (actualmente duckdns.org) se actualizarán tras finalizar la migración a Render.
 - **No hace falta levantar nada local** para probar la app: el frontend (Vercel) ya está conectado al backend (Render con
   HTTPS). Solo entrá a https://movilidad-mdq.vercel.app/ y registrate.
-- ℹ️ Si abrís https://movilidad-mdq-backend.duckdns.org en el navegador vas a ver una **"Whitelabel Error Page" con status 401** —
+- ℹ️ Si abrís https://movilidad-mdq-backend.onrender.com en el navegador vas a ver una **"Whitelabel Error Page" con status 401** —
   eso es **esperado**: el backend no tiene mapeo en la ruta raíz y Spring Security la protege. Para explorar la API usá
   **Swagger UI** (link de arriba) o pegale directo a un endpoint específico (ej. `/usuarios/login`).
 - Si querés correr todo en local de todas formas, seguí los pasos
@@ -497,10 +496,10 @@ curl http://localhost:8080/usuarios/3/historial \
 
 ## 📘 Documentación navegable (Swagger UI)
 
-**Producción (EC2)**:
+**Producción (Render)**:
 
-- **Swagger UI** → https://movilidad-mdq-backend.duckdns.org/swagger-ui/index.html
-- **OpenAPI JSON** → https://movilidad-mdq-backend.duckdns.org/api-docs
+- **Swagger UI** → https://movilidad-mdq-backend.onrender.com/swagger-ui/index.html
+- **OpenAPI JSON** → https://movilidad-mdq-backend.onrender.com/api-docs
 
 **Local**:
 
