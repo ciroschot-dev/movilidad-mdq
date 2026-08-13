@@ -97,7 +97,7 @@
             "spring.config.import="
         })
     </div>
-    <p>Esto garantiza que <b>NUNCA</b> se toque la base de datos de producción (AWS RDS) durante los tests, y que no se necesiten las variables de entorno locales (<span class="code">.env</span>) para validar el código.</p>
+    <p>Esto garantiza que <b>NUNCA</b> se toque la base de datos de producción (Neon PostgreSQL) durante los tests, y que no se necesiten las variables de entorno locales (<span class="code">.env</span>) para validar el código.</p>
 
     <h2 id="capa-servicio">1. Capa de Servicios (Business Logic)</h2>
     
@@ -173,7 +173,7 @@
         <p>Prueba el flujo de datos completo entre el controlador y la base de datos.</p>
         <div class="logic-box">
             <b>Escenario:</b> Guarda un viaje real en la base de datos de prueba y luego llama al endpoint de historial para ver si el viaje "aparece" en la lista del usuario.<br>
-            <b>Herramienta:</b> Usa <b>H2 Database</b> para no ensuciar la base de datos real de AWS.
+            <b>Herramienta:</b> Usa <b>H2 Database</b> para no ensuciar la base de datos real en Neon.
         </div>
     </div>
 
