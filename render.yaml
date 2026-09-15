@@ -5,7 +5,7 @@ services:
     name: movilidad-mdq-backend
     runtime: docker
     repo: https://github.com/ciroschot-dev/movilidad-mdq
-    branch: ciro
+    branch: main
     plan: free
     region: oregon
     dockerfilePath: ./Dockerfile
