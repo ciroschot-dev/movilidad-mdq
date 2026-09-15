@@ -50,6 +50,20 @@ gh pr create --base dev --title "feat(MDQ-16): iniciar y cerrar sesión"
 **6. ✅ Jira: cerrar la tarea**
 - Arrastrá la tarea a **"Hecho"**.
 
+## 🏷️ Dónde va la clave (`MDQ-16`) y qué engancha cada una
+
+| Dónde la ponés | Ejemplo | Qué muestra Jira | ¿Hace falta? |
+|---|---|---|---|
+| 🌿 Nombre de la rama | `feat/MDQ-16-login` | La rama, dentro de la tarea | ✅ Sí |
+| 📬 Título del PR | `feat(MDQ-16): iniciar sesión` | El PR y si ya se mergeó | ✅ Sí |
+| 💾 Mensaje del commit | `feat(MDQ-16): agrego el botón` | Ese commit en la lista | 👍 Recomendado |
+
+💡 Si la rama se llama `feat/MDQ-16-login` y hacés un commit que dice solo "agrego botón", Jira igual
+muestra la rama y el PR (lo importante), pero ese commit no aparece en la lista.
+
+⚠️ Si te olvidás la clave en la rama **y** en el PR, esa tarea queda vacía en Jira: nadie ve en qué
+andás. Se arregla renombrando la rama o agregando la clave al título del PR.
+
 ## 🏁 Al cerrar el sprint (cada 2 semanas)
 
 1. 🔀 PR de `dev` → `main` con título `release: sprint N`.
