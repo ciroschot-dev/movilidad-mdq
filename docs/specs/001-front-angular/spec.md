@@ -105,7 +105,7 @@ Backend en Render; clave de Google Maps/Places; login con Google en el backend (
   - Escenario: Dado "juan@mail.com" · Entonces juan. Dado "nadie" · Entonces el mensaje.
 
 ## E0 — Base técnica (solo tareas)
-Crear proyecto Angular + Tailwind · cliente HTTP con token y 401/403 · navegación y layout · carga de Google Maps/Places · deploy en Render · borrar el front React. Los RNF01–RNF08 del TP van en la descripción de esta épica.
+Crear proyecto Angular + Tailwind · cliente HTTP con token y 401/403 · navegación y layout · carga de Google Maps/Places · deploy del front en Vercel (backend en Render desde `main`) · borrar el front React. Los RNF01–RNF08 del TP van en la descripción de esta épica.
 
 ## Criterios de finalización
 - Cada RF de E1–E4 con su escenario probado en Angular; recorrido lado a lado React vs Angular (celular y escritorio): mismas funciones, con las mejoras de A-19.
