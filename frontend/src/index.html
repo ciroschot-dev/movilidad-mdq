@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>MovilidadMDQ</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Aplica el tema antes de que cargue Angular, para que no parpadee en claro -->
+  <script>
+    try {
+      var tema = localStorage.getItem('movilidadmdq.theme.v1');
+      if (tema === 'dark' || (!tema && matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
