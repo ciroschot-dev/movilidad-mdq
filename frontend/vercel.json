@@ -1,0 +1,8 @@
+{
+  "framework": "angular",
+  "outputDirectory": "dist/frontend/browser",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://movilidad-mdq-backend.onrender.com/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
