@@ -1,25 +1,46 @@
-@import 'tailwindcss';
+/* Tema claro por defecto. El oscuro se activa con la clase .dark del <html> (la maneja ThemeService). */
+:root {
+  color-scheme: light;
 
-/* La variante dark: responde a la clase .dark del <html> (la maneja ThemeService) */
-@custom-variant dark (&:where(.dark, .dark *));
-
-@theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-text: #111827;
+  --color-text-muted: #374151;
+
   --color-brand-uber: #000000;
   --color-brand-didi: #ff7d00;
   --color-brand-taxi: #ffcc00;
 }
 
-@layer base {
-  html {
-    color-scheme: light;
-  }
+:root.dark {
+  color-scheme: dark;
 
-  html.dark {
-    color-scheme: dark;
-  }
+  --color-bg: #030712;
+  --color-surface: #111827;
+  --color-surface-hover: #1f2937;
+  --color-border: #1f2937;
+  --color-text: #f3f4f6;
+  --color-text-muted: #e5e7eb;
+}
 
-  body {
-    @apply bg-gray-50 text-gray-900 antialiased transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 300ms,
+    color 300ms;
 }
