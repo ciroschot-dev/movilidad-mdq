@@ -26,6 +26,10 @@
       <p class="error">{{ registroForm.password().errors()[0].message }}</p>
     }
 
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
     <button class="boton" type="submit" [disabled]="registroForm().submitting()">REGISTRARME</button>
   </form>
 </section>
