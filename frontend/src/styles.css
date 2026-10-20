@@ -1,0 +1,26 @@
+/* Colores del tema claro. Los componentes usan siempre var(--…) para que el tema cambie en un solo lugar */
+:root {
+  --color-fondo: #f5f7fa;
+  --color-superficie: #ffffff;
+  --color-texto: #1f2933;
+  --color-texto-suave: #52606d;
+  --color-primario: #1565c0;
+  --color-borde: #d9e2ec;
+}
+
+/* Tema oscuro: el servicio de tema agrega la clase dark al <html> */
+html.dark {
+  --color-fondo: #121417;
+  --color-superficie: #1e2227;
+  --color-texto: #e4e7eb;
+  --color-texto-suave: #9aa5b1;
+  --color-primario: #64b5f6;
+  --color-borde: #323840;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+}
