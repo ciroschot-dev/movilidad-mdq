@@ -10,7 +10,7 @@ import {
 } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import { RegistroForm } from '../../models/registro';
-import { Auth } from '../../services/auth';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-registro',
@@ -19,7 +19,7 @@ import { Auth } from '../../services/auth';
   styleUrl: './registro.css',
 })
 export class Registro {
-  private readonly auth = inject(Auth);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   protected readonly error = signal('');
