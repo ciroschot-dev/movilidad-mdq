@@ -6,6 +6,7 @@
   --color-texto-suave: #52606d;
   --color-primario: #1565c0;
   --color-borde: #d9e2ec;
+  --color-error: #c62828;
 }
 
 /* Tema oscuro: el servicio de tema agrega la clase dark al <html> */
@@ -16,6 +17,7 @@ html.dark {
   --color-texto-suave: #9aa5b1;
   --color-primario: #64b5f6;
   --color-borde: #323840;
+  --color-error: #ef9a9a;
 }
 
 body {

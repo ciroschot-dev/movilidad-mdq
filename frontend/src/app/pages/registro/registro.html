@@ -1,0 +1,35 @@
+<section class="registro">
+  <h1 class="titulo">Crear cuenta</h1>
+
+  <form class="formulario" [formRoot]="registroForm">
+    <label class="campo">
+      Usuario
+      <input type="text" autocomplete="username" [formField]="registroForm.username" />
+    </label>
+    @if (registroForm.username().touched() && registroForm.username().invalid()) {
+      <p class="error">{{ registroForm.username().errors()[0].message }}</p>
+    }
+
+    <label class="campo">
+      Email
+      <input type="email" autocomplete="email" [formField]="registroForm.email" />
+    </label>
+    @if (registroForm.email().touched() && registroForm.email().invalid()) {
+      <p class="error">{{ registroForm.email().errors()[0].message }}</p>
+    }
+
+    <label class="campo">
+      Contraseña
+      <input type="password" autocomplete="new-password" [formField]="registroForm.password" />
+    </label>
+    @if (registroForm.password().touched() && registroForm.password().invalid()) {
+      <p class="error">{{ registroForm.password().errors()[0].message }}</p>
+    }
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button class="boton" type="submit" [disabled]="registroForm().submitting()">REGISTRARME</button>
+  </form>
+</section>
