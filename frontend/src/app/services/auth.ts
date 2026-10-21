@@ -20,6 +20,9 @@ export class AuthService {
   // Se recalcula solo cada vez que cambia el token
   estaLogueado = computed(() => this.token() !== null);
 
+  // Queda en true cuando el back rechazó el token, así el login muestra el aviso
+  sesionVencida = signal(false);
+
   // Le manda usuario y contraseña al back; el que llama se suscribe y recibe la sesión
   login(credenciales: Credenciales) {
     return this.http.post<Sesion>(`${this.url}/login`, credenciales);
@@ -34,12 +37,15 @@ export class AuthService {
   guardarSesion(sesion: Sesion) {
     localStorage.setItem(CLAVE_TOKEN, sesion.token);
     this.token.set(sesion.token);
+    this.sesionVencida.set(false);
   }
 
-  // Borra el token y manda a la pantalla de login
-  cerrarSesion() {
+  // Borra el token y manda a la pantalla de login.
+  // vencida = true cuando la saca el interceptor, no cuando el usuario toca "Cerrar sesión"
+  cerrarSesion(vencida = false) {
     localStorage.removeItem(CLAVE_TOKEN);
     this.token.set(null);
+    this.sesionVencida.set(vencida);
     this.router.navigate(['/login']);
   }
 }

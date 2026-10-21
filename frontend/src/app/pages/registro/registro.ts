@@ -8,13 +8,13 @@ import {
   minLength,
   required,
 } from '@angular/forms/signals';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { RegistroForm } from '../../models/registro';
 import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-registro',
-  imports: [FormRoot, FormField],
+  imports: [FormRoot, FormField, RouterLink],
   templateUrl: './registro.html',
   styleUrl: './registro.css',
 })

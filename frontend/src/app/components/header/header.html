@@ -1,11 +1,18 @@
 <header class="header">
   <span class="marca">MovilidadMDQ</span>
 
-  <button class="boton-tema" type="button" (click)="tema.alternar()">
-    @if (tema.oscuro()) {
-      Tema claro
-    } @else {
-      Tema oscuro
+  <div class="acciones">
+    <button class="boton-tema" type="button" (click)="tema.alternar()">
+      @if (tema.oscuro()) {
+        Tema claro
+      } @else {
+        Tema oscuro
+      }
+    </button>
+
+    <!-- Solo con sesión abierta: en login y registro no tiene sentido -->
+    @if (auth.estaLogueado()) {
+      <button class="boton-tema" type="button" (click)="auth.cerrarSesion()">Cerrar sesión</button>
     }
-  </button>
+  </div>
 </header>

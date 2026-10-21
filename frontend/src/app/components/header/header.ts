@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { AuthService } from '../../services/auth';
 import { Tema } from '../../services/tema';
 
 @Component({
@@ -9,4 +10,5 @@ import { Tema } from '../../services/tema';
 })
 export class Header {
   protected readonly tema = inject(Tema);
+  protected readonly auth = inject(AuthService);
 }

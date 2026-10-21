@@ -13,6 +13,12 @@
   color: var(--color-primario);
 }
 
+/* Botones de la derecha, uno al lado del otro */
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .boton-tema {
   padding: 0.5rem 1rem;
   border: 1px solid var(--color-borde);
