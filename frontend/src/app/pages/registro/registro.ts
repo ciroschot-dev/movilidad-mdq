@@ -9,6 +9,7 @@ import {
   required,
 } from '@angular/forms/signals';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { RegistroForm } from '../../models/registro';
 import { AuthService } from '../../services/auth';
 
@@ -39,19 +40,20 @@ export class Registro {
     },
     {
       // Solo se ejecuta si el formulario es válido; si no, marca los campos y muestra los errores
-      submission: { action: async () => this.registrar() },
+      submission: { action: () => this.registrar() },
     },
   );
 
-  private registrar() {
+  private async registrar() {
     this.error.set('');
-    this.auth.registrar(this.datos()).subscribe({
+    try {
+      // Espera la respuesta del back: mientras tanto el botón queda deshabilitado y no se manda dos veces
+      const sesion = await firstValueFrom(this.auth.registrar(this.datos()));
       // El backend ya devuelve el token, así que el usuario queda logueado sin pasar por el login
-      next: (sesion) => {
-        this.auth.guardarSesion(sesion);
-        this.router.navigate(['/cotizar']);
-      },
-      error: () => this.error.set('No se pudo crear el usuario.'),
-    });
+      this.auth.guardarSesion(sesion);
+      this.router.navigate(['/cotizar']);
+    } catch {
+      this.error.set('No se pudo crear el usuario.');
+    }
   }
 }
