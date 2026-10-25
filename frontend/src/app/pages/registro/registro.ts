@@ -1,59 +1,53 @@
 import { Component, inject, signal } from '@angular/core';
-import {
-  email,
-  form,
-  FormField,
-  FormRoot,
-  maxLength,
-  minLength,
-  required,
-} from '@angular/forms/signals';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { RegistroForm } from '../../models/registro';
 import { AuthService } from '../../services/auth';
 
+// Pantalla para crear una cuenta: si sale bien, el usuario queda logueado y va a cotizar
 @Component({
   selector: 'app-registro',
-  imports: [FormRoot, FormField],
+  imports: [ReactiveFormsModule],
   templateUrl: './registro.html',
   styleUrl: './registro.css',
 })
 export class Registro {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly fb = inject(FormBuilder);
 
+  // Aviso que se muestra si el back no pudo crear la cuenta
   protected readonly error = signal('');
-  protected readonly datos = signal<RegistroForm>({ username: '', email: '', password: '' });
+  // true mientras espera al back: bloquea el botón para no mandar la cuenta dos veces
+  protected readonly cargando = signal(false);
 
-  // Mismas reglas que RegistroRequest del backend, para avisar antes de mandar el pedido
-  protected readonly registroForm = form(
-    this.datos,
-    (campo) => {
-      required(campo.username, { message: 'El usuario es obligatorio.' });
-      minLength(campo.username, 3, { message: 'El usuario debe tener entre 3 y 30 caracteres.' });
-      maxLength(campo.username, 30, { message: 'El usuario debe tener entre 3 y 30 caracteres.' });
-      required(campo.email, { message: 'El email es obligatorio.' });
-      email(campo.email, { message: 'El email no tiene un formato válido.' });
-      required(campo.password, { message: 'La contraseña es obligatoria.' });
-      minLength(campo.password, 6, { message: 'La contraseña debe tener al menos 6 caracteres.' });
-    },
-    {
-      // Solo se ejecuta si el formulario es válido; si no, marca los campos y muestra los errores
-      submission: { action: () => this.registrar() },
-    },
-  );
+  // Mismas reglas que RegistroRequest del backend, para avisar antes de mandar el pedido.
+  // Cada campo: [valor inicial, validaciones].
+  protected readonly registroForm = this.fb.nonNullable.group({
+    username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+  });
 
-  private async registrar() {
+  // Error solo si el campo está mal Y el usuario ya lo tocó; si no, se vería en rojo apenas abre la página
+  protected mostrarError(control: string) {
+    return this.registroForm.get(control)?.invalid && this.registroForm.get(control)?.touched;
+  }
+
+  protected registrar() {
     this.error.set('');
-    try {
-      // Espera la respuesta del back: mientras tanto el botón queda deshabilitado y no se manda dos veces
-      const sesion = await firstValueFrom(this.auth.registrar(this.datos()));
-      // El backend ya devuelve el token, así que el usuario queda logueado sin pasar por el login
-      this.auth.guardarSesion(sesion);
-      this.router.navigate(['/cotizar']);
-    } catch {
-      this.error.set('No se pudo crear el usuario.');
-    }
+    this.cargando.set(true);
+    // getRawValue() da el objeto con todos los campos, con la forma de RegistroForm
+    this.auth.registrar(this.registroForm.getRawValue()).subscribe({
+      // Salió bien: el back ya devuelve el token, así que queda logueado sin pasar por el login
+      next: (sesion) => {
+        this.auth.guardarSesion(sesion);
+        this.router.navigate(['/cotizar']);
+      },
+      // Salió mal (por ejemplo, el usuario ya existe): muestra el aviso y libera el botón
+      error: () => {
+        this.error.set('No se pudo crear el usuario.');
+        this.cargando.set(false);
+      },
+    });
   }
 }
