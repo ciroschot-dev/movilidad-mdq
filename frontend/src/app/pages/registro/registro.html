@@ -1,0 +1,40 @@
+<!-- Pantalla de registro: usuario, email y contraseña -->
+<section class="registro">
+  <h1 class="titulo">Crear cuenta</h1>
+
+  <!-- [formGroup] conecta este form con el del TS; al apretar REGISTRARME llama a registrar() -->
+  <form class="formulario" [formGroup]="registroForm" (ngSubmit)="registrar()">
+    <label class="campo">
+      Usuario
+      <!-- formControlName conecta el input con su campo del form; el @if de abajo muestra el error -->
+      <input type="text" autocomplete="username" formControlName="username" />
+    </label>
+    @if (mostrarError('username')) {
+      <p class="error">El usuario debe tener entre 3 y 30 caracteres.</p>
+    }
+
+    <label class="campo">
+      Email
+      <input type="email" autocomplete="email" formControlName="email" />
+    </label>
+    @if (mostrarError('email')) {
+      <p class="error">Ingresá un email válido.</p>
+    }
+
+    <label class="campo">
+      Contraseña
+      <input type="password" autocomplete="new-password" formControlName="password" />
+    </label>
+    @if (mostrarError('password')) {
+      <p class="error">La contraseña debe tener al menos 6 caracteres.</p>
+    }
+
+    <!-- Aviso del back cuando no pudo crear la cuenta -->
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <!-- Bloqueado si falta completar algo o mientras espera la respuesta del back -->
+    <button class="boton" type="submit" [disabled]="registroForm.invalid || cargando()">REGISTRARME</button>
+  </form>
+</section>

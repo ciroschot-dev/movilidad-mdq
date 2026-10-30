@@ -3,6 +3,7 @@ import { Service, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { Credenciales, Sesion } from '../models/auth';
+import { RegistroForm } from '../models/registro';
 
 // Nombre de la "caja" del navegador donde queda guardado el token
 const CLAVE_TOKEN = 'token';
@@ -22,6 +23,11 @@ export class AuthService {
   // Le manda usuario y contraseña al back; el que llama se suscribe y recibe la sesión
   login(credenciales: Credenciales) {
     return this.http.post<Sesion>(`${this.url}/login`, credenciales);
+  }
+
+  // Crea la cuenta; el back ya devuelve la sesión, así que queda logueado sin pasar por el login
+  registrar(datos: RegistroForm) {
+    return this.http.post<Sesion>(`${this.url}/registro`, datos);
   }
 
   // Se llama después de un login o registro exitoso
