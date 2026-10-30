@@ -1,5 +1,13 @@
+<!-- Barra de arriba: la marca, las pestañas para moverse entre pantallas y el botón del tema -->
 <header class="header">
   <span class="marca">MovilidadMDQ</span>
+
+  <!-- routerLinkActive le pone la clase "activo" a la pestaña de la pantalla donde estás -->
+  <nav class="pestanas">
+    <a routerLink="/cotizar" routerLinkActive="activo">Cotizar</a>
+    <a routerLink="/historial" routerLinkActive="activo">Historial</a>
+    <a routerLink="/favoritos" routerLinkActive="activo">Favoritos</a>
+  </nav>
 
   <button class="boton-tema" type="button" (click)="tema.alternar()">
     @if (tema.oscuro()) {
