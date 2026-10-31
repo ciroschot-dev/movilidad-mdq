@@ -1,36 +1,41 @@
+<!-- Pantalla de registro: usuario, email y contraseña -->
 <section class="registro">
   <h1 class="titulo">Crear cuenta</h1>
 
-  <form class="formulario" [formRoot]="registroForm">
+  <!-- [formGroup] conecta este form con el del TS; al apretar REGISTRARME llama a registrar() -->
+  <form class="formulario" [formGroup]="registroForm" (ngSubmit)="registrar()">
     <label class="campo">
       Usuario
-      <input type="text" autocomplete="username" [formField]="registroForm.username" />
+      <!-- formControlName conecta el input con su campo del form; el @if de abajo muestra el error -->
+      <input type="text" autocomplete="username" formControlName="username" />
     </label>
-    @if (registroForm.username().touched() && registroForm.username().invalid()) {
-      <p class="error">{{ registroForm.username().errors()[0].message }}</p>
+    @if (mostrarError('username')) {
+      <p class="error">El usuario debe tener entre 3 y 30 caracteres.</p>
     }
 
     <label class="campo">
       Email
-      <input type="email" autocomplete="email" [formField]="registroForm.email" />
+      <input type="email" autocomplete="email" formControlName="email" />
     </label>
-    @if (registroForm.email().touched() && registroForm.email().invalid()) {
-      <p class="error">{{ registroForm.email().errors()[0].message }}</p>
+    @if (mostrarError('email')) {
+      <p class="error">Ingresá un email válido.</p>
     }
 
     <label class="campo">
       Contraseña
-      <input type="password" autocomplete="new-password" [formField]="registroForm.password" />
+      <input type="password" autocomplete="new-password" formControlName="password" />
     </label>
-    @if (registroForm.password().touched() && registroForm.password().invalid()) {
-      <p class="error">{{ registroForm.password().errors()[0].message }}</p>
+    @if (mostrarError('password')) {
+      <p class="error">La contraseña debe tener al menos 6 caracteres.</p>
     }
 
+    <!-- Aviso del back cuando no pudo crear la cuenta -->
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
 
-    <button class="boton" type="submit" [disabled]="registroForm().submitting()">REGISTRARME</button>
+    <!-- Bloqueado si falta completar algo o mientras espera la respuesta del back -->
+    <button class="boton" type="submit" [disabled]="registroForm.invalid || cargando()">REGISTRARME</button>
   </form>
 
   <p class="pie">¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a></p>
