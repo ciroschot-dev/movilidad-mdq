@@ -37,4 +37,6 @@
     <!-- Bloqueado si falta completar algo o mientras espera la respuesta del back -->
     <button class="boton" type="submit" [disabled]="registroForm.invalid || cargando()">REGISTRARME</button>
   </form>
+
+  <p class="pie">¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a></p>
 </section>
