@@ -5,8 +5,8 @@
 
 ![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?logo=springboot&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 ![Swagger](https://img.shields.io/badge/OpenAPI-Swagger%20UI-85EA2D?logo=swagger&logoColor=black)
 
@@ -55,7 +55,7 @@
 
 **Checklist funcional para validar la app**:
 
-- ✅ Abrir https://movilidad-mdq.vercel.app/ (o `http://localhost:5173` si la corrés en local).
+- ✅ Abrir https://movilidad-mdq.vercel.app/ (o `http://localhost:4200` si la corrés en local).
 - ✅ Registrarse con usuario, email y contraseña.
 - ✅ Cerrar sesión y volver a iniciar sesión.
 - ✅ Probar **"Continuar con Google"** (OAuth2).
@@ -82,7 +82,7 @@ La app combina:
 - **Autenticación dual**: registro/login clásico con JWT + opción **"Continuar con Google"** (OAuth2).
 
 Está pensada como proyecto académico para la materia **Programación 3 (UTN)**, pero el código sigue prácticas reales de
-un backend Spring Boot moderno y un frontend React + TypeScript.
+un backend Spring Boot moderno y un frontend Angular + TypeScript.
 
 ---
 
@@ -108,10 +108,11 @@ un backend Spring Boot moderno y un frontend React + TypeScript.
 
 **Frontend**
 
-- React 19
+- Angular 22 (componentes standalone y signals)
 - TypeScript
-- Vite
-- React Router
+- Angular Router
+- Formularios reactivos (`ReactiveFormsModule`)
+- CSS propio, sin librerías de componentes
 
 **Base de datos**
 
@@ -149,7 +150,15 @@ movilidadMDQ/
 │       │   └── service/        # Lógica de negocio
 │       └── resources/
 │           └── application.properties
-├── frontend/                   # App React + TS + Vite (la que se usa)
+├── frontend/                   # App Angular (la que se usa)
+│   └── src/
+│       ├── app/
+│       │   ├── components/     # Piezas que se repiten, como el header
+│       │   ├── interceptors/   # Suma el token a cada pedido al backend
+│       │   ├── models/         # Interfaces con la forma de cada dato
+│       │   ├── pages/          # Una pantalla por ruta (cotizar, registro…)
+│       │   └── services/       # Hablan con el backend
+│       └── environments/       # Dirección del backend en local y en Vercel
 ├── Dockerfile                  # Imagen del backend
 ├── Caddyfile                   # Proxy reverso (solo para deploy con Caddy)
 ├── docker-compose.yml          # Backend + proxy reverso
@@ -244,10 +253,10 @@ GOOGLE_OAUTH_CLIENT_ID=tu_client_id_google
 GOOGLE_OAUTH_CLIENT_SECRET=tu_client_secret_google
 
 # CORS
-APP_CORS_ALLOWED_ORIGINS=http://localhost:5173
+APP_CORS_ALLOWED_ORIGINS=http://localhost:4200
 
 # Destino del login con Google
-APP_OAUTH2_REDIRECT_URI=http://localhost:5173/oauth2/redirect
+APP_OAUTH2_REDIRECT_URI=http://localhost:4200/oauth2/redirect
 ```
 
 Para generar un `JWT_SECRET` seguro:
@@ -258,18 +267,16 @@ openssl rand -base64 32
 
 > 📌 El backend lee `.env` automáticamente desde `application.properties`. No es necesario exportar las variables a mano.
 
-### 3. Configuración del frontend — `frontend/.env`
+### 3. Configuración del frontend — `frontend/src/environments/`
 
-Copiá `frontend/.env.example` a `frontend/.env`:
+El frontend no usa `.env`: la dirección del backend está en dos archivos de Angular.
 
-```env
-VITE_API_URL=http://localhost:8080
-VITE_OAUTH_BASE_URL=http://localhost:8080
-VITE_GOOGLE_MAPS_API_KEY=tu_google_maps_key_para_browser
-```
+| Archivo                      | Cuándo se usa                    | `apiUrl`                                                         |
+|------------------------------|----------------------------------|------------------------------------------------------------------|
+| `environment.development.ts` | `ng serve`, en la compu          | `http://localhost:8080`                                          |
+| `environment.ts`             | Build de producción, en Vercel   | `/api`, que `frontend/vercel.json` redirige al backend de Render |
 
-> 📌 La key del frontend necesita **Maps JavaScript API** y **Places API**. En Google Cloud conviene restringirla por
-> referer a `http://localhost:5173/*`.
+> 📌 Para correrlo en local no hay que tocar nada: con el backend en el puerto 8080, ya conecta.
 
 ### 4. Google OAuth2 (solo si vas a probar "Continuar con Google")
 
@@ -284,7 +291,7 @@ http://localhost:8080/login/oauth2/code/google
 **Authorized JavaScript origins**
 
 ```text
-http://localhost:5173
+http://localhost:4200
 http://localhost:8080
 ```
 
@@ -293,7 +300,7 @@ http://localhost:8080
 Después del login, el flujo vuelve al frontend en:
 
 ```text
-http://localhost:5173/oauth2/redirect?token=...
+http://localhost:4200/oauth2/redirect?token=...
 ```
 
 ### 5. Base de datos
@@ -314,10 +321,13 @@ Queda escuchando en `http://localhost:8080`.
 ```bash
 cd frontend
 npm install
-npm run dev
+npm start
 ```
 
-Queda en `http://localhost:5173`. Abrilo en el navegador.
+Queda en `http://localhost:4200`. Abrilo en el navegador.
+
+> ⚠️ Los comandos de Angular (`ng serve`, `ng build`) se corren **adentro de `frontend/`**. En la raíz está el backend
+> y Angular no la reconoce como proyecto.
 
 ### Alternativa con Docker (opcional)
 
@@ -348,7 +358,7 @@ La API usa **JWT (JSON Web Tokens)** para autenticar las requests, con soporte a
 3. Google autentica al usuario y vuelve al backend.
 4. El backend genera un JWT propio y redirige al frontend a:
    ```text
-   http://localhost:5173/oauth2/redirect?token=<jwt>
+   http://localhost:4200/oauth2/redirect?token=<jwt>
    ```
 5. El frontend guarda el token y lo usa igual que el flujo clásico.
 
@@ -534,7 +544,7 @@ cd frontend && npm run build
 |-----------------------|--------------------------------------------------------------------------------|
 | No encuentra Java     | Instalar **Java 21** y verificar con `java -version`                           |
 | Error 401 al calcular | Falta iniciar sesión o el token venció                                         |
-| Google Maps no carga  | `VITE_GOOGLE_MAPS_API_KEY` en `frontend/.env`                                  |
+| `ng serve` no anda    | Correrlo adentro de `frontend/`, no en la raíz                                 |
 | Distance Matrix falla | `GOOGLE_MAPS_KEY` en `.env` raíz y APIs habilitadas en Google Cloud            |
 | OAuth2 falla          | Redirect URI y JavaScript origins en Google Cloud                              |
 | No conecta a Neon     | `SPRING_DATASOURCE_URL`, `DB_USER`, `DB_PASSWORD` y cadena de conexión de Neon |
