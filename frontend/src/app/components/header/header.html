@@ -1,5 +1,16 @@
+<!-- Barra de arriba: la marca, las pestañas para moverse entre pantallas y el botón del tema -->
 <header class="header">
   <span class="marca">MovilidadMDQ</span>
+
+  <!-- Pestañas y cerrar sesión: solo con sesión abierta, en login y registro no tienen sentido -->
+  @if (auth.estaLogueado()) {
+    <!-- routerLinkActive le pone la clase "activo" a la pestaña de la pantalla donde estás -->
+    <nav class="pestanas">
+      <a routerLink="/cotizar" routerLinkActive="activo">Cotizar</a>
+      <a routerLink="/historial" routerLinkActive="activo">Historial</a>
+      <a routerLink="/favoritos" routerLinkActive="activo">Favoritos</a>
+    </nav>
+  }
 
   <div class="acciones">
     <button class="boton-tema" type="button" (click)="tema.alternar()">
@@ -10,7 +21,6 @@
       }
     </button>
 
-    <!-- Solo con sesión abierta: en login y registro no tiene sentido -->
     @if (auth.estaLogueado()) {
       <button class="boton-tema" type="button" (click)="auth.cerrarSesion()">Cerrar sesión</button>
     }
