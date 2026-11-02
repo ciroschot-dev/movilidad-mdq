@@ -43,13 +43,10 @@ export class Login {
         this.auth.guardarSesion(sesion);
         this.router.navigate(['/cotizar']);
       },
-      // 401 = usuario o contraseña mal; cualquier otro error es que el back no respondió bien
+      // Salió mal: muestra el motivo que manda el back (ej.: "Usuario o contraseña incorrectos").
+      // Si el back no respondió, no hay motivo y queda el aviso genérico.
       error: (respuesta: HttpErrorResponse) => {
-        this.error.set(
-          respuesta.status === 401
-            ? 'Usuario o contraseña incorrectos.'
-            : 'No se pudo iniciar sesión. Probá de nuevo en un rato.',
-        );
+        this.error.set(respuesta.error?.message ?? 'No se pudo iniciar sesión. Probá de nuevo en un rato.');
         this.cargando.set(false);
       },
     });
