@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Mapa } from '../../components/mapa/mapa';
@@ -43,10 +44,11 @@ export class Cotizar {
         this.opciones.set(opciones);
         this.cargando.set(false);
       },
-      // Salió mal: borra las opciones viejas para no mostrarlas junto al aviso
-      error: () => {
+      // Salió mal: borra las opciones viejas y muestra el motivo que manda el back.
+      // Si el back no respondió, no hay motivo y queda el aviso genérico.
+      error: (respuesta: HttpErrorResponse) => {
         this.opciones.set([]);
-        this.error.set('No se pudieron calcular las opciones.');
+        this.error.set(respuesta.error?.message ?? 'No se pudieron calcular las opciones.');
         this.cargando.set(false);
       },
     });
