@@ -1,0 +1,39 @@
+<!-- Pantalla de inicio de sesión: usuario y contraseña -->
+<section class="login">
+  <h1 class="titulo">Iniciar sesión</h1>
+
+  <!-- Aparece cuando el back rechazó el token y la app te sacó sola -->
+  @if (auth.sesionVencida()) {
+    <p class="aviso">Tu sesión venció. Iniciá sesión otra vez.</p>
+  }
+
+  <!-- [formGroup] conecta este form con el del TS; al apretar ENTRAR llama a entrar() -->
+  <form class="formulario" [formGroup]="loginForm" (ngSubmit)="entrar()">
+    <label class="campo">
+      Usuario
+      <!-- formControlName conecta el input con su campo del form; el @if de abajo muestra el error -->
+      <input type="text" autocomplete="username" formControlName="username" />
+    </label>
+    @if (mostrarError('username')) {
+      <p class="error">El usuario es obligatorio.</p>
+    }
+
+    <label class="campo">
+      Contraseña
+      <input type="password" autocomplete="current-password" formControlName="password" />
+    </label>
+    @if (mostrarError('password')) {
+      <p class="error">La contraseña es obligatoria.</p>
+    }
+
+    <!-- Aviso del back cuando no pudo iniciar sesión -->
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <!-- Bloqueado si falta completar algo o mientras espera la respuesta del back -->
+    <button class="boton" type="submit" [disabled]="loginForm.invalid || cargando()">ENTRAR</button>
+  </form>
+
+  <p class="pie">¿No tenés cuenta? <a routerLink="/registro">Registrate</a></p>
+</section>

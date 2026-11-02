@@ -2,18 +2,27 @@
 <header class="header">
   <span class="marca">MovilidadMDQ</span>
 
-  <!-- routerLinkActive le pone la clase "activo" a la pestaña de la pantalla donde estás -->
-  <nav class="pestanas">
-    <a routerLink="/cotizar" routerLinkActive="activo">Cotizar</a>
-    <a routerLink="/historial" routerLinkActive="activo">Historial</a>
-    <a routerLink="/favoritos" routerLinkActive="activo">Favoritos</a>
-  </nav>
+  <!-- Pestañas y cerrar sesión: solo con sesión abierta, en login y registro no tienen sentido -->
+  @if (auth.estaLogueado()) {
+    <!-- routerLinkActive le pone la clase "activo" a la pestaña de la pantalla donde estás -->
+    <nav class="pestanas">
+      <a routerLink="/cotizar" routerLinkActive="activo">Cotizar</a>
+      <a routerLink="/historial" routerLinkActive="activo">Historial</a>
+      <a routerLink="/favoritos" routerLinkActive="activo">Favoritos</a>
+    </nav>
+  }
 
-  <button class="boton-tema" type="button" (click)="tema.alternar()">
-    @if (tema.oscuro()) {
-      Tema claro
-    } @else {
-      Tema oscuro
+  <div class="acciones">
+    <button class="boton-tema" type="button" (click)="tema.alternar()">
+      @if (tema.oscuro()) {
+        Tema claro
+      } @else {
+        Tema oscuro
+      }
+    </button>
+
+    @if (auth.estaLogueado()) {
+      <button class="boton-tema" type="button" (click)="auth.cerrarSesion()">Cerrar sesión</button>
     }
-  </button>
+  </div>
 </header>

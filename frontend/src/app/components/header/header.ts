@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../services/auth';
 import { Tema } from '../../services/tema';
 
 // Barra de arriba de todas las pantallas: la marca, las pestañas y el botón del tema
@@ -11,4 +12,5 @@ import { Tema } from '../../services/tema';
 })
 export class Header {
   protected readonly tema = inject(Tema);
+  protected readonly auth = inject(AuthService);
 }
