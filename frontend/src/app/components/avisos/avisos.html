@@ -1,0 +1,18 @@
+<!-- Aviso de abajo: 'as aviso' le pone un nombre corto; [class.error] lo pinta de rojo si falló -->
+@if (avisos.aviso(); as aviso) {
+  <p class="aviso" [class.error]="aviso.tipo === 'error'" role="status">{{ aviso.texto }}</p>
+}
+
+<!-- Ventana de confirmación: el fondo oscuro tapa la pantalla hasta que se responda -->
+@if (avisos.pregunta(); as pregunta) {
+  <div class="fondo">
+    <div class="ventana" role="dialog" aria-modal="true">
+      <p class="texto">{{ pregunta.texto }}</p>
+
+      <div class="botones">
+        <button class="boton-cancelar" type="button" (click)="avisos.cancelar()">Cancelar</button>
+        <button class="boton-aceptar" type="button" (click)="avisos.aceptar()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+}
