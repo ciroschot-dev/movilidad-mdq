@@ -1,0 +1,36 @@
+<!-- Pantalla de cotizar: origen, destino y el mapa -->
+<section class="cotizar">
+  <h1 class="titulo">Cotizar</h1>
+
+  <!-- [formGroup] conecta este form con el del TS; al apretar CALCULAR llama a calcular() -->
+  <form class="formulario" [formGroup]="busquedaForm" (ngSubmit)="calcular()">
+    <label class="campo">
+      Origen
+      <!-- formControlName conecta el input con su campo del form; el @if de abajo muestra el error -->
+      <input type="text" placeholder="¿De dónde salís?" formControlName="origen" />
+    </label>
+    @if (mostrarError('origen')) {
+      <p class="error">Ingresá el origen.</p>
+    }
+
+    <label class="campo">
+      Destino
+      <input type="text" placeholder="¿A dónde vas?" formControlName="destino" />
+    </label>
+    @if (mostrarError('destino')) {
+      <p class="error">Ingresá el destino.</p>
+    }
+
+    <!-- Aviso del back cuando no pudo cotizar -->
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <!-- Bloqueado si falta un campo o mientras espera al back; el texto avisa que está calculando -->
+    <button class="boton" type="submit" [disabled]="busquedaForm.invalid || cargando()">
+      {{ cargando() ? 'CALCULANDO…' : 'CALCULAR' }}
+    </button>
+  </form>
+
+  <app-mapa />
+</section>
