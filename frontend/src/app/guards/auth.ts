@@ -15,3 +15,11 @@ export const soloInvitados: CanActivateFn = () => {
   const router = inject(Router);
   return auth.estaLogueado() ? router.createUrlTree(['/cotizar']) : true;
 };
+
+// Para las pantallas del admin: si no sos ADMIN, te manda a cotizar
+// (y si encima no tenés sesión, el guard de cotizar te lleva al login)
+export const soloAdmin: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.esAdmin() ? true : router.createUrlTree(['/cotizar']);
+};
