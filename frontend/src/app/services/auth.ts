@@ -7,6 +7,8 @@ import { RegistroForm } from '../models/registro';
 
 // Nombre de la "caja" del navegador donde queda guardado el token
 const CLAVE_TOKEN = 'token';
+// Y donde queda guardado el rol (USER o ADMIN), así no se pierde al recargar
+const CLAVE_ROL = 'rol';
 
 @Service()
 export class AuthService {
@@ -19,6 +21,12 @@ export class AuthService {
 
   // Se recalcula solo cada vez que cambia el token
   estaLogueado = computed(() => this.token() !== null);
+
+  // El rol que mandó el back al entrar; arranca con el guardado, igual que el token
+  rol = signal<string | null>(localStorage.getItem(CLAVE_ROL));
+
+  // Solo es admin si el back dijo ADMIN: el nombre de usuario no cuenta (un USER llamado "admin" no entra)
+  esAdmin = computed(() => this.rol() === 'ADMIN');
 
   // Queda en true cuando el back rechazó el token, así el login muestra el aviso
   sesionVencida = signal(false);
@@ -36,7 +44,9 @@ export class AuthService {
   // Se llama después de un login o registro exitoso
   guardarSesion(sesion: Sesion) {
     localStorage.setItem(CLAVE_TOKEN, sesion.token);
+    localStorage.setItem(CLAVE_ROL, sesion.role);
     this.token.set(sesion.token);
+    this.rol.set(sesion.role);
     this.sesionVencida.set(false);
   }
 
@@ -44,7 +54,9 @@ export class AuthService {
   // vencida = true cuando la saca el interceptor, no cuando el usuario toca "Cerrar sesión"
   cerrarSesion(vencida = false) {
     localStorage.removeItem(CLAVE_TOKEN);
+    localStorage.removeItem(CLAVE_ROL);
     this.token.set(null);
+    this.rol.set(null);
     this.sesionVencida.set(vencida);
     this.router.navigate(['/login']);
   }
