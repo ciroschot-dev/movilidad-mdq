@@ -9,6 +9,10 @@
       <a routerLink="/cotizar" routerLinkActive="activo">Cotizar</a>
       <a routerLink="/historial" routerLinkActive="activo">Historial</a>
       <a routerLink="/favoritos" routerLinkActive="activo">Favoritos</a>
+      <!-- La cuarta pestaña solo aparece si el back dijo que sos ADMIN -->
+      @if (auth.esAdmin()) {
+        <a routerLink="/admin" routerLinkActive="activo">Admin</a>
+      }
     </nav>
   }
 
