@@ -7,6 +7,7 @@
   --color-primario: #1565c0;
   --color-borde: #d9e2ec;
   --color-error: #c62828;
+  --color-exito: #2e7d32;
 }
 
 /* Tema oscuro: el servicio de tema agrega la clase dark al <html> */
@@ -18,6 +19,7 @@ html.dark {
   --color-primario: #64b5f6;
   --color-borde: #323840;
   --color-error: #ef9a9a;
+  --color-exito: #81c784;
 }
 
 body {
