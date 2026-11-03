@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { soloInvitados, soloLogueados } from './guards/auth';
+import { soloAdmin, soloInvitados, soloLogueados } from './guards/auth';
+import { Admin } from './pages/admin/admin';
 import { Cotizar } from './pages/cotizar/cotizar';
 import { Favoritos } from './pages/favoritos/favoritos';
 import { Historial } from './pages/historial/historial';
@@ -15,6 +16,8 @@ export const routes: Routes = [
   { path: 'cotizar', component: Cotizar, canActivate: [soloLogueados] },
   { path: 'historial', component: Historial, canActivate: [soloLogueados] },
   { path: 'favoritos', component: Favoritos, canActivate: [soloLogueados] },
+  // Solo para el role ADMIN: a cualquier otro el guard lo manda a cotizar
+  { path: 'admin', component: Admin, canActivate: [soloAdmin] },
   // Cualquier URL que no existe vuelve a cotizar. Va última porque atrapa todo
   { path: '**', redirectTo: 'cotizar' },
 ];
