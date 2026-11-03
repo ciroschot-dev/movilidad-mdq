@@ -11,11 +11,11 @@ import jakarta.validation.constraints.NotBlank;
  * controlador al service.
  */
 public record ActualizarUsuarioRequest(
-        @NotBlank(message = "El username es obligatorio")
+        @NotBlank(message = "El nombre de usuario es obligatorio")
         String username,
 
         @NotBlank(message = "El email es obligatorio")
-        @Email(message = "El email no tiene un formato valido")
+        @Email(message = "El email no tiene un formato válido")
         String email,
 
         // Password opcional: si viene null o vacia, no se actualiza.

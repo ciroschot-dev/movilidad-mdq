@@ -30,7 +30,7 @@ public record ApiError(
         @Schema(description = "Nombre corto del estado HTTP", example = "Bad Request")
         String error,
 
-        @Schema(description = "Mensaje legible para humanos", example = "Datos invalidos")
+        @Schema(description = "Mensaje legible para humanos", example = "Datos inválidos")
         String message,
 
         @Schema(description = "URL que se estaba pidiendo cuando ocurrio el error", example = "/usuarios/registro")

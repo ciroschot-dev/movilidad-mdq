@@ -50,7 +50,7 @@ public class GlobalExceptionHandler
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiError> manejarCredencialesInvalidas(BadCredentialsException ex, HttpServletRequest req)
     {
-        return construir(HttpStatus.UNAUTHORIZED, "Credenciales invalidas", req, null);
+        return construir(HttpStatus.UNAUTHORIZED, "Usuario o contraseña incorrectos", req, null);
     }
 
     /**
@@ -64,14 +64,14 @@ public class GlobalExceptionHandler
         List<String> detalles = ex.getBindingResult().getFieldErrors().stream()
                 .map(this::formatearError)
                 .toList();
-        return construir(HttpStatus.BAD_REQUEST, "Datos invalidos", req, detalles);
+        return construir(HttpStatus.BAD_REQUEST, "Datos inválidos", req, detalles);
     }
 
     /** El cuerpo del pedido no es un JSON válido → 400 Bad Request. */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> manejarBodyIlegible(HttpMessageNotReadableException ex, HttpServletRequest req)
     {
-        return construir(HttpStatus.BAD_REQUEST, "El cuerpo de la peticion no es un JSON valido", req, null);
+        return construir(HttpStatus.BAD_REQUEST, "El cuerpo de la petición no es un JSON válido", req, null);
     }
 
     /** Falta configuración de tarifas en la base → 503 Service Unavailable. */

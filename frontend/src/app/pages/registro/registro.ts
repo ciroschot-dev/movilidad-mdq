@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -43,9 +44,10 @@ export class Registro {
         this.auth.guardarSesion(sesion);
         this.router.navigate(['/cotizar']);
       },
-      // Salió mal (por ejemplo, el usuario ya existe): muestra el aviso y libera el botón
-      error: () => {
-        this.error.set('No se pudo crear el usuario.');
+      // Salió mal: muestra el motivo que manda el back (ej.: "Ese email ya está registrado") y libera el botón.
+      // Si el back no respondió, no hay motivo y queda el aviso genérico.
+      error: (respuesta: HttpErrorResponse) => {
+        this.error.set(respuesta.error?.message ?? 'No se pudo crear el usuario.');
         this.cargando.set(false);
       },
     });
