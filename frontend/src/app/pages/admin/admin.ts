@@ -2,9 +2,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Usuario } from '../../models/usuario';
+import { AvisoService } from '../../services/avisos';
 import { UsuarioService } from '../../services/usuario';
 
-// Pantalla del admin: busca una cuenta por nombre o email
+// Pantalla del admin: busca una cuenta por nombre o email y la puede eliminar
 @Component({
   selector: 'app-admin',
   imports: [ReactiveFormsModule],
@@ -13,6 +14,7 @@ import { UsuarioService } from '../../services/usuario';
 })
 export class Admin {
   private readonly usuarios = inject(UsuarioService);
+  private readonly avisos = inject(AvisoService);
   private readonly fb = inject(FormBuilder);
 
   // El usuario encontrado; null = todavía no se buscó o no apareció
@@ -39,7 +41,7 @@ export class Admin {
     // trim() saca los espacios de más, así " juan " encuentra a "juan"
     this.usuarios.buscar(this.busquedaForm.getRawValue().query.trim()).subscribe({
       next: (encontrado) => {
-        // Las cuentas ADMIN no se muestran, así nadie ve el email del admin
+        // Las cuentas ADMIN no se muestran, así nadie ve el email del admin ni la puede borrar
         if (encontrado.role === 'ADMIN') {
           this.error.set('Usuario no encontrado');
         } else {
@@ -52,6 +54,23 @@ export class Admin {
         this.error.set(err.error?.message ?? 'No se pudo buscar el usuario. Probá de nuevo en un rato.');
         this.cargando.set(false);
       },
+    });
+  }
+
+  // Pregunta antes de borrar, porque eliminar una cuenta no tiene vuelta atrás
+  protected confirmarEliminar(usuario: Usuario) {
+    this.avisos.confirmar(`¿Eliminar la cuenta de ${usuario.username}?`, () => this.eliminar(usuario.id));
+  }
+
+  private eliminar(id: number) {
+    this.usuarios.eliminar(id).subscribe({
+      // Salió bien: saca la tarjeta y avisa
+      next: () => {
+        this.usuario.set(null);
+        this.avisos.mostrar('Usuario eliminado correctamente.');
+      },
+      error: (err: HttpErrorResponse) =>
+        this.avisos.mostrar(err.error?.message ?? 'No se pudo eliminar el usuario.', 'error'),
     });
   }
 }

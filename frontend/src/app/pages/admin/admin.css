@@ -58,7 +58,7 @@
   color: var(--color-error);
 }
 
-/* Usuario encontrado: sus datos */
+/* Usuario encontrado: datos a la izquierda y el botón a la derecha */
 .tarjeta {
   display: flex;
   flex-wrap: wrap;
@@ -79,4 +79,13 @@
 .dato {
   margin: 0.25rem 0 0;
   color: var(--color-texto-suave);
+}
+
+.eliminar {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--color-error);
+  cursor: pointer;
 }

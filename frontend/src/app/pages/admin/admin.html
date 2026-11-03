@@ -1,4 +1,4 @@
-<!-- Pantalla del admin: buscar una cuenta -->
+<!-- Pantalla del admin: buscar una cuenta y eliminarla -->
 <section class="admin">
   <h1 class="titulo">Usuarios</h1>
 
@@ -26,6 +26,7 @@
         <p class="nombre">{{ u.username }}</p>
         <p class="dato">{{ u.email }}</p>
       </div>
+      <button class="eliminar" type="button" (click)="confirmarEliminar(u)">Eliminar</button>
     </article>
   }
 </section>
