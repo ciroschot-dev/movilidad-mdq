@@ -4,21 +4,60 @@
 
   <!-- [formGroup] conecta este form con el del TS; al apretar CALCULAR llama a calcular() -->
   <form class="formulario" [formGroup]="busquedaForm" (ngSubmit)="calcular()">
-    <label class="campo">
-      Origen
-      <!-- formControlName conecta el input con su campo del form; el @if de abajo muestra el error -->
-      <input type="text" placeholder="¿De dónde salís?" formControlName="origen" />
-    </label>
+    <!-- El div envuelve campo y lista, así la lista queda pegada abajo del campo -->
+    <div class="buscador">
+      <label class="campo">
+        Origen
+        <!-- formControlName conecta el input con su campo del form; (input) pide sugerencias con cada letra -->
+        <input
+          type="text"
+          placeholder="¿De dónde salís?"
+          autocomplete="off"
+          formControlName="origen"
+          (input)="escribir('origen')"
+          (blur)="cerrarSugerencias()"
+        />
+      </label>
+      <!-- Sugerencias de Google: solo debajo del campo que se está escribiendo -->
+      @if (campoActivo() === 'origen' && sugerencias().length > 0) {
+        <ul class="sugerencias">
+          @for (sugerencia of sugerencias(); track sugerencia.placeId) {
+            <!-- mousedown y no click: llega antes que el blur del campo, que cierra la lista -->
+            <li (mousedown)="elegir('origen', sugerencia)">{{ sugerencia.text.text }}</li>
+          }
+        </ul>
+      }
+    </div>
     @if (mostrarError('origen')) {
       <p class="error">Ingresá el origen.</p>
+    } @else if (faltaElegir('origen')) {
+      <p class="error">Elegí el origen de la lista.</p>
     }
 
-    <label class="campo">
-      Destino
-      <input type="text" placeholder="¿A dónde vas?" formControlName="destino" />
-    </label>
+    <div class="buscador">
+      <label class="campo">
+        Destino
+        <input
+          type="text"
+          placeholder="¿A dónde vas?"
+          autocomplete="off"
+          formControlName="destino"
+          (input)="escribir('destino')"
+          (blur)="cerrarSugerencias()"
+        />
+      </label>
+      @if (campoActivo() === 'destino' && sugerencias().length > 0) {
+        <ul class="sugerencias">
+          @for (sugerencia of sugerencias(); track sugerencia.placeId) {
+            <li (mousedown)="elegir('destino', sugerencia)">{{ sugerencia.text.text }}</li>
+          }
+        </ul>
+      }
+    </div>
     @if (mostrarError('destino')) {
       <p class="error">Ingresá el destino.</p>
+    } @else if (faltaElegir('destino')) {
+      <p class="error">Elegí el destino de la lista.</p>
     }
 
     <!-- Aviso del back cuando no pudo cotizar -->
@@ -26,11 +65,12 @@
       <p class="error">{{ error() }}</p>
     }
 
-    <!-- Bloqueado si falta un campo o mientras espera al back; el texto avisa que está calculando -->
-    <button class="boton" type="submit" [disabled]="busquedaForm.invalid || cargando()">
+    <!-- Bloqueado si falta elegir una dirección o mientras espera al back; el texto avisa que está calculando -->
+    <button class="boton" type="submit" [disabled]="!origen() || !destino() || cargando()">
       {{ cargando() ? 'CALCULANDO…' : 'CALCULAR' }}
     </button>
   </form>
 
-  <app-mapa />
+  <!-- [ruta] le pasa al mapa el camino; mientras sea null, el mapa muestra la ciudad -->
+  <app-mapa [ruta]="ruta()" />
 </section>
