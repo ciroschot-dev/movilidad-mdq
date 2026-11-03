@@ -1,0 +1,82 @@
+/* Tarjeta centrada, igual que login y registro */
+.admin {
+  max-width: 560px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+
+.titulo {
+  margin-top: 0;
+}
+
+/* Campo y botón en la misma fila; en el celular el botón baja abajo */
+.buscador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.campo {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--color-texto-suave);
+}
+
+.campo input {
+  padding: 0.5rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-size: 1rem;
+}
+
+.boton {
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--color-primario);
+  color: var(--color-superficie);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+
+/* Usuario encontrado: sus datos */
+.tarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+}
+
+.nombre {
+  margin: 0;
+  font-weight: bold;
+}
+
+.dato {
+  margin: 0.25rem 0 0;
+  color: var(--color-texto-suave);
+}
