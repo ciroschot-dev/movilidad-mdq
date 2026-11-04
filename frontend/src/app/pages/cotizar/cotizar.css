@@ -84,3 +84,36 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* Las tarjetas una al lado de la otra; en el celular, si no entran, bajan solas una abajo de la otra */
+.opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.opcion {
+  padding: 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background-color: var(--color-superficie);
+  text-align: center;
+}
+
+.opcion h3 {
+  margin: 0 0 0.5rem;
+  color: var(--color-texto);
+}
+
+.opcion .precio {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-primario);
+}
+
+.opcion .minutos {
+  margin: 0.25rem 0 0;
+  color: var(--color-texto-suave);
+}
