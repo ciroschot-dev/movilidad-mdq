@@ -3,11 +3,13 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { Usuario } from '../../models/usuario';
+import { DestinoPopular } from '../../models/viaje';
 import { AvisoService } from '../../services/avisos';
 import { TarifaService } from '../../services/tarifa';
 import { UsuarioService } from '../../services/usuario';
+import { ViajeService } from '../../services/viaje';
 
-// Pantalla del admin: buscar y eliminar cuentas, y ajustar la tarifa del taxi
+// Pantalla del admin: buscar y eliminar cuentas, ajustar la tarifa del taxi y ver los destinos más buscados
 @Component({
   selector: 'app-admin',
   imports: [ReactiveFormsModule],
@@ -17,6 +19,7 @@ import { UsuarioService } from '../../services/usuario';
 export class Admin {
   private readonly usuarios = inject(UsuarioService);
   private readonly tarifas = inject(TarifaService);
+  private readonly viajes = inject(ViajeService);
   private readonly avisos = inject(AvisoService);
   private readonly fb = inject(FormBuilder);
 
@@ -30,6 +33,12 @@ export class Admin {
   protected readonly cargando = signal(false);
   // true mientras guarda la tarifa, para no mandarla dos veces
   protected readonly guardando = signal(false);
+  // El ranking de destinos; null = todavía no se filtró (ahí se muestra "Aplica un filtro…")
+  protected readonly destinos = signal<DestinoPopular[] | null>(null);
+  // Aviso cuando el ranking no se pudo traer
+  protected readonly errorDestinos = signal('');
+  // true mientras espera el ranking, para bloquear el botón
+  protected readonly cargandoDestinos = signal(false);
 
   // Un solo campo: el nombre de usuario o el email a buscar
   protected readonly busquedaForm = this.fb.nonNullable.group({
@@ -43,6 +52,12 @@ export class Admin {
     valorFichaDia: [0, Validators.min(0)],
     valorFichaNoche: [0, Validators.min(0)],
     metrosPorFicha: [0, Validators.min(1)],
+  });
+
+  // Filtro de los destinos populares (RF25): las dos fechas. Son opcionales
+  protected readonly filtroForm = this.fb.nonNullable.group({
+    desde: '',
+    hasta: '',
   });
 
   constructor() {
@@ -129,6 +144,34 @@ export class Admin {
             err.error?.message ?? 'No se pudo actualizar la tarifa. Verifica tus permisos.',
             'error',
           ),
+      });
+  }
+
+  // Trae el top 10 de destinos más buscados con el filtro elegido (RF25)
+  protected verDestinos() {
+    const { desde, hasta } = this.filtroForm.getRawValue();
+
+    // Sin ninguna fecha no se consulta al back: la historia pide el aviso en vez de estadísticas
+    if (!desde && !hasta) {
+      this.destinos.set(null);
+      this.errorDestinos.set('');
+      return;
+    }
+
+    this.errorDestinos.set('');
+    this.cargandoDestinos.set(true);
+    // El servicio arma la fecha completa (00:00 para el desde y 23:59 para el hasta)
+    this.viajes
+      .destinosPopulares({ desde, hasta })
+      .pipe(
+        // Pase lo que pase el botón se destraba, igual que al guardar la tarifa
+        finalize(() => this.cargandoDestinos.set(false)),
+      )
+      .subscribe({
+        next: (lista) => this.destinos.set(lista),
+        // Si el back explica por qué falló, mostramos su texto; si no respondió, uno genérico
+        error: (err: HttpErrorResponse) =>
+          this.errorDestinos.set(err.error?.message ?? 'No se pudieron traer los destinos populares.'),
       });
   }
 }

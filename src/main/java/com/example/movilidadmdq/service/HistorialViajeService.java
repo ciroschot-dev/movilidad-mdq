@@ -40,10 +40,16 @@ public class HistorialViajeService
     private final UsuarioRepository usuarioRepository;
     private final ViajeRepository viajeRepository;
 
-    /** Devuelve los 10 destinos más buscados, con filtros opcionales por fecha y zona. */
-    public List<DestinoPopularResponse> obtenerDestinosPopulares(LocalDateTime desde, LocalDateTime hasta, String zona)
+    /** Devuelve los 10 destinos más buscados, con filtros opcionales por fecha. */
+    public List<DestinoPopularResponse> obtenerDestinosPopulares(LocalDateTime desde, LocalDateTime hasta)
     {
-        return viajeRepository.findPopularDestinations(desde, hasta, zona, PageRequest.of(0, 10));
+        // La fecha que no viene se completa acá con un rango abierto (desde 1970 hasta 2999), porque la
+        // consulta no puede recibir NULL: PostgreSQL no sabe qué tipo comparar y devuelve un 500 en vez
+        // de no filtrar
+        return viajeRepository.findPopularDestinations(
+                desde != null ? desde : LocalDateTime.of(1970, 1, 1, 0, 0),
+                hasta != null ? hasta : LocalDateTime.of(2999, 12, 31, 23, 59),
+                PageRequest.of(0, 10));
     }
 
     /**

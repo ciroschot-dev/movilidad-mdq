@@ -74,10 +74,9 @@ public class ViajeController
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<DestinoPopularResponse>> getDestinosPopulares(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
-            @RequestParam(required = false) String zona)
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta)
     {
-        return ResponseEntity.ok(historialViajeService.obtenerDestinosPopulares(desde, hasta, zona));
+        return ResponseEntity.ok(historialViajeService.obtenerDestinosPopulares(desde, hasta));
     }
 
     /**
