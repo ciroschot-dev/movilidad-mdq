@@ -15,6 +15,7 @@
 ## 📑 Índice
 
 - [Cómo probar la app en 1 minuto](#-cómo-probar-la-app-en-1-minuto)
+- [Manual de uso](#-manual-de-uso)
 - [Descripción general](#-descripción-general)
 - [Integrantes del grupo](#-integrantes-del-grupo)
 - [Tecnologías utilizadas](#-tecnologías-utilizadas)
@@ -63,6 +64,12 @@
 - ✅ Ver opciones de Taxi, Uber y Didi.
 - ✅ Entrar a **Historial** y confirmar que se guardó el viaje.
 - ✅ Borrar un viaje del historial.
+
+---
+
+## 📗 Manual de uso
+
+Para usar la aplicación, no para programarla: **[docs/manual-de-uso.html](docs/manual-de-uso.html)** (se abre en el navegador y se puede imprimir). Explica paso a paso cómo crear la cuenta, cotizar y elegir una opción, cómo entra el administrador al panel y el procedimiento para actualizar la tarifa del taxi, con responsable y frecuencia.
 
 ---
 
