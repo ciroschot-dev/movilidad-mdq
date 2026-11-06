@@ -47,7 +47,19 @@
   border-radius: 6px;
   background-color: var(--color-fondo);
   color: var(--color-texto);
+  /* Mismo tamaño de letra para el link y los botones: el navegador los dibuja distinto si no se aclara */
+  font-size: 0.875rem;
   cursor: pointer;
+}
+
+/* "Mi perfil" es un link con forma de botón: sin subrayado y, si estás en tu perfil, con el color principal */
+a.boton-tema {
+  text-decoration: none;
+}
+
+a.boton-tema.activo {
+  color: var(--color-primario);
+  font-weight: bold;
 }
 
 /* En el celular las pestañas bajan a su propia fila, abajo de la marca y el tema */
