@@ -76,12 +76,14 @@
     <div class="opciones">
       @for (opcion of opciones(); track opcion.tipo) {
         <!-- Cada tarjeta es un link al que armó el back (RF11 + RF12): Uber y Didi abren la app en el
-             celular o la web en otra pestaña; el taxi es un tel:, así que llama sin abrir otra pestaña -->
+             celular o la web en otra pestaña; el taxi es un tel:, así que llama sin abrir otra pestaña.
+             El (click) avisa al back qué opción se eligió (RF10) sin frenar el link -->
         <a
           class="opcion"
           [href]="opcion.url"
           [target]="opcion.tipo === 'TAXI' ? '_self' : '_blank'"
           rel="noopener"
+          (click)="registrarEleccion(opcion)"
         >
           <h3>{{ nombres[opcion.tipo] }}</h3>
           <p class="precio">{{ formatearPrecio(opcion.precio) }}</p>

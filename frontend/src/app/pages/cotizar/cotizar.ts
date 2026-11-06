@@ -152,6 +152,19 @@ export class Cotizar {
     });
   }
 
+  // Al tocar una tarjeta se le avisa al back cuál eligió el usuario (RF10). No se espera la respuesta
+  // ni se bloquea el link: si el back falla, la app o el teléfono se abren igual
+  protected registrarEleccion(opcion: OpcionTransporte) {
+    if (opcion.viajeId === null) {
+      return; // el back no pudo guardar el viaje, así que no hay nada que actualizar
+    }
+    this.viajes.elegir(opcion.viajeId, opcion.tipo).subscribe({
+      error: () => {
+        // Se traga el error a propósito: perder la estadística no puede impedir abrir Uber o Didi
+      },
+    });
+  }
+
   // El back puede mandar centavos (4532.67): se redondea y se separan los miles con punto, como en Argentina ($ 4.533)
   protected formatearPrecio(precio: number) {
     return '$ ' + Math.round(precio).toLocaleString('es-AR');

@@ -21,6 +21,7 @@ export interface CalculoViaje extends BusquedaForm {
 
 // Una de las opciones que devuelve el back al cotizar (igual a OpcionTransporteResponse)
 export interface OpcionTransporte {
+  viajeId: number | null; // id del viaje guardado; null si el back no pudo guardarlo
   tipo: 'TAXI' | 'UBER' | 'DIDI';
   precio: number; // en pesos
   tiempoMinutos: number;
