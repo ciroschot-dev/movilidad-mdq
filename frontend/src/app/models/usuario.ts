@@ -5,3 +5,11 @@ export interface Usuario {
   email: string;
   role: 'USER' | 'ADMIN';
 }
+
+// Datos del formulario de perfil: los mismos campos que pide ActualizarUsuarioRequest en el back.
+// La contraseña vacía significa "no cambiarla"
+export interface PerfilForm {
+  username: string;
+  email: string;
+  password: string;
+}

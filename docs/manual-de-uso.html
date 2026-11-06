@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Manual de uso — MovilidadMDQ</title>
+<style>
+  @page { size: A4; margin: 12mm 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    font: 15px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1f2937;
+    background: #fff;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 16px 20px 48px;
+  }
+  header { border-bottom: 3px solid #0066cc; padding-bottom: 10px; margin-bottom: 20px; }
+  h1 { font-size: 26px; margin: 0 0 4px; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+  .sub { color: #64748b; margin: 0; font-size: 13px; }
+  h2 { font-size: 20px; margin: 34px 0 10px; color: #0f172a; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; }
+  h3 { font-size: 16px; margin: 22px 0 6px; color: #0f172a; }
+  p { margin: 8px 0; }
+  nav.indice {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 10px 16px; margin-bottom: 22px;
+  }
+  nav.indice p.titulo {
+    margin: 0 0 6px; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .4px; color: #475569;
+  }
+  nav.indice a { color: #0066cc; text-decoration: none; }
+  nav.indice a:hover { text-decoration: underline; }
+  nav.indice ol { margin: 0; padding-left: 18px; }
+  nav.indice li { margin: 2px 0; }
+  .btn {
+    display: inline-block; background: #eef4fb; border: 1px solid #c7dcf3;
+    border-radius: 5px; padding: 1px 6px; font-weight: 700; font-size: 13px; color: #0b4d8f;
+  }
+  .pasos { counter-reset: paso; margin: 14px 0; padding: 0; list-style: none; }
+  .pasos > li {
+    position: relative; padding: 10px 14px 10px 46px; margin: 8px 0;
+    border: 1px solid #e2e8f0; border-left: 4px solid #0066cc;
+    border-radius: 6px; background: #fcfdff;
+  }
+  .pasos > li::before {
+    counter-increment: paso; content: counter(paso);
+    position: absolute; left: 12px; top: 10px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #0066cc; color: #fff;
+    font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 14px 0; }
+  .tarjeta { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; background: #fff; }
+  .tarjeta h4 { margin: 0 0 4px; font-size: 15px; color: #0f172a; }
+  .tarjeta p { margin: 2px 0; font-size: 14px; color: #475569; }
+  .aviso {
+    border-left: 4px solid #f59e0b; background: #fffbeb;
+    border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 14px 0;
+  }
+  .ok {
+    border-left: 4px solid #16a34a; background: #f0fdf4;
+    border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 14px 0;
+  }
+  .formula {
+    background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 6px;
+    padding: 12px 14px; margin: 12px 0; font-size: 15px; text-align: center;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  th { background: #f8fafc; color: #0f172a; font-size: 13px; text-transform: uppercase; letter-spacing: .3px; }
+  td:first-child { font-weight: 600; color: #0f172a; }
+  code { background: #f1f5f9; border-radius: 4px; padding: 1px 5px; font-size: 13px; }
+  footer { margin-top: 36px; padding-top: 12px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; }
+  footer a { color: #0066cc; }
+  @media print { body { padding: 0; font-size: 12pt; } h2 { page-break-after: avoid; } .pasos > li, .tarjeta, .aviso { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚗 Manual de uso — MovilidadMDQ</h1>
+  <p class="sub">Comparador de viajes para Mar del Plata · Para el pasajero y para el administrador · No es documentación técnica</p>
+</header>
+
+<nav class="indice">
+  <p class="titulo">Índice</p>
+  <ol>
+    <li><a href="#que-hace">Qué hace la aplicación</a></li>
+    <li><a href="#pasajero">Para el pasajero</a></li>
+    <li><a href="#admin">Para el administrador</a> <span class="sub">— incluye el procedimiento de la tarifa del taxi</span></li>
+    <li><a href="#problemas">Problemas comunes</a></li>
+    <li><a href="#hoy">Qué se puede hacer hoy</a></li>
+  </ol>
+</nav>
+
+<h2 id="que-hace">1. 🎯 Qué hace la aplicación</h2>
+
+<p>MovilidadMDQ compara las tres formas de viajar en Mar del Plata en una sola pantalla, con el precio estimado y los minutos de viaje de cada una, para elegir sin abrir tres aplicaciones distintas.</p>
+
+<div class="tarjetas">
+  <div class="tarjeta">
+    <h4>🚕 Taxi</h4>
+    <p>Precio calculado con la tarifa oficial del taxi de Mar del Plata, de día o de noche.</p>
+  </div>
+  <div class="tarjeta">
+    <h4>🚙 Uber</h4>
+    <p>Precio estimado y tiempo de espera y viaje.</p>
+  </div>
+  <div class="tarjeta">
+    <h4>🚗 Didi</h4>
+    <p>Precio estimado y tiempo de espera y viaje.</p>
+  </div>
+</div>
+
+<div class="aviso">
+  <strong>⚠️ Compara, informa y deriva.</strong> La aplicación no contrata el viaje, no cobra nada y no pide datos de tarjeta. Cuando elegís, se abre la aplicación de Uber o Didi, se abre su sitio web o se marca el número del taxi.
+</div>
+
+<p>🌐 Se usa desde el celular o la computadora, con el mismo enlace y la misma cuenta: <strong>https://movilidad-mdq.vercel.app/</strong></p>
+
+<h2 id="pasajero">2. 🧍 Para el pasajero</h2>
+
+<h3>2.1 🔑 Crear una cuenta</h3>
+
+<p>La pantalla de cotizar pide una sesión abierta. Si no hay cuenta, la aplicación lleva al inicio de sesión, donde está el enlace para registrarse.</p>
+
+<ol class="pasos">
+  <li>Tocá <span class="btn">Registrate</span>, el enlace del inicio de sesión. Si ya estás en la pantalla de registro, el botón dice <span class="btn">REGISTRARME</span>.</li>
+  <li>Completá los tres campos:
+    <ul>
+      <li><strong>Usuario</strong>: entre 3 y 30 caracteres.</li>
+      <li><strong>Email</strong>: un correo válido.</li>
+      <li><strong>Contraseña</strong>: al menos 6 caracteres.</li>
+    </ul>
+  </li>
+  <li>Tocá <span class="btn">REGISTRARME</span>. Si todo está bien, entrás directo a Cotizar.</li>
+</ol>
+
+<div class="aviso">
+  <strong>⚠️ Si el usuario o el email ya existen</strong>, la pantalla muestra el motivo tal como lo explica el servidor, por ejemplo "Ese nombre de usuario ya está registrado". No dice "error" a secas: dice qué pasó.
+</div>
+
+<h3>2.2 🚪 Iniciar y cerrar sesión</h3>
+
+<table>
+  <tr><th>Acción</th><th>Cómo</th></tr>
+  <tr><td>Iniciar</td><td>Usuario y contraseña en el inicio de sesión, y <span class="btn">ENTRAR</span>.</td></tr>
+  <tr><td>Cerrar</td><td>Botón <span class="btn">Cerrar sesión</span>, arriba a la derecha, en cualquier pantalla.</td></tr>
+  <tr><td>Sesión vencida</td><td>Por seguridad la sesión caduca. Si pasa mientras usás la aplicación, vuelve al inicio de sesión con un aviso: alcanza con volver a entrar.</td></tr>
+</table>
+
+<h3>2.3 🔎 Cotizar un viaje</h3>
+
+<ol class="pasos">
+  <li><strong>Origen:</strong> escribí la dirección, por ejemplo "Güemes 2300". Aparecen sugerencias de Google y hay que <strong>elegir una de la lista</strong>, porque así la aplicación obtiene la ubicación exacta del lugar. Si escribís sin elegir, la pantalla avisa: "Elegí el origen de la lista".</li>
+  <li><strong>Atajo de ubicación:</strong> el botón <span class="btn">Usar mi ubicación</span> completa el origen con el lugar donde estás. La primera vez el navegador pide permiso; si lo negás, escribís la dirección a mano.</li>
+  <li><strong>Destino:</strong> igual que el origen, también eligiendo de la lista.</li>
+  <li><strong>Calcular:</strong> tocá <span class="btn">CALCULAR</span>. Mientras espera, el botón dice "CALCULANDO…".</li>
+  <li><strong>Comparar:</strong> aparecen tres tarjetas, una por medio de transporte, con el precio estimado en pesos y los minutos de viaje. Debajo, el mapa dibuja la ruta.</li>
+</ol>
+
+<h3>2.4 👉 Elegir una opción</h3>
+
+<p>Cada tarjeta se puede tocar. Abajo de todo, cada una dice qué hace:</p>
+
+<table>
+  <tr><th>Tarjeta</th><th>Qué hace al tocarla</th></tr>
+  <tr><td>🚕 Taxi</td><td>Marca el número del taxi, sin abrir otra pestaña.</td></tr>
+  <tr><td>🚙 Uber</td><td>Abre la aplicación de Uber si está instalada en el celular; en la computadora, abre el sitio web.</td></tr>
+  <tr><td>🚗 Didi</td><td>Igual que Uber, con la aplicación de Didi.</td></tr>
+</table>
+
+<div class="ok">
+  <strong>✅ La opción elegida queda registrada</strong> en el viaje: es el dato con el que se mide si la comparación sirvió. Si el aviso de guardado fallara, el enlace igual se abre, porque el viaje no se frena por eso.
+</div>
+
+<h3>2.5 🌗 Tema claro u oscuro</h3>
+
+<p>El botón <span class="btn">Tema oscuro</span> / <span class="btn">Tema claro</span>, arriba a la derecha, cambia los colores de toda la aplicación. La elección queda guardada en el navegador y se mantiene al cerrar y volver a abrir.</p>
+
+<h3>2.6 🗂️ Historial y favoritos</h3>
+
+<div class="aviso">
+  <strong>⚠️ Todavía no.</strong> La barra de arriba tiene las pestañas <strong>Historial</strong> y <strong>Favoritos</strong>, y abren su pantalla, pero por ahora solo muestran el título: la lista de viajes y las direcciones guardadas llegan en la próxima entrega.
+</div>
+
+<h2 id="admin">3. 🛠️ Para el administrador</h2>
+
+<p>El administrador es la cuenta que mantiene al día la tarifa del taxi y controla las cuentas de usuario. No es un usuario con más botones: es un <strong>rol</strong> distinto, que el servidor verifica en cada pedido.</p>
+
+<h3>3.1 🔐 Entrar al panel</h3>
+
+<ul>
+  <li>🔓 Con una cuenta de rol <strong>ADMIN</strong> aparece una cuarta pestaña, <span class="btn">Admin</span>, en la barra de arriba.</li>
+  <li>🚫 A cualquier otra cuenta no se le muestra, y si escribe la dirección a mano el servidor le responde "No tenés permiso".</li>
+  <li>🧑‍💻 La cuenta de administrador no se crea desde el formulario de registro: el servidor crea una la primera vez que arranca, si todavía no existe ninguna, con el usuario y la contraseña configurados en el despliegue (las variables <code>APP_ADMIN_USERNAME</code> y <code>APP_ADMIN_PASSWORD</code>). Todo lo que se registra desde la aplicación es una cuenta de pasajero.</li>
+  <li>👤 Hoy el responsable del panel es <strong>Ciro Schot</strong>.</li>
+</ul>
+
+<h3>3.2 🔍 Buscar y eliminar una cuenta</h3>
+
+<ol class="pasos">
+  <li>En <span class="btn">Admin</span>, escribí el nombre de usuario o el email en el campo <strong>Nombre de usuario o email</strong> y tocá <span class="btn">BUSCAR</span>.</li>
+  <li>La pantalla muestra la cuenta encontrada, con su usuario y su email.</li>
+  <li>Tocá <span class="btn">Eliminar</span>: pide confirmación antes de borrar. Al confirmar, la cuenta se elimina y esa persona ya no puede entrar.</li>
+</ol>
+
+<div class="aviso">
+  <strong>⚠️ Las cuentas ADMIN no aparecen en la búsqueda.</strong> El panel está pensado para dar de baja cuentas de pasajeros, no para borrar administradores.
+</div>
+
+<h3>3.3 💰 Procedimiento de actualización de la tarifa del taxi</h3>
+
+<p>El precio del taxi cambia cuando la Municipalidad actualiza el cuadro tarifario. La aplicación no tiene los valores escritos en el código: los guarda en la base y los lee en cada cotización, así que se actualizan desde el panel, sin tocar el sistema y sin esperar una versión nueva.</p>
+
+<table>
+  <tr><th>Quién</th><th>Cuándo</th></tr>
+  <tr>
+    <td>El administrador del sistema (rol ADMIN). Hoy: Ciro Schot. Es quien carga los valores y responde por ellos.</td>
+    <td>Cada vez que se publica un ajuste de tarifa. Además, una revisión mensual con el cuadro vigente, aunque no haya cambios, para dejar constancia de que el valor cargado sigue siendo el correcto.</td>
+  </tr>
+</table>
+
+<h4>Cómo se actualiza</h4>
+
+<ol class="pasos">
+  <li>Entrá al panel con la cuenta de administrador.</li>
+  <li>Bajá hasta la sección <strong>Tarifa del taxi</strong>. Los cinco campos vienen completos con los valores que la aplicación está usando en ese momento.</li>
+  <li>Cargá los valores nuevos. Los importes no pueden ser negativos y los metros por ficha tienen que ser mayores a cero; si algo no cumple, la pantalla lo marca y no deja guardar.</li>
+  <li>Tocá <span class="btn">GUARDAR TARIFA</span>. El botón muestra "GUARDANDO…" y después aparece el aviso de confirmación.</li>
+  <li>Hacé una cotización de prueba y comparala con el valor oficial. Si no coincide, volvé al paso 3.</li>
+</ol>
+
+<h4>Los cinco valores y qué hace cada uno</h4>
+
+<table>
+  <tr><th>Campo</th><th>Qué es</th><th>Cuándo se usa</th></tr>
+  <tr><td>Bajada de bandera (día)</td><td>Lo que se cobra al subir al taxi en horario diurno.</td><td>De 6:00 a 22:00</td></tr>
+  <tr><td>Bajada de bandera (noche)</td><td>Lo mismo, en horario nocturno.</td><td>De 22:00 a 6:00</td></tr>
+  <tr><td>Valor de la ficha (día)</td><td>Lo que se cobra por cada ficha recorrida en horario diurno.</td><td>De 6:00 a 22:00</td></tr>
+  <tr><td>Valor de la ficha (noche)</td><td>Lo mismo, en horario nocturno.</td><td>De 22:00 a 6:00</td></tr>
+  <tr><td>Metros por ficha</td><td>Cuántos metros entran en una ficha. Es la medida que fija el cuadro tarifario.</td><td>Siempre</td></tr>
+</table>
+
+<h4>Cómo se arma el precio</h4>
+
+<p>La aplicación hace la misma cuenta que el taxímetro:</p>
+
+<div class="formula">
+  <strong>precio = bajada de bandera + (metros del viaje ÷ metros por ficha) × valor de la ficha</strong>
+</div>
+
+<p>La cantidad de fichas se redondea <strong>hacia arriba</strong>: si el viaje deja una fracción de ficha, se cobra entera.</p>
+
+<div class="ok">
+  <strong>✅ Ejemplo.</strong> Con una bajada de bandera de $ 2.250 y una ficha de $ 150 cada 100 metros, un viaje de 8 km son 80 fichas y el precio estimado es de $ 14.250. Los valores del ejemplo son ilustrativos: los vigentes son los que se ven en el panel.
+</div>
+
+<h4>Desde cuándo rige y qué pasa si algo está mal</h4>
+
+<ul>
+  <li>⏱️ El cambio toma efecto en la cotización siguiente, sin reiniciar nada: el servidor lee la tarifa de la base en cada cálculo.</li>
+  <li>🧾 La pantalla no guarda un historial de tarifas anteriores. Si hace falta dejar constancia de la fecha del ajuste, se anota en la planilla del equipo.</li>
+  <li>↩️ Si un valor está mal, se vuelve a cargar el correcto y se guarda otra vez.</li>
+  <li>🚫 Mientras falte un valor, la cotización no inventa un precio: responde que la tarifa no está completamente cargada y pide configurarla.</li>
+</ul>
+
+<h2 id="problemas">4. 🧯 Problemas comunes</h2>
+
+<table>
+  <tr><th>Qué ves</th><th>Qué hacer</th></tr>
+  <tr><td>"Ingresá el origen" o "Elegí el origen de la lista"</td><td>Falta completar el campo o falta tocar una sugerencia de Google. Escribí de nuevo y elegí de la lista.</td></tr>
+  <tr><td>"Usar mi ubicación" se queda en "Ubicando…"</td><td>El navegador no dio el permiso, o el sistema operativo tiene apagada la ubicación. Revisá el permiso del sitio y la ubicación del equipo; mientras tanto, escribí la dirección a mano.</td></tr>
+  <tr><td>La comparación tarda la primera vez</td><td>El servidor corre en un plan gratuito que se suspende cuando nadie lo usa. El primer acceso del día puede demorar unos segundos de más; después responde normal.</td></tr>
+  <tr><td>"No se pudo calcular el viaje" o un mensaje del servidor</td><td>Alguno de los proveedores de precios no respondió. La aplicación avisa en vez de mostrar precios calculados sobre datos que faltan: reintentá en unos segundos.</td></tr>
+  <tr><td>La tarjeta de Uber o Didi no abre la aplicación</td><td>En la computadora abre el sitio web, no la aplicación. En el celular, revisá que la aplicación esté instalada y que el enlace abra en el navegador.</td></tr>
+  <tr><td>La sesión se cerró sola</td><td>La sesión caduca por seguridad. Volvé a entrar con usuario y contraseña.</td></tr>
+</table>
+
+<h2 id="hoy">5. 📋 Qué se puede hacer hoy</h2>
+
+<table>
+  <tr><th>Función</th><th>Estado</th></tr>
+  <tr><td>Crear cuenta, iniciar y cerrar sesión</td><td>✅ Disponible</td></tr>
+  <tr><td>Cotizar y comparar Taxi, Uber y Didi</td><td>✅ Disponible</td></tr>
+  <tr><td>Abrir Uber o Didi, o llamar al taxi</td><td>✅ Disponible</td></tr>
+  <tr><td>Elegir tema claro u oscuro</td><td>✅ Disponible</td></tr>
+  <tr><td>Panel del administrador: buscar y eliminar cuentas</td><td>✅ Disponible</td></tr>
+  <tr><td>Panel del administrador: actualizar la tarifa del taxi</td><td>✅ Disponible</td></tr>
+  <tr><td>Historial de viajes y favoritos</td><td>⏳ Próxima entrega</td></tr>
+  <tr><td>Iniciar sesión con Google, ver y modificar el perfil, eliminar la propia cuenta</td><td>⏳ Próxima entrega</td></tr>
+</table>
+
+<footer>
+  <p>📘 Este manual cubre el uso de la aplicación. Las instrucciones para instalarla, ejecutarla en local o consultar la API están en el <a href="../README.md">README del proyecto</a>.</p>
+  <p>MovilidadMDQ · Trabajo Práctico Final de Gestión de Desarrollo de Software · UTN Facultad Regional Mar del Plata · 2026</p>
+</footer>
+
+</body>
+</html>

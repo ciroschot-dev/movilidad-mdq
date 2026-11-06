@@ -1,20 +1,30 @@
 import { HttpClient } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { Usuario } from '../models/usuario';
+import { PerfilForm, Usuario } from '../models/usuario';
 
-// Pedidos del admin sobre las cuentas de usuario: buscar una y eliminarla
+// Pedidos sobre las cuentas de usuario: el perfil propio y, para el admin, buscar y eliminar
 @Service()
 export class UsuarioService {
   private http = inject(HttpClient);
   private url = `${environment.apiUrl}/usuarios`;
+
+  // GET /usuarios/me → los datos de la cuenta con la que se inició sesión (el back la saca del token)
+  actual() {
+    return this.http.get<Usuario>(`${this.url}/me`);
+  }
+
+  // PUT /usuarios/:id → guarda los datos nuevos del perfil y devuelve la cuenta ya actualizada
+  actualizar(id: number, datos: PerfilForm) {
+    return this.http.put<Usuario>(`${this.url}/${id}`, datos);
+  }
 
   // GET /usuarios/buscar?query=… → el usuario con ese nombre o email (si no existe, el back da 404)
   buscar(query: string) {
     return this.http.get<Usuario>(`${this.url}/buscar`, { params: { query } });
   }
 
-  // DELETE /usuarios/:id → borra la cuenta; no devuelve nada (void)
+  // DELETE /usuarios/:id → borra la cuenta (la propia, o cualquiera si es el admin); no devuelve nada (void)
   eliminar(id: number) {
     return this.http.delete<void>(`${this.url}/${id}`);
   }

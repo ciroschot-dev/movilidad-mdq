@@ -1,0 +1,92 @@
+/* La misma tarjeta centrada que el registro, así las pantallas de la cuenta se ven iguales */
+.perfil {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+
+.titulo {
+  margin-top: 0;
+  text-align: center;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--color-texto-suave);
+}
+
+.campo input {
+  padding: 0.5rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-size: 1rem;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+
+/* Texto de ayuda debajo de un campo, más chico y suave que la etiqueta */
+.ayuda {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+}
+
+.boton {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--color-primario);
+  color: var(--color-superficie);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Botón de peligro: solo el borde y el texto en rojo, separado del formulario */
+.eliminar {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--color-error);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pie {
+  margin: 0;
+  text-align: center;
+  color: var(--color-texto-suave);
+}
+
+/* En el celular la tarjeta ocupa todo el ancho, con un margen chico a los costados */
+@media (max-width: 600px) {
+  .perfil {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}
