@@ -29,6 +29,8 @@ export class Cotizar {
   protected readonly error = signal('');
   // true mientras espera al back: bloquea el botón para no cotizar dos veces
   protected readonly cargando = signal(false);
+  // true mientras busca la ubicación del celular: bloquea su botón para no pedirla de nuevo
+  protected readonly ubicando = signal(false);
 
   // El texto que se ve en cada campo
   protected readonly busquedaForm = this.fb.nonNullable.group({
@@ -44,6 +46,21 @@ export class Cotizar {
   protected readonly campoActivo = signal<Campo | null>(null);
   // El camino entre las dos direcciones; el mapa lo dibuja cuando no es null
   protected readonly ruta = signal<google.maps.DirectionsResult | null>(null);
+
+  constructor() {
+    // Al abrir la pantalla, si el navegador ya tiene el permiso de ubicación dado, el origen se completa solo (RF26).
+    // Si al usuario todavía no se lo pidió, acá no se pide: los navegadores no muestran el cartel de permiso
+    // sin un toque del usuario, así que en ese caso queda el link "Usar mi ubicación" debajo del campo
+    navigator.permissions
+      ?.query({ name: 'geolocation' })
+      .then((permiso) => {
+        if (permiso.state === 'granted') {
+          this.usarMiUbicacion();
+        }
+      })
+      // Si el navegador no sabe responder por los permisos, todo sigue por el link, como siempre
+      .catch(() => {});
+  }
 
   // Error solo si el campo está vacío Y el usuario ya lo tocó; si no, se vería en rojo apenas abre la página
   protected mostrarError(control: Campo) {
@@ -99,6 +116,47 @@ export class Cotizar {
       this.trazarRuta();
     } catch {
       this.error.set('No se pudo cargar esa dirección. Probá de nuevo.');
+    }
+  }
+
+  // Completa el origen con la ubicación del celular (RF26). El navegador muestra su cartel de permiso
+  // y, si el usuario dice que no, el campo queda vacío y sin error, como pide la regla de la historia
+  protected usarMiUbicacion() {
+    // Un navegador viejo puede no tener ubicación: ahí el botón no hace nada
+    if (!navigator.geolocation) {
+      return;
+    }
+    this.ubicando.set(true);
+    // Tope de 10 segundos: si el navegador no contesta (por ejemplo, porque el cartel de permiso quedó
+    // abierto y nadie lo tocó), el botón vuelve a la normalidad en vez de quedar en "Ubicando…" para siempre
+    setTimeout(() => this.ubicando.set(false), 10000);
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (posicion) => {
+          try {
+            const lugar = await this.lugares.desdeCoordenadas(
+              posicion.coords.latitude,
+              posicion.coords.longitude,
+            );
+            // Queda igual que una dirección elegida de la lista: el texto en el campo y la dirección guardada
+            this.busquedaForm.controls.origen.setValue(lugar.direccion);
+            this.origen.set(lugar);
+            this.error.set('');
+            this.trazarRuta();
+          } catch {
+            // Si Google no encuentra la dirección, el origen queda como estaba
+          } finally {
+            this.ubicando.set(false);
+          }
+        },
+        // Sin permiso o sin señal de GPS no se muestra nada: el usuario completa el origen a mano
+        () => this.ubicando.set(false),
+        // Si el celular no tiene forma de ubicarse, el navegador avisa con error a los 10 segundos
+        { timeout: 10000 },
+      );
+    } catch {
+      // Un navegador que bloquea la ubicación puede fallar en el acto: se destraba el botón
+      this.ubicando.set(false);
     }
   }
 
