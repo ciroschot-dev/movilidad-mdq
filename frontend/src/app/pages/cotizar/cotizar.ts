@@ -23,12 +23,16 @@ export class Cotizar {
   private readonly lugares = inject(LugarService);
   private readonly fb = inject(FormBuilder);
 
-  // Lo que devolvió el back; las tarjetas que las muestran llegan con RF09 (MDQ-24)
+  // Lo que devolvió el back: una tarjeta por opción (RF09)
   protected readonly opciones = signal<OpcionTransporte[]>([]);
+  // El back manda el tipo en mayúsculas (TAXI); en la tarjeta se ve con el nombre de siempre
+  protected readonly nombres = { TAXI: 'Taxi', UBER: 'Uber', DIDI: 'Didi' };
   // Aviso que se muestra si el back no pudo cotizar
   protected readonly error = signal('');
   // true mientras espera al back: bloquea el botón para no cotizar dos veces
   protected readonly cargando = signal(false);
+  // true mientras busca la ubicación del celular: bloquea su botón para no pedirla de nuevo
+  protected readonly ubicando = signal(false);
 
   // El texto que se ve en cada campo
   protected readonly busquedaForm = this.fb.nonNullable.group({
@@ -44,6 +48,21 @@ export class Cotizar {
   protected readonly campoActivo = signal<Campo | null>(null);
   // El camino entre las dos direcciones; el mapa lo dibuja cuando no es null
   protected readonly ruta = signal<google.maps.DirectionsResult | null>(null);
+
+  constructor() {
+    // Al abrir la pantalla, si el navegador ya tiene el permiso de ubicación dado, el origen se completa solo (RF26).
+    // Si al usuario todavía no se lo pidió, acá no se pide: los navegadores no muestran el cartel de permiso
+    // sin un toque del usuario, así que en ese caso queda el link "Usar mi ubicación" debajo del campo
+    navigator.permissions
+      ?.query({ name: 'geolocation' })
+      .then((permiso) => {
+        if (permiso.state === 'granted') {
+          this.usarMiUbicacion();
+        }
+      })
+      // Si el navegador no sabe responder por los permisos, todo sigue por el link, como siempre
+      .catch(() => {});
+  }
 
   // Error solo si el campo está vacío Y el usuario ya lo tocó; si no, se vería en rojo apenas abre la página
   protected mostrarError(control: Campo) {
@@ -102,6 +121,47 @@ export class Cotizar {
     }
   }
 
+  // Completa el origen con la ubicación del celular (RF26). El navegador muestra su cartel de permiso
+  // y, si el usuario dice que no, el campo queda vacío y sin error, como pide la regla de la historia
+  protected usarMiUbicacion() {
+    // Un navegador viejo puede no tener ubicación: ahí el botón no hace nada
+    if (!navigator.geolocation) {
+      return;
+    }
+    this.ubicando.set(true);
+    // Tope de 10 segundos: si el navegador no contesta (por ejemplo, porque el cartel de permiso quedó
+    // abierto y nadie lo tocó), el botón vuelve a la normalidad en vez de quedar en "Ubicando…" para siempre
+    setTimeout(() => this.ubicando.set(false), 10000);
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (posicion) => {
+          try {
+            const lugar = await this.lugares.desdeCoordenadas(
+              posicion.coords.latitude,
+              posicion.coords.longitude,
+            );
+            // Queda igual que una dirección elegida de la lista: el texto en el campo y la dirección guardada
+            this.busquedaForm.controls.origen.setValue(lugar.direccion);
+            this.origen.set(lugar);
+            this.error.set('');
+            this.trazarRuta();
+          } catch {
+            // Si Google no encuentra la dirección, el origen queda como estaba
+          } finally {
+            this.ubicando.set(false);
+          }
+        },
+        // Sin permiso o sin señal de GPS no se muestra nada: el usuario completa el origen a mano
+        () => this.ubicando.set(false),
+        // Si el celular no tiene forma de ubicarse, el navegador avisa con error a los 10 segundos
+        { timeout: 10000 },
+      );
+    } catch {
+      // Un navegador que bloquea la ubicación puede fallar en el acto: se destraba el botón
+      this.ubicando.set(false);
+    }
+  }
+
   // Al salir del campo se esconde la lista (por eso las sugerencias se eligen con mousedown, que llega antes)
   protected cerrarSugerencias() {
     this.sugerencias.set([]);
@@ -134,7 +194,10 @@ export class Cotizar {
     this.viajes.calcular(pedido).subscribe({
       // Salió bien: guarda las opciones y libera el botón
       next: (opciones) => {
-        this.opciones.set(opciones);
+        // Si mientras esperaba se cambió alguna dirección, estos precios son del viaje anterior: no se muestran
+        if (this.origen() === origen && this.destino() === destino) {
+          this.opciones.set(opciones);
+        }
         this.cargando.set(false);
       },
       // Salió mal: borra las opciones viejas y muestra el motivo que manda el back.
@@ -145,6 +208,24 @@ export class Cotizar {
         this.cargando.set(false);
       },
     });
+  }
+
+  // Al tocar una tarjeta se le avisa al back cuál eligió el usuario (RF10). No se espera la respuesta
+  // ni se bloquea el link: si el back falla, la app o el teléfono se abren igual
+  protected registrarEleccion(opcion: OpcionTransporte) {
+    if (opcion.viajeId === null) {
+      return; // el back no pudo guardar el viaje, así que no hay nada que actualizar
+    }
+    this.viajes.elegir(opcion.viajeId, opcion.tipo).subscribe({
+      error: () => {
+        // Se traga el error a propósito: perder la estadística no puede impedir abrir Uber o Didi
+      },
+    });
+  }
+
+  // El back puede mandar centavos (4532.67): se redondea y se separan los miles con punto, como en Argentina ($ 4.533)
+  protected formatearPrecio(precio: number) {
+    return '$ ' + Math.round(precio).toLocaleString('es-AR');
   }
 
   // El signal que guarda la dirección de cada campo

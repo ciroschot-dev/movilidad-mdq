@@ -4,6 +4,7 @@ import com.example.movilidadmdq.dto.ActualizarDireccionFavoritaRequest;
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.dto.DireccionFavoritaResponse;
+import com.example.movilidadmdq.dto.ElegirOpcionRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
 import com.example.movilidadmdq.model.Usuario;
@@ -85,7 +86,7 @@ public class ViajeController
      */
     @Operation(summary = "Calcular viaje")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "El viaje se ha calculado con exito"),
+            @ApiResponse(responseCode = "200", description = "El viaje se calculó con éxito"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PostMapping("/calcular")
@@ -107,6 +108,27 @@ public class ViajeController
         """);
 
         return ResponseEntity.ok(viajeService.calcularViaje(request, usuario.getId()));
+    }
+
+    /**
+     * Guarda qué medio eligió el usuario para este viaje (RF10).
+     * <p>
+     * El front lo llama al tocar una tarjeta y no espera la respuesta: si falla,
+     * igual abre Uber, Didi o el teléfono del taxi, para no trabarle la elección.
+     */
+    @Operation(summary = "Registrar la opción elegida")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "La elección quedó guardada"),
+            @ApiResponse(responseCode = "404", description = "El viaje no existe")
+    })
+    @PutMapping("/{viajeId}/opcion-elegida")
+    public ResponseEntity<Void> registrarEleccion(
+            @PathVariable Long viajeId,
+            @Valid @RequestBody ElegirOpcionRequest request,
+            @AuthenticationPrincipal Usuario usuario)
+    {
+        historialViajeService.registrarEleccion(viajeId, request.tipo(), usuario.getId());
+        return ResponseEntity.ok().build();
     }
 
     /** Marca o desmarca un viaje del historial como favorito. */

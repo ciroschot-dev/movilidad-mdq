@@ -41,7 +41,7 @@ public class UsuarioController
     private final UsuarioService usuarioService;
     private final HistorialViajeService historialViajeService;
 
-    @Operation(summary = "Ingresar", description = "Se ingresan credenciales para iniciar sesion, devuelve token")
+    @Operation(summary = "Ingresar", description = "Se ingresan credenciales para iniciar sesión y se devuelve el token")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login exitoso, devuelve el token"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos o faltantes"),
@@ -82,7 +82,7 @@ public class UsuarioController
         return ResponseEntity.ok(usuarioService.registrar(request));
     }
 
-    @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado ")
+    @Operation(summary = "Obtener usuario actual", description = "Devuelve los datos del usuario autenticado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Devuelve datos del usuario"),
             @ApiResponse(responseCode = "401", description = "No autenticado o token inválido")
@@ -93,7 +93,7 @@ public class UsuarioController
         return ResponseEntity.ok(usuarioService.toResponse(usuario));
     }
 
-    @Operation(summary = "Obtener el historial de un usuario segun ID", description = "Devuelve una lista como historial del usuario")
+    @Operation(summary = "Obtener el historial de un usuario según su ID", description = "Devuelve la lista de viajes del historial del usuario")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Datos del usuario"),
             @ApiResponse(responseCode = "401", description = "No autenticado o token inválido"),
@@ -106,9 +106,9 @@ public class UsuarioController
         return ResponseEntity.ok(historialViajeService.obtenerHistorial(usuario, id));
     }
 
-    @Operation(summary = "Borrar el historial de un usuario segun ID", description = "Borra historial del usuario de la base de datos")
+    @Operation(summary = "Borrar el historial de un usuario según su ID", description = "Borra el historial del usuario de la base de datos")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Borrado historial del usuario con exito"),
+            @ApiResponse(responseCode = "204", description = "Historial del usuario borrado con éxito"),
             @ApiResponse(responseCode = "401", description = "No autenticado o token inválido"),
             @ApiResponse(responseCode = "403", description = "No tenés permiso para borrar el historial de otro usuario")
     })
@@ -124,9 +124,9 @@ public class UsuarioController
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Obtener viaje frecuente de un usuario segun ID", description = "Obtener viaje frecuente del usuario de la base de datos")
+    @Operation(summary = "Obtener el viaje frecuente de un usuario según su ID", description = "Devuelve el destino que el usuario más repitió")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Viaje frecuente del usuario hallado con exito"),
+            @ApiResponse(responseCode = "200", description = "Viaje frecuente del usuario encontrado con éxito"),
             @ApiResponse(responseCode = "401", description = "No autenticado o token inválido"),
             @ApiResponse(responseCode = "403", description = "No tenés permiso para ver los viajes de otro usuario")
     })
@@ -144,9 +144,9 @@ public class UsuarioController
 
     @Operation(summary = "Actualizar el perfil del usuario", description = "Se usa el ID del usuario para actualizar sus datos")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Se actualizo el perfil del usuario con exito"),
+            @ApiResponse(responseCode = "200", description = "Se actualizó el perfil del usuario con éxito"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
-            @ApiResponse(responseCode = "403", description = "No tiene permiso para actualizar perfil")
+            @ApiResponse(responseCode = "403", description = "No tenés permiso para actualizar el perfil")
     })
 
     @PutMapping("/{id}")
@@ -172,7 +172,7 @@ public class UsuarioController
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Cuenta eliminada con éxito"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
-            @ApiResponse(responseCode = "403", description = "No tiene permiso para eliminar esta cuenta")
+            @ApiResponse(responseCode = "403", description = "No tenés permiso para eliminar esta cuenta")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCuenta(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario)

@@ -4,6 +4,7 @@ import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.DestinoPopularResponse;
 import com.example.movilidadmdq.dto.ViajeFrecuenteResponse;
 import com.example.movilidadmdq.dto.ViajeHistorialResponse;
+import com.example.movilidadmdq.enums.TipoTransporte;
 import com.example.movilidadmdq.exception.OperacionNoPermitidaException;
 import com.example.movilidadmdq.exception.RecursoNoEncontradoException;
 import com.example.movilidadmdq.model.Usuario;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -155,16 +157,18 @@ public class HistorialViajeService
      * logueado (usuarioId null) no guarda nada. Cualquier error al persistir se
      * traga: el historial es secundario y no debe romper el cálculo del viaje.
      */
-    public void guardar(String origen, String destino, Long distanciaMetros, int tiempoMin,
-                        BigDecimal precioTaxi, BigDecimal precioUber, BigDecimal precioDidi,
-                        Long usuarioId, CalculoViajeRequest request)
+    public Viaje guardar(String origen, String destino, Long distanciaMetros, int tiempoMin,
+                         BigDecimal precioTaxi, BigDecimal precioUber, BigDecimal precioDidi,
+                         Long usuarioId, CalculoViajeRequest request)
     {
-        if (usuarioId == null) return;
+        if (usuarioId == null) return null;
 
         try
         {
-            usuarioRepository.findById(usuarioId).ifPresent(usuario ->
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(usuarioId);
+            if (usuarioOpt.isPresent())
             {
+                Usuario usuario = usuarioOpt.get();
                 Viaje nuevoViaje = new Viaje();
                 nuevoViaje.setOrigen(origen);
                 nuevoViaje.setDestino(destino);
@@ -184,14 +188,35 @@ public class HistorialViajeService
 
                 nuevoViaje.setUsuario(usuario);
 
-                viajeRepository.save(nuevoViaje);
-                System.out.println("Viaje guardado automaticamente en AWS para el usuario: " + usuario.getUsername());
-            });
+                Viaje guardado = viajeRepository.save(nuevoViaje);
+                System.out.println("Viaje guardado automáticamente en el historial del usuario: " " + usuario.getUsername());
+                return guardado;
+            }
         }
         catch (Exception e)
         {
             System.err.println("Error al guardar historial: " + e.getMessage());
         }
+        return null;
+    }
+
+    /**
+     * Registra el tipo de transporte que el usuario terminó eligiendo (RF10).
+     * Valida que el viaje exista (404 si no) y que pertenezca al usuario (403).
+     */
+    @Transactional
+    public void registrarEleccion(Long viajeId, TipoTransporte tipo, Long usuarioId)
+    {
+        Viaje viaje = viajeRepository.findById(viajeId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Viaje no encontrado"));
+
+        if (!viaje.getUsuario().getId().equals(usuarioId))
+        {
+            throw new OperacionNoPermitidaException("No tenés permiso para modificar este viaje");
+        }
+
+        viaje.setTipoElegido(tipo);
+        viajeRepository.save(viaje);
     }
 
     /** Convierte una entidad Viaje en el DTO que se devuelve al front. */

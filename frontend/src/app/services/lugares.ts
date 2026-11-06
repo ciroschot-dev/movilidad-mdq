@@ -53,6 +53,28 @@ export class LugarService {
     };
   }
 
+  // Convierte las coordenadas del celular en una dirección, para completar el origen (RF26).
+  // Google lo llama "geocodificación inversa": le das un punto y devuelve la dirección de ese lugar.
+  async desdeCoordenadas(lat: number, lng: number): Promise<Lugar> {
+    const { Geocoder } = await google.maps.importLibrary('geocoding');
+    const { results } = await new Geocoder().geocode({ location: { lat, lng }, language: 'es' });
+    const elegido = results[0];
+    // Si Google no reconoce la zona no hay dirección que mostrar: se toma como error (lo atrapa cotizar)
+    if (!elegido) {
+      throw new Error('Google no encontró una dirección para esa ubicación');
+    }
+    // El nombre corto es calle y altura ("Roffo 1841"), como el de las direcciones que se eligen de la lista
+    const calle = elegido.address_components.find((parte) => parte.types.includes('route'))?.long_name;
+    const altura = elegido.address_components.find((parte) =>
+      parte.types.includes('street_number'),
+    )?.long_name;
+    // En una plaza o en la playa no hay calle: ahí se usa el primer pedazo de la dirección completa
+    const nombre =
+      [calle, altura].filter(Boolean).join(' ') || elegido.formatted_address.split(',')[0];
+
+    return { nombre, direccion: elegido.formatted_address, placeId: elegido.place_id, lat, lng };
+  }
+
   // Pide a Google el camino en auto entre las dos direcciones, para dibujarlo en el mapa
   async ruta(origen: Lugar, destino: Lugar) {
     const { DirectionsService, TravelMode } = await google.maps.importLibrary('routes');

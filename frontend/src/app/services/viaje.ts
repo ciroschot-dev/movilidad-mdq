@@ -13,4 +13,9 @@ export class ViajeService {
   calcular(busqueda: CalculoViaje) {
     return this.http.post<OpcionTransporte[]>(`${this.url}/calcular`, busqueda);
   }
+
+  // Le avisa al back qué opción tocó el usuario, para que quede en el historial (RF10)
+  elegir(viajeId: number, tipo: OpcionTransporte['tipo']) {
+    return this.http.put<void>(`${this.url}/${viajeId}/opcion-elegida`, { tipo });
+  }
 }
