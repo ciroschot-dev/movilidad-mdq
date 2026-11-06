@@ -58,7 +58,7 @@ public class SecurityConfig
     private final UsuarioRepository usuarioRepository;
 
     // Dominios permitidos (CORS) leídos desde variables de entorno para seguridad.
-    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8080}")
+    @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:8080}")
     private List<String> allowedOrigins;
 
     // Credenciales del admin principal cargadas de forma segura desde el archivo .env.
@@ -94,7 +94,7 @@ public class SecurityConfig
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
         http
-                // 1. Configuración de CORS: Permite que el frontend (React) hable con el backend.
+                // 1. Configuración de CORS: Permite que el frontend (Angular) hable con el backend.
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 
                 // 2. CSRF: Desactivado porque usamos JWT (Stateless), lo que nos hace inmunes a este ataque.
@@ -212,7 +212,7 @@ public class SecurityConfig
     /**
      * Permisos de CORS para que el navegador deje al frontend hablar con la API.
      * <p>
-     * Sin esto, el React de otro origen (otro puerto/dominio) no podría
+     * Sin esto, el front de otro origen (otro puerto/dominio) no podría
      * comunicarse con el backend de Spring.
      */
     @Bean
