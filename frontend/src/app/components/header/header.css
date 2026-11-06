@@ -1,0 +1,64 @@
+/* Estilos de la barra de arriba. Los colores salen de styles.css, así cambian con el tema */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background-color: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.marca {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--color-primario);
+}
+
+/* Botones de la derecha, uno al lado del otro */
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pestanas {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pestanas a {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--color-texto-suave);
+}
+
+/* La pestaña de la pantalla actual se destaca con el color principal */
+.pestanas a.activo {
+  background-color: var(--color-fondo);
+  color: var(--color-primario);
+  font-weight: bold;
+}
+
+.boton-tema {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+/* En el celular las pestañas bajan a su propia fila, abajo de la marca y el tema */
+@media (max-width: 600px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .pestanas {
+    order: 3;
+    width: 100%;
+    justify-content: space-around;
+  }
+}

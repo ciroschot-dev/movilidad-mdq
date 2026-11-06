@@ -1,0 +1,32 @@
+<!-- Barra de arriba: la marca, las pestañas para moverse entre pantallas y el botón del tema -->
+<header class="header">
+  <span class="marca">MovilidadMDQ</span>
+
+  <!-- Pestañas y cerrar sesión: solo con sesión abierta, en login y registro no tienen sentido -->
+  @if (auth.estaLogueado()) {
+    <!-- routerLinkActive le pone la clase "activo" a la pestaña de la pantalla donde estás -->
+    <nav class="pestanas">
+      <a routerLink="/cotizar" routerLinkActive="activo">Cotizar</a>
+      <a routerLink="/historial" routerLinkActive="activo">Historial</a>
+      <a routerLink="/favoritos" routerLinkActive="activo">Favoritos</a>
+      <!-- La cuarta pestaña solo aparece si el back dijo que sos ADMIN -->
+      @if (auth.esAdmin()) {
+        <a routerLink="/admin" routerLinkActive="activo">Admin</a>
+      }
+    </nav>
+  }
+
+  <div class="acciones">
+    <button class="boton-tema" type="button" (click)="tema.alternar()">
+      @if (tema.oscuro()) {
+        Tema claro
+      } @else {
+        Tema oscuro
+      }
+    </button>
+
+    @if (auth.estaLogueado()) {
+      <button class="boton-tema" type="button" (click)="auth.cerrarSesion()">Cerrar sesión</button>
+    }
+  </div>
+</header>

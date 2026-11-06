@@ -31,7 +31,7 @@ public class TarifaService
     public Tarifa obtenerTarifaTaxi()
     {
         return tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la tarifa del taxi"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró la tarifa del taxi"));
     }
 
     /**
@@ -43,7 +43,7 @@ public class TarifaService
     public Tarifa actualizarTarifaTaxi(TarifaRequest request)
     {
         Tarifa tarifaTaxi = tarifaRepository.findByTipoTransporte(TipoTransporte.TAXI)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro la tarifa de taxi"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró la tarifa de taxi"));
 
         // Verificación campo a campo para permitir actualizaciones parciales.
         if (request.getBajadaBanderaDia() != null) tarifaTaxi.setBajadaBanderaDia(request.getBajadaBanderaDia());

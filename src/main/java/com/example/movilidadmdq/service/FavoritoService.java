@@ -39,7 +39,7 @@ public class FavoritoService
 
         if (!viaje.getUsuario().getId().equals(usuarioId))
         {
-            throw new OperacionNoPermitidaException("No tienes permiso para modificar este viaje");
+            throw new OperacionNoPermitidaException("No tenés permiso para modificar este viaje");
         }
 
         boolean nuevoEstado = !viaje.isFavorito();
@@ -111,7 +111,7 @@ public class FavoritoService
 
         if (!df.getUsuario().getId().equals(usuarioId))
         {
-            throw new OperacionNoPermitidaException("No tienes permiso para modificar este favorito");
+            throw new OperacionNoPermitidaException("No tenés permiso para modificar este favorito");
         }
         return df;
     }

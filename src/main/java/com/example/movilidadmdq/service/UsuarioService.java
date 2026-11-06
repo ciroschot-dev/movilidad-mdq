@@ -54,11 +54,11 @@ public class UsuarioService
         // no un error de validacion. El handler global se encarga del status.
         if (usuarioRepository.findByUsername(request.username()).isPresent())
         {
-            throw new RecursoDuplicadoException("El username ya esta registrado");
+            throw new RecursoDuplicadoException("Ese nombre de usuario ya está registrado");
         }
         if (usuarioRepository.findByEmail(request.email()).isPresent())
         {
-            throw new RecursoDuplicadoException("El email ya esta registrado");
+            throw new RecursoDuplicadoException("Ese email ya está registrado");
         }
 
         Usuario usuario = new Usuario();
@@ -90,13 +90,13 @@ public class UsuarioService
                 .filter(otro -> !otro.getId().equals(usuario.getId()))
                 .isPresent())
         {
-            throw new RecursoDuplicadoException("El username ya esta registrado");
+            throw new RecursoDuplicadoException("Ese nombre de usuario ya está registrado");
         }
         if (usuarioRepository.findByEmail(datos.email())
                 .filter(otro -> !otro.getId().equals(usuario.getId()))
                 .isPresent())
         {
-            throw new RecursoDuplicadoException("El email ya esta registrado");
+            throw new RecursoDuplicadoException("Ese email ya está registrado");
         }
 
         usuario.setUsername(datos.username());

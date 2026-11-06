@@ -1,0 +1,32 @@
+<!-- Pantalla del admin: buscar una cuenta y eliminarla -->
+<section class="admin">
+  <h1 class="titulo">Usuarios</h1>
+
+  <!-- Buscador: un campo y el botón al lado -->
+  <form class="buscador" [formGroup]="busquedaForm" (ngSubmit)="buscar()">
+    <label class="campo">
+      Nombre de usuario o email
+      <input type="text" formControlName="query" />
+    </label>
+    <button class="boton" type="submit" [disabled]="busquedaForm.invalid || cargando()">BUSCAR</button>
+  </form>
+  @if (mostrarError('query')) {
+    <p class="error">Escribí un nombre de usuario o un email.</p>
+  }
+
+  <!-- Aviso del back cuando no encontró a nadie -->
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <!-- Tarjeta del usuario encontrado -->
+  @if (usuario(); as u) {
+    <article class="tarjeta">
+      <div>
+        <p class="nombre">{{ u.username }}</p>
+        <p class="dato">{{ u.email }}</p>
+      </div>
+      <button class="eliminar" type="button" (click)="confirmarEliminar(u)">Eliminar</button>
+    </article>
+  }
+</section>
