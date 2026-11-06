@@ -29,4 +29,43 @@
       <button class="eliminar" type="button" (click)="confirmarEliminar(u)">Eliminar</button>
     </article>
   }
+
+  <!-- Tarifa del taxi (MDQ-37): los cinco valores con los que se cotiza, para que el admin los ajuste -->
+  <h2 class="subtitulo">Tarifa del taxi</h2>
+
+  @if (errorTarifa()) {
+    <p class="error">{{ errorTarifa() }}</p>
+  }
+
+  <form class="tarifa" [formGroup]="tarifaForm" (ngSubmit)="guardarTarifa()">
+    <label class="campo">
+      Bajada de bandera (día)
+      <input type="number" min="0" step="0.01" formControlName="bajadaBanderaDia" />
+    </label>
+    <label class="campo">
+      Bajada de bandera (noche)
+      <input type="number" min="0" step="0.01" formControlName="bajadaBanderaNoche" />
+    </label>
+    <label class="campo">
+      Valor de la ficha (día)
+      <input type="number" min="0" step="0.01" formControlName="valorFichaDia" />
+    </label>
+    <label class="campo">
+      Valor de la ficha (noche)
+      <input type="number" min="0" step="0.01" formControlName="valorFichaNoche" />
+    </label>
+    <label class="campo">
+      Metros por ficha
+      <input type="number" min="1" formControlName="metrosPorFicha" />
+    </label>
+
+    @if (tarifaForm.invalid && tarifaForm.touched) {
+      <p class="error">Los importes no pueden ser negativos, y los metros por ficha tienen que ser mayores a cero.</p>
+    }
+
+    <!-- Bloqueado si algún valor está mal o mientras guarda, así no se manda dos veces -->
+    <button class="boton" type="submit" [disabled]="tarifaForm.invalid || guardando()">
+      {{ guardando() ? 'GUARDANDO…' : 'GUARDAR TARIFA' }}
+    </button>
+  </form>
 </section>
