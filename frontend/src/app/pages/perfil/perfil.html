@@ -1,0 +1,30 @@
+<!-- Pantalla "Mi perfil": el usuario y el email de la cuenta, en un formulario para editarlos -->
+<section class="perfil">
+  <h1 class="titulo">Editar Perfil</h1>
+
+  <!-- Mientras llegan los datos del back no se muestra el formulario, así no aparece vacío -->
+  @if (cargando()) {
+    <p class="pie">Cargando…</p>
+  } @else if (errorCarga()) {
+    <!-- Si el perfil no se pudo traer, no tiene sentido mostrar un formulario vacío -->
+    <p class="error">{{ errorCarga() }}</p>
+  } @else {
+    <form class="formulario" [formGroup]="perfilForm">
+      <label class="campo">
+        Usuario
+        <input type="text" autocomplete="username" formControlName="username" />
+      </label>
+      @if (mostrarError('username')) {
+        <p class="error">El usuario debe tener entre 3 y 30 caracteres.</p>
+      }
+
+      <label class="campo">
+        Email
+        <input type="email" autocomplete="email" formControlName="email" />
+      </label>
+      @if (mostrarError('email')) {
+        <p class="error">Ingresá un email válido.</p>
+      }
+    </form>
+  }
+</section>

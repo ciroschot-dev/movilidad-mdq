@@ -3,11 +3,16 @@ import { Service, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { Usuario } from '../models/usuario';
 
-// Pedidos del admin sobre las cuentas de usuario: buscar una y eliminarla
+// Pedidos sobre las cuentas de usuario: el perfil propio y, para el admin, buscar y eliminar
 @Service()
 export class UsuarioService {
   private http = inject(HttpClient);
   private url = `${environment.apiUrl}/usuarios`;
+
+  // GET /usuarios/me → los datos de la cuenta con la que se inició sesión (el back la saca del token)
+  actual() {
+    return this.http.get<Usuario>(`${this.url}/me`);
+  }
 
   // GET /usuarios/buscar?query=… → el usuario con ese nombre o email (si no existe, el back da 404)
   buscar(query: string) {

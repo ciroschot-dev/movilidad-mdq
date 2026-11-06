@@ -5,6 +5,7 @@ import { Cotizar } from './pages/cotizar/cotizar';
 import { Favoritos } from './pages/favoritos/favoritos';
 import { Historial } from './pages/historial/historial';
 import { Login } from './pages/login/login';
+import { Perfil } from './pages/perfil/perfil';
 import { Registro } from './pages/registro/registro';
 
 // Tabla de rutas: cada URL muestra una pantalla
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'cotizar', component: Cotizar, canActivate: [soloLogueados] },
   { path: 'historial', component: Historial, canActivate: [soloLogueados] },
   { path: 'favoritos', component: Favoritos, canActivate: [soloLogueados] },
+  { path: 'perfil', component: Perfil, canActivate: [soloLogueados] },
   // Solo para el role ADMIN: a cualquier otro el guard lo manda a cotizar
   { path: 'admin', component: Admin, canActivate: [soloAdmin] },
   // Cualquier URL que no existe vuelve a cotizar. Va última porque atrapa todo

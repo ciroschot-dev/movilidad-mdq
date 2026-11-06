@@ -26,6 +26,8 @@
     </button>
 
     @if (auth.estaLogueado()) {
+      <!-- Va con los botones y no con las pestañas: la spec pide 3 pestañas para un usuario común (RF19) -->
+      <a class="boton-tema" routerLink="/perfil" routerLinkActive="activo">Mi perfil</a>
       <button class="boton-tema" type="button" (click)="auth.cerrarSesion()">Cerrar sesión</button>
     }
   </div>
