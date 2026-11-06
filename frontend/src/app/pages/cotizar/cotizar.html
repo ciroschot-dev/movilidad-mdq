@@ -71,6 +71,19 @@
     </button>
   </form>
 
+  <!-- Una tarjeta por opción que devolvió el back (RF09), así se comparan de un vistazo -->
+  @if (opciones().length > 0) {
+    <div class="opciones">
+      @for (opcion of opciones(); track opcion.tipo) {
+        <article class="opcion">
+          <h3>{{ nombres[opcion.tipo] }}</h3>
+          <p class="precio">{{ formatearPrecio(opcion.precio) }}</p>
+          <p class="minutos">{{ opcion.tiempoMinutos }} min</p>
+        </article>
+      }
+    </div>
+  }
+
   <!-- [ruta] le pasa al mapa el camino; mientras sea null, el mapa muestra la ciudad -->
   <app-mapa [ruta]="ruta()" />
 </section>

@@ -23,8 +23,10 @@ export class Cotizar {
   private readonly lugares = inject(LugarService);
   private readonly fb = inject(FormBuilder);
 
-  // Lo que devolvió el back; las tarjetas que las muestran llegan con RF09 (MDQ-24)
+  // Lo que devolvió el back: una tarjeta por opción (RF09)
   protected readonly opciones = signal<OpcionTransporte[]>([]);
+  // El back manda el tipo en mayúsculas (TAXI); en la tarjeta se ve con el nombre de siempre
+  protected readonly nombres = { TAXI: 'Taxi', UBER: 'Uber', DIDI: 'Didi' };
   // Aviso que se muestra si el back no pudo cotizar
   protected readonly error = signal('');
   // true mientras espera al back: bloquea el botón para no cotizar dos veces
@@ -134,7 +136,10 @@ export class Cotizar {
     this.viajes.calcular(pedido).subscribe({
       // Salió bien: guarda las opciones y libera el botón
       next: (opciones) => {
-        this.opciones.set(opciones);
+        // Si mientras esperaba se cambió alguna dirección, estos precios son del viaje anterior: no se muestran
+        if (this.origen() === origen && this.destino() === destino) {
+          this.opciones.set(opciones);
+        }
         this.cargando.set(false);
       },
       // Salió mal: borra las opciones viejas y muestra el motivo que manda el back.
@@ -145,6 +150,11 @@ export class Cotizar {
         this.cargando.set(false);
       },
     });
+  }
+
+  // El back puede mandar centavos (4532.67): se redondea y se separan los miles con punto, como en Argentina ($ 4.533)
+  protected formatearPrecio(precio: number) {
+    return '$ ' + Math.round(precio).toLocaleString('es-AR');
   }
 
   // El signal que guarda la dirección de cada campo
