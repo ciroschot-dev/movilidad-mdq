@@ -32,7 +32,7 @@ public record OpcionTransporteResponse(
         @Schema(description = "Distancia del viaje en metros", example = "5000")
         long distanciaEnMetros,
 
-        @Schema(description = "URL para redirigir a la opcion elegida", example = "www.uber.com/av%colon%1736")
+        @Schema(description = "URL para redirigir a la opción elegida", example = "www.uber.com/av%colon%1736")
         String url
 ) {
 }

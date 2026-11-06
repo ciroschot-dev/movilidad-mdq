@@ -12,9 +12,9 @@ public enum TipoTransporte
     /** Taxi tradicional: tarifa fija (bajada de bandera + fichas). */
     TAXI,
 
-    /** Uber: precio por rango (mínimo y máximo segun demanda). */
+    /** Uber: precio por rango (mínimo y máximo según la demanda). */
     UBER,
 
-    /** DiDi: precio por rango (mínimo y máximo segun demanda). */
+    /** DiDi: precio por rango (mínimo y máximo según la demanda). */
     DIDI
 }

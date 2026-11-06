@@ -136,18 +136,18 @@ public class OpenApiConfig
         mapa.put("400", ejemplo(
                 400,
                 "Bad Request",
-                "Datos invalidos",
+                "Datos inválidos",
                 "/usuarios/registro",
                 List.of(
-                        "email: El email no tiene un formato valido",
-                        "password: La password debe tener al menos 6 caracteres"
+                        "email: El email no tiene un formato válido",
+                        "password: La contraseña debe tener al menos 6 caracteres"
                 )
         ));
 
         mapa.put("401", ejemplo(
                 401,
                 "Unauthorized",
-                "Credenciales invalidas",
+                "Credenciales inválidas",
                 "/usuarios/login",
                 null
         ));
@@ -155,7 +155,7 @@ public class OpenApiConfig
         mapa.put("403", ejemplo(
                 403,
                 "Forbidden",
-                "No tienes permiso para modificar este viaje",
+                "No tenés permiso para modificar este viaje",
                 "/viajes/42/favorito",
                 null
         ));
@@ -171,7 +171,7 @@ public class OpenApiConfig
         mapa.put("409", ejemplo(
                 409,
                 "Conflict",
-                "El username ya esta registrado",
+                "Ese nombre de usuario ya está registrado",
                 "/usuarios/registro",
                 null
         ));

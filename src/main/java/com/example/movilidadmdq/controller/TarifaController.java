@@ -44,7 +44,7 @@ public class TarifaController
     @Operation(summary = "Actualizar tarifa taxi", description = "Actualiza el sistema de fichas del taxi: bajada de bandera y valor de ficha (día y noche) y metros por ficha. Admite actualización parcial. Solo accesible por administradores.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tarifa actualizada correctamente"),
-            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "403", description = "Sin permisos de administrador")
     })
     @PutMapping

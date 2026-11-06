@@ -185,7 +185,7 @@ public class HistorialViajeService
                 nuevoViaje.setUsuario(usuario);
 
                 viajeRepository.save(nuevoViaje);
-                System.out.println("Viaje guardado automaticamente en AWS para el usuario: " + usuario.getUsername());
+                System.out.println("Viaje guardado automáticamente en el historial del usuario: " + usuario.getUsername());
             });
         }
         catch (Exception e)

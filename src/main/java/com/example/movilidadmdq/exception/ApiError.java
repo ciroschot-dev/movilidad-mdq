@@ -37,8 +37,8 @@ public record ApiError(
         String path,
 
         @Schema(
-                description = "Detalle por campo cuando viene de una validacion @Valid. Null en errores que no son de validacion.",
-                example = "[\"email: El email no tiene un formato valido\"]"
+                description = "Detalle por campo cuando el error viene de una validación @Valid. Null en los errores que no son de validación.",
+                example = "[\"email: El email no tiene un formato válido\"]"
         )
         List<String> errores
 )
