@@ -35,8 +35,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
 
-    // Dirección del frontend (React) donde el usuario debe aterrizar tras el login.
-    @Value("${app.oauth2.redirect-uri:http://localhost:5173/oauth2/redirect}")
+    // Dirección del frontend (Angular) donde el usuario debe aterrizar tras el login.
+    @Value("${app.oauth2.redirect-uri:http://localhost:4200/oauth2/redirect}")
     private String redirectUri;
 
     /**
@@ -78,7 +78,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler
 
         // 4. REDIRECCIÓN EXITOSA: 
         // Mandamos al usuario al frontend inyectando el token en la URL (como query param).
-        // El componente 'OAuth2RedirectHandler' en React lo capturará y guardará.
+        // El token viaja en la dirección, así que la pantalla de login del front lo toma de ahí y lo guarda.
         String urlExito = construirUrl(redirectUri, "token", token);
         getRedirectStrategy().sendRedirect(request, response, urlExito);
     }

@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
         ubicación guardada por el usuario desde la base de datos hacia el frontend.
 
         SU FUNCIÓN:
-        Permite que la sección de "Favoritos" en el Frontend (React) pueda
+        Permite que la sección de "Favoritos" en el frontend (Angular) pueda
         listar las direcciones con sus nombres personalizados y re-utilizarlas
         rápidamente para nuevos cálculos sin que el usuario tenga que escribir todo de nuevo.
 */
