@@ -28,6 +28,10 @@
         </ul>
       }
     </div>
+    <!-- type="button" para que no mande el formulario: solo completa el origen con la ubicación -->
+    <button class="ubicacion" type="button" [disabled]="ubicando()" (click)="usarMiUbicacion()">
+      {{ ubicando() ? 'Ubicando…' : 'Usar mi ubicación' }}
+    </button>
     @if (mostrarError('origen')) {
       <p class="error">Ingresá el origen.</p>
     } @else if (faltaElegir('origen')) {
