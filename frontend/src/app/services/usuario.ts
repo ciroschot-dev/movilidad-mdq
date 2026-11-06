@@ -24,7 +24,7 @@ export class UsuarioService {
     return this.http.get<Usuario>(`${this.url}/buscar`, { params: { query } });
   }
 
-  // DELETE /usuarios/:id → borra la cuenta; no devuelve nada (void)
+  // DELETE /usuarios/:id → borra la cuenta (la propia, o cualquiera si es el admin); no devuelve nada (void)
   eliminar(id: number) {
     return this.http.delete<void>(`${this.url}/${id}`);
   }
