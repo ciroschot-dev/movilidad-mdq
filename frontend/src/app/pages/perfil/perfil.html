@@ -1,4 +1,4 @@
-<!-- Pantalla "Mi perfil": el usuario y el email de la cuenta, en un formulario para editarlos -->
+<!-- Pantalla "Mi perfil": el usuario y el email de la cuenta, para verlos y cambiarlos -->
 <section class="perfil">
   <h1 class="titulo">Editar Perfil</h1>
 
@@ -9,7 +9,8 @@
     <!-- Si el perfil no se pudo traer, no tiene sentido mostrar un formulario vacío -->
     <p class="error">{{ errorCarga() }}</p>
   } @else {
-    <form class="formulario" [formGroup]="perfilForm">
+    <!-- [formGroup] conecta este form con el del TS; al apretar GUARDAR llama a guardar() -->
+    <form class="formulario" [formGroup]="perfilForm" (ngSubmit)="guardar()">
       <label class="campo">
         Usuario
         <input type="text" autocomplete="username" formControlName="username" />
@@ -25,6 +26,27 @@
       @if (mostrarError('email')) {
         <p class="error">Ingresá un email válido.</p>
       }
+
+      <label class="campo">
+        Nueva contraseña
+        <input type="password" autocomplete="new-password" formControlName="password" />
+      </label>
+      <!-- Aclara que no hace falta completarla para guardar lo demás -->
+      @if (mostrarError('password')) {
+        <p class="error">La contraseña debe tener al menos 6 caracteres.</p>
+      } @else {
+        <p class="ayuda">Dejala vacía para no cambiarla.</p>
+      }
+
+      <!-- Aviso del back cuando no pudo guardar el perfil -->
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <!-- Bloqueado si algún dato está mal o mientras guarda -->
+      <button class="boton" type="submit" [disabled]="perfilForm.invalid || guardando()">
+        {{ guardando() ? 'GUARDANDO…' : 'GUARDAR' }}
+      </button>
     </form>
   }
 </section>
