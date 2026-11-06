@@ -86,7 +86,7 @@ public class ViajeController
      */
     @Operation(summary = "Calcular viaje")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "El viaje se ha calculado con exito"),
+            @ApiResponse(responseCode = "200", description = "El viaje se calculó con éxito"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PostMapping("/calcular")

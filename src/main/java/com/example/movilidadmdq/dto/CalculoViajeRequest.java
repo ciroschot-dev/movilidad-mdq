@@ -17,18 +17,18 @@ import jakarta.validation.constraints.NotBlank;
 
 
 public record CalculoViajeRequest(
-        @Schema(description = "Direccion de origen", example = "Paseo Costanera Mar del Plata")
+        @Schema(description = "Dirección de origen", example = "Paseo Costanera Mar del Plata")
         @NotBlank(message = "El origen es obligatorio")
         String origen,
 
-        @Schema(description = "Direccion de destino", example = "Grand Beach")
+        @Schema(description = "Dirección de destino", example = "Grand Beach")
         @NotBlank(message = "El destino es obligatorio")
         String destino,
 
         @Schema(description = "Nombre corto del lugar de origen", example = "Paseo Costanera Mar del Plata")
         String origenAddressLine1,
 
-        @Schema(description = "Direccion completa del lugar de origen", example = "Santiago del Estero 1202, Mar del Plata")
+        @Schema(description = "Dirección completa del lugar de origen", example = "Santiago del Estero 1202, Mar del Plata")
         String origenAddressLine2,
 
         @Schema(description = "Google Place ID del origen", example = "ChIJKwxUL7bdhJUR_yRC-2o5c_c")
@@ -43,7 +43,7 @@ public record CalculoViajeRequest(
         @Schema(description = "Nombre corto del lugar de destino", example = "Grand Beach")
         String destinoAddressLine1,
 
-        @Schema(description = "Direccion completa del lugar de destino", example = "Saavedra 65, Mar del Plata")
+        @Schema(description = "Dirección completa del lugar de destino", example = "Saavedra 65, Mar del Plata")
         String destinoAddressLine2,
 
         @Schema(description = "Google Place ID del destino", example = "ChIJD0zcgMvdhJURkZqCZ7ciEBY")
