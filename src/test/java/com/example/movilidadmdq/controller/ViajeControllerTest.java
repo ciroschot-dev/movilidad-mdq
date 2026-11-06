@@ -2,7 +2,9 @@ package com.example.movilidadmdq.controller;
 
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.enums.Role;
+import com.example.movilidadmdq.enums.TipoTransporte;
 import com.example.movilidadmdq.model.Usuario;
+import com.example.movilidadmdq.service.HistorialViajeService;
 import com.example.movilidadmdq.service.ViajeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +22,11 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
@@ -44,6 +48,9 @@ class ViajeControllerTest {
 
     @MockitoBean
     private com.example.movilidadmdq.repository.UsuarioRepository usuarioRepository;
+
+    @MockitoBean
+    private HistorialViajeService historialViajeService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -91,5 +98,47 @@ class ViajeControllerTest {
                 .andExpect(status().isOk());
                 
         log.info("FIN TEST: testCalcularViajeConAuthDeberiaDar200 - PASÓ EXITOSAMENTE");
+    }
+
+    @Test
+    void testRegistrarEleccionDeberiaGuardarElTipoElegido() throws Exception {
+        log.info("INICIO TEST: testRegistrarEleccionDeberiaGuardarElTipoElegido - Valida que al tocar una opción (RF10) el back guarde el medio elegido.");
+
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setUsername("testuser");
+        usuario.setRole(Role.USER);
+
+        when(usuarioRepository.findByUsername("testuser")).thenReturn(Optional.of(usuario));
+
+        mockMvc.perform(put("/viajes/7/opcion-elegida")
+                .with(user(usuario))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"tipo\":\"UBER\"}"))
+                .andExpect(status().isOk());
+
+        verify(historialViajeService).registrarEleccion(7L, TipoTransporte.UBER, 1L);
+
+        log.info("FIN TEST: testRegistrarEleccionDeberiaGuardarElTipoElegido - PASÓ EXITOSAMENTE");
+    }
+
+    @Test
+    void testRegistrarEleccionSinTipoDeberiaDar400() throws Exception {
+        log.info("INICIO TEST: testRegistrarEleccionSinTipoDeberiaDar400 - Valida que sin el medio elegido el back rechace el pedido.");
+
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setUsername("testuser");
+        usuario.setRole(Role.USER);
+
+        when(usuarioRepository.findByUsername("testuser")).thenReturn(Optional.of(usuario));
+
+        mockMvc.perform(put("/viajes/7/opcion-elegida")
+                .with(user(usuario))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest());
+
+        log.info("FIN TEST: testRegistrarEleccionSinTipoDeberiaDar400 - PASÓ EXITOSAMENTE");
     }
 }

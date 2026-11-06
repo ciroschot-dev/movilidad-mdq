@@ -69,6 +69,24 @@
   color: var(--color-error);
 }
 
+/* Botón chico debajo del origen: se ve como un link para que no compita con CALCULAR */
+.ubicacion {
+  align-self: flex-start;
+  margin-top: -0.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primario);
+  font-size: 0.875rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ubicacion:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .boton {
   margin-top: 0.5rem;
   padding: 0.75rem;
@@ -83,4 +101,52 @@
 .boton:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* Las tarjetas una al lado de la otra; en el celular, si no entran, bajan solas una abajo de la otra */
+.opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.opcion {
+  padding: 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background-color: var(--color-superficie);
+  text-align: center;
+  /* Es un link: sin subrayado ni el azul de los links, que ensuciaría la tarjeta */
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Al pasar el mouse (o con el foco del teclado), el borde se pinta para mostrar que se puede tocar */
+.opcion:hover,
+.opcion:focus-visible {
+  border-color: var(--color-primario);
+}
+
+.opcion h3 {
+  margin: 0 0 0.5rem;
+  color: var(--color-texto);
+}
+
+.opcion .precio {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-primario);
+}
+
+.opcion .minutos {
+  margin: 0.25rem 0 0;
+  color: var(--color-texto-suave);
+}
+
+.opcion .accion {
+  margin: 0.75rem 0 0;
+  font-weight: bold;
+  color: var(--color-primario);
 }

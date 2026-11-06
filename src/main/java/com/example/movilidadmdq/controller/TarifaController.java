@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +30,26 @@ import org.springframework.web.bind.annotation.RestController;
 public class TarifaController
 {
     private final TarifaService tarifaService;
+
+    /**
+     * Devuelve la tarifa vigente del taxi (solo admin).
+     * <p>
+     * La pantalla del admin la pide al abrirse, así el formulario muestra los
+     * valores de hoy y no arranca vacío. Si todavía no hay ninguna cargada,
+     * el service responde 404.
+     */
+    @Operation(summary = "Ver tarifa taxi", description = "Devuelve la tarifa vigente del taxi para que el administrador la vea antes de cambiarla. Solo accesible por administradores.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tarifa vigente"),
+            @ApiResponse(responseCode = "403", description = "Sin permisos de administrador"),
+            @ApiResponse(responseCode = "404", description = "No hay tarifa cargada")
+    })
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Tarifa obtenerTarifaTaxi()
+    {
+        return tarifaService.obtenerTarifaTaxi();
+    }
 
     /**
      * Actualiza los valores del sistema de fichas del taxi (solo admin).

@@ -3,6 +3,7 @@ package com.example.movilidadmdq.service;
 import com.example.movilidadmdq.dto.CalculoViajeRequest;
 import com.example.movilidadmdq.dto.OpcionTransporteResponse;
 import com.example.movilidadmdq.enums.TipoTransporte;
+import com.example.movilidadmdq.model.Viaje;
 import com.google.maps.model.DistanceMatrix;
 import com.google.maps.model.DistanceMatrixElement;
 import lombok.RequiredArgsConstructor;
@@ -101,10 +102,19 @@ public class ViajeService
 
         // 5. PERSISTENCIA:
         // Registra el viaje en el historial del usuario antes de enviar la respuesta.
-        historialViajeService.guardar(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
+        Viaje guardado = historialViajeService.guardar(origenFinal, destinoFinal, distanciaMetros, tiempoMin,
                 taxi.precio(), uber.precio(), didi.precio(), usuarioId, request);
 
         List<OpcionTransporteResponse> opciones = List.of(taxi, uber, didi);
+
+        // El front necesita el id del viaje guardado para avisar después qué opción eligió el usuario (RF10).
+        // Si no se pudo guardar, las tarjetas viajan sin id y el front simplemente no registra la elección.
+        if (guardado != null)
+        {
+            opciones = opciones.stream()
+                    .map(opcion -> opcion.withViajeId(guardado.getId()))
+                    .toList();
+        }
 
         // 6. ORDENAMIENTO:
         // Devuelve las opciones ordenadas por el precio más bajo para ayudar al usuario a ahorrar.
