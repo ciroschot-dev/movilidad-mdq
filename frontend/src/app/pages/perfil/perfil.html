@@ -1,4 +1,4 @@
-<!-- Pantalla "Mi perfil": el usuario y el email de la cuenta, para verlos y cambiarlos -->
+<!-- Pantalla "Mi perfil": el usuario y el email de la cuenta, para verlos, cambiarlos o eliminar la cuenta -->
 <section class="perfil">
   <h1 class="titulo">Editar Perfil</h1>
 
@@ -48,5 +48,8 @@
         {{ guardando() ? 'GUARDANDO…' : 'GUARDAR' }}
       </button>
     </form>
+
+    <!-- Separado del formulario y en rojo, para que no se toque por error -->
+    <button class="eliminar" type="button" (click)="confirmarEliminar()">Eliminar cuenta</button>
   }
 </section>

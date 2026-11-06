@@ -64,6 +64,19 @@
   cursor: default;
 }
 
+/* Botón de peligro: solo el borde y el texto en rojo, separado del formulario */
+.eliminar {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--color-error);
+  font-weight: bold;
+  cursor: pointer;
+}
+
 .pie {
   margin: 0;
   text-align: center;

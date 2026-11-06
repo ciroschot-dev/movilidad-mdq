@@ -5,7 +5,7 @@ import { AuthService } from '../../services/auth';
 import { AvisoService } from '../../services/avisos';
 import { UsuarioService } from '../../services/usuario';
 
-// Pantalla "Mi perfil": ver los datos de la cuenta (RF04) y modificarlos (RF05)
+// Pantalla "Mi perfil": ver los datos de la cuenta (RF04), modificarlos (RF05) y eliminar la cuenta (RF06)
 @Component({
   selector: 'app-perfil',
   imports: [ReactiveFormsModule],
@@ -27,7 +27,7 @@ export class Perfil {
   // true mientras guarda: bloquea el botón para no mandar el perfil dos veces
   protected readonly guardando = signal(false);
 
-  // El id de la cuenta, que el back pide en la dirección para guardar
+  // El id de la cuenta, que el back pide en la dirección para guardar y para eliminar
   private id = 0;
   // El nombre de usuario con el que se inició sesión, para saber si se cambió al guardar
   private usuarioOriginal = '';
@@ -91,6 +91,23 @@ export class Perfil {
         this.error.set(respuesta.error?.message ?? 'No se pudo actualizar el perfil.');
         this.guardando.set(false);
       },
+    });
+  }
+
+  // Pide confirmación antes de borrar: es definitivo (RF06)
+  protected confirmarEliminar() {
+    this.avisos.confirmar('¿Eliminar tu cuenta? No se puede deshacer.', () => this.eliminar());
+  }
+
+  private eliminar() {
+    this.usuarios.eliminar(this.id).subscribe({
+      // Salió bien: la cuenta ya no existe, así que se cierra la sesión y vuelve al login
+      next: () => {
+        this.avisos.mostrar('Tu cuenta se eliminó.');
+        this.auth.cerrarSesion();
+      },
+      error: (respuesta: HttpErrorResponse) =>
+        this.avisos.mostrar(respuesta.error?.message ?? 'No se pudo eliminar la cuenta.', 'error'),
     });
   }
 }
