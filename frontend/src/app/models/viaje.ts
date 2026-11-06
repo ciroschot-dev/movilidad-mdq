@@ -19,6 +19,18 @@ export interface CalculoViaje extends BusquedaForm {
   destinoLng: number;
 }
 
+// Un destino del ranking de los más buscados (igual a DestinoPopularResponse): el lugar y cuántas veces se buscó
+export interface DestinoPopular {
+  destino: string;
+  cantidad: number;
+}
+
+// Lo que se completa en el filtro del ranking (RF25): las dos fechas. Son opcionales
+export interface FiltroDestinos {
+  desde: string; // llegan como aaaa-mm-dd desde el input de fecha
+  hasta: string;
+}
+
 // Una de las opciones que devuelve el back al cotizar (igual a OpcionTransporteResponse)
 export interface OpcionTransporte {
   viajeId: number | null; // id del viaje guardado; null si el back no pudo guardarlo
