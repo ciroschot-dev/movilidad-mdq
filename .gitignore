@@ -49,3 +49,6 @@ movilidad-key.pem
 # macOS
 .DS_Store
 **/.DS_Store
+
+# AJUSTES LOCALES DE LAS HERRAMIENTAS
+.commandcode/

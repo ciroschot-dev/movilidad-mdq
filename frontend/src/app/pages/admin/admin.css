@@ -113,3 +113,42 @@
 .tarifa .boton {
   margin-top: 0.25rem;
 }
+
+/* Las dos fechas del ranking, una al lado de la otra; en el celular el navegador las pone una abajo de la otra */
+.filtro {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+/* El botón ocupa todo el ancho, abajo de las fechas */
+.filtro .boton {
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+}
+
+/* Tabla del top 10: ocupa todo el ancho de la tarjeta y se lee también en el celular */
+.tabla {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.tabla th,
+.tabla td {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+}
+
+.tabla th {
+  color: var(--color-texto-suave);
+  font-weight: normal;
+}
+
+/* La cantidad se alinea a la derecha, con su encabezado */
+.tabla th:last-child,
+.tabla td:last-child {
+  text-align: right;
+}
