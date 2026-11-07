@@ -19,6 +19,20 @@ export interface CalculoViaje extends BusquedaForm {
   destinoLng: number;
 }
 
+// Un viaje del historial (los campos de ViajeHistorialResponse que muestra la pantalla Historial, RF13)
+export interface ViajeHistorial {
+  id: number;
+  origen: string;
+  destino: string;
+  distanciaEnMetros: number;
+  tiempoEstimadoMin: number;
+  // Los precios de aquel momento; null si esa app no se pudo cotizar
+  precioTaxi: number | null;
+  precioUber: number | null;
+  precioDidi: number | null;
+  fechaHora: string; // llega como aaaa-mm-ddThh:mm:ss
+}
+
 // Un destino del ranking de los más buscados (igual a DestinoPopularResponse): el lugar y cuántas veces se buscó
 export interface DestinoPopular {
   destino: string;

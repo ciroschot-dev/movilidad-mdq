@@ -2,8 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { PerfilForm, Usuario } from '../models/usuario';
+import { ViajeHistorial } from '../models/viaje';
 
-// Pedidos sobre las cuentas de usuario: el perfil propio y, para el admin, buscar y eliminar
+// Pedidos sobre las cuentas de usuario: el perfil propio, su historial y, para el admin, buscar y eliminar
 @Service()
 export class UsuarioService {
   private http = inject(HttpClient);
@@ -17,6 +18,11 @@ export class UsuarioService {
   // PUT /usuarios/:id → guarda los datos nuevos del perfil y devuelve la cuenta ya actualizada
   actualizar(id: number, datos: PerfilForm) {
     return this.http.put<Usuario>(`${this.url}/${id}`, datos);
+  }
+
+  // GET /usuarios/:id/historial → los viajes de la cuenta, del más reciente al más viejo (RF13)
+  historial(id: number) {
+    return this.http.get<ViajeHistorial[]>(`${this.url}/${id}/historial`);
   }
 
   // GET /usuarios/buscar?query=… → el usuario con ese nombre o email (si no existe, el back da 404)

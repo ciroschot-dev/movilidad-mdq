@@ -1,0 +1,38 @@
+<!-- Pantalla Historial: una tarjeta por viaje cotizado, con la fecha, la ruta, el tiempo, los km y los tres precios -->
+<section class="historial">
+  <h1 class="titulo">Historial</h1>
+
+  @if (cargando()) {
+    <p class="dato">Cargando…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    @for (viaje of viajes(); track viaje.id) {
+      <article class="viaje">
+        <p class="fecha">{{ formatearFecha(viaje.fechaHora) }}</p>
+        <p class="ruta">{{ viaje.origen }} → {{ viaje.destino }}</p>
+        <p class="dato">
+          {{ viaje.tiempoEstimadoMin }} min · {{ formatearKm(viaje.distanciaEnMetros) }}
+        </p>
+
+        <!-- Los precios de aquel momento, uno al lado del otro para compararlos -->
+        <dl class="precios">
+          <div>
+            <dt>Taxi</dt>
+            <dd>{{ formatearPrecio(viaje.precioTaxi) }}</dd>
+          </div>
+          <div>
+            <dt>Uber</dt>
+            <dd>{{ formatearPrecio(viaje.precioUber) }}</dd>
+          </div>
+          <div>
+            <dt>Didi</dt>
+            <dd>{{ formatearPrecio(viaje.precioDidi) }}</dd>
+          </div>
+        </dl>
+      </article>
+    } @empty {
+      <p class="dato">Todavía no tenés viajes guardados.</p>
+    }
+  }
+</section>
