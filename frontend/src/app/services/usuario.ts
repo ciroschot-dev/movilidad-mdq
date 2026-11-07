@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { PerfilForm, Usuario } from '../models/usuario';
-import { ViajeHistorial } from '../models/viaje';
+import { ViajeFrecuente, ViajeHistorial } from '../models/viaje';
 
 // Pedidos sobre las cuentas de usuario: el perfil propio, su historial y, para el admin, buscar y eliminar
 @Service()
@@ -28,6 +28,12 @@ export class UsuarioService {
   // DELETE /usuarios/:id/historial/:viajeId → borra ese viaje del historial (RF14); no devuelve nada (void)
   borrarViaje(id: number, viajeId: number) {
     return this.http.delete<void>(`${this.url}/${id}/historial/${viajeId}`);
+  }
+
+  // GET /usuarios/:id/viaje-frecuente → el viaje más repetido (RF15). Si no hay, el back responde 204
+  // sin cuerpo y llega null
+  viajeFrecuente(id: number) {
+    return this.http.get<ViajeFrecuente | null>(`${this.url}/${id}/viaje-frecuente`);
   }
 
   // GET /usuarios/buscar?query=… → el usuario con ese nombre o email (si no existe, el back da 404)

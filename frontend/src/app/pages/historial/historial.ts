@@ -1,11 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { switchMap, tap } from 'rxjs';
-import { ViajeHistorial } from '../../models/viaje';
+import { ViajeFrecuente, ViajeHistorial } from '../../models/viaje';
 import { AvisoService } from '../../services/avisos';
 import { UsuarioService } from '../../services/usuario';
 
-// Pantalla Historial: los viajes que cotizó el usuario, del más reciente al más viejo (RF13), y borrarlos (RF14)
+// Pantalla Historial: los viajes que cotizó el usuario, del más reciente al más viejo (RF13), borrarlos (RF14)
+// y el viaje que más repite (RF15)
 @Component({
   selector: 'app-historial',
   imports: [],
@@ -24,6 +25,8 @@ export class Historial {
   protected readonly error = signal('');
   // El id del viaje que se está borrando, para bloquear su botón y no mandarlo dos veces
   protected readonly borrando = signal<number | null>(null);
+  // El viaje que más repite; null = no tiene ninguno, y la tarjeta no aparece
+  protected readonly frecuente = signal<ViajeFrecuente | null>(null);
 
   // El id de la cuenta, que el back pide en la dirección para traer y para borrar viajes
   private id = 0;
@@ -34,7 +37,10 @@ export class Historial {
     this.usuarios
       .actual()
       .pipe(
-        tap((usuario) => (this.id = usuario.id)),
+        tap((usuario) => {
+          this.id = usuario.id;
+          this.cargarFrecuente();
+        }),
         switchMap((usuario) => this.usuarios.historial(usuario.id)),
       )
       .subscribe({
@@ -58,11 +64,21 @@ export class Historial {
         this.viajes.update((viajes) => viajes.filter((v) => v.id !== viaje.id));
         this.borrando.set(null);
         this.avisos.mostrar('Viaje borrado.');
+        // Con un viaje menos el frecuente puede cambiar o dejar de existir: se le vuelve a pedir al back
+        this.cargarFrecuente();
       },
       error: (respuesta: HttpErrorResponse) => {
         this.borrando.set(null);
         this.avisos.mostrar(respuesta.error?.message ?? 'No se pudo borrar el viaje.', 'error');
       },
+    });
+  }
+
+  // Pide el viaje frecuente (RF15). Si falla no se avisa: es un extra y el historial se ve igual
+  private cargarFrecuente() {
+    this.usuarios.viajeFrecuente(this.id).subscribe({
+      next: (frecuente) => this.frecuente.set(frecuente),
+      error: () => this.frecuente.set(null),
     });
   }
 

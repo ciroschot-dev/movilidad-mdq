@@ -9,6 +9,15 @@
   margin-top: 0;
 }
 
+/* La tarjeta del viaje frecuente se distingue de las del historial con el borde del color principal */
+.frecuente {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  background-color: var(--color-superficie);
+  border: 2px solid var(--color-primario);
+  border-radius: 8px;
+}
+
 /* Una tarjeta por viaje, separadas entre sí */
 .viaje {
   margin-bottom: 0.75rem;

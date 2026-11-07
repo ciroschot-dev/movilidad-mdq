@@ -33,6 +33,13 @@ export interface ViajeHistorial {
   fechaHora: string; // llega como aaaa-mm-ddThh:mm:ss
 }
 
+// El viaje que el usuario más repite (igual a ViajeFrecuenteResponse, RF15). El back lo da desde 3 veces
+export interface ViajeFrecuente {
+  origen: string;
+  destino: string;
+  cantidad: number;
+}
+
 // Un destino del ranking de los más buscados (igual a DestinoPopularResponse): el lugar y cuántas veces se buscó
 export interface DestinoPopular {
   destino: string;
