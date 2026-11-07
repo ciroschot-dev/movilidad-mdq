@@ -1,10 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { switchMap } from 'rxjs';
+import { switchMap, tap } from 'rxjs';
 import { ViajeHistorial } from '../../models/viaje';
+import { AvisoService } from '../../services/avisos';
 import { UsuarioService } from '../../services/usuario';
 
-// Pantalla Historial: los viajes que cotizó el usuario, del más reciente al más viejo (RF13)
+// Pantalla Historial: los viajes que cotizó el usuario, del más reciente al más viejo (RF13), y borrarlos (RF14)
 @Component({
   selector: 'app-historial',
   imports: [],
@@ -13,6 +14,7 @@ import { UsuarioService } from '../../services/usuario';
 })
 export class Historial {
   private readonly usuarios = inject(UsuarioService);
+  private readonly avisos = inject(AvisoService);
 
   // Los viajes que devolvió el back
   protected readonly viajes = signal<ViajeHistorial[]>([]);
@@ -20,13 +22,21 @@ export class Historial {
   protected readonly cargando = signal(true);
   // Aviso que se muestra si el back no pudo traer el historial
   protected readonly error = signal('');
+  // El id del viaje que se está borrando, para bloquear su botón y no mandarlo dos veces
+  protected readonly borrando = signal<number | null>(null);
+
+  // El id de la cuenta, que el back pide en la dirección para traer y para borrar viajes
+  private id = 0;
 
   constructor() {
     // El back pide el id de la cuenta en la dirección, y la sesión guarda solo el token:
     // primero se trae la cuenta (GET /usuarios/me) y con su id se pide el historial
     this.usuarios
       .actual()
-      .pipe(switchMap((usuario) => this.usuarios.historial(usuario.id)))
+      .pipe(
+        tap((usuario) => (this.id = usuario.id)),
+        switchMap((usuario) => this.usuarios.historial(usuario.id)),
+      )
       .subscribe({
         next: (viajes) => {
           this.viajes.set(viajes);
@@ -38,6 +48,22 @@ export class Historial {
           this.cargando.set(false);
         },
       });
+  }
+
+  // Borra el viaje (RF14). Recién cuando el back confirma se saca de la lista, así no desaparece si falló
+  protected borrar(viaje: ViajeHistorial) {
+    this.borrando.set(viaje.id);
+    this.usuarios.borrarViaje(this.id, viaje.id).subscribe({
+      next: () => {
+        this.viajes.update((viajes) => viajes.filter((v) => v.id !== viaje.id));
+        this.borrando.set(null);
+        this.avisos.mostrar('Viaje borrado.');
+      },
+      error: (respuesta: HttpErrorResponse) => {
+        this.borrando.set(null);
+        this.avisos.mostrar(respuesta.error?.message ?? 'No se pudo borrar el viaje.', 'error');
+      },
+    });
   }
 
   // El back manda la fecha sin zona (2026-06-03T14:30:00): se muestra como en Argentina (3/6/26, 14:30)

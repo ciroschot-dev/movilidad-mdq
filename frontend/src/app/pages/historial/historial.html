@@ -9,7 +9,19 @@
   } @else {
     @for (viaje of viajes(); track viaje.id) {
       <article class="viaje">
-        <p class="fecha">{{ formatearFecha(viaje.fechaHora) }}</p>
+        <!-- La fecha y, en la misma línea a la derecha, el botón para borrar este viaje (RF14) -->
+        <div class="cabecera">
+          <p class="fecha">{{ formatearFecha(viaje.fechaHora) }}</p>
+          <!-- Bloqueado mientras el back borra este viaje, así no se manda dos veces -->
+          <button
+            class="borrar"
+            type="button"
+            [disabled]="borrando() === viaje.id"
+            (click)="borrar(viaje)"
+          >
+            {{ borrando() === viaje.id ? 'Borrando…' : 'Borrar' }}
+          </button>
+        </div>
         <p class="ruta">{{ viaje.origen }} → {{ viaje.destino }}</p>
         <p class="dato">
           {{ viaje.tiempoEstimadoMin }} min · {{ formatearKm(viaje.distanciaEnMetros) }}
