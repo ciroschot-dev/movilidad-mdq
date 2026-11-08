@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { DireccionFavorita } from '../models/lugar';
 import { CalculoViaje, DestinoPopular, FiltroDestinos, OpcionTransporte } from '../models/viaje';
 
 // Junta los pedidos al back que tienen que ver con viajes (/viajes)
@@ -23,6 +24,12 @@ export class ViajeService {
   // en Favoritos. No devuelve nada (void): el estado nuevo es el contrario al que tenía
   alternarFavorito(viajeId: number) {
     return this.http.put<void>(`${this.url}/${viajeId}/favorito`, null);
+  }
+
+  // GET /viajes/direcciones-favoritas → las direcciones guardadas en Favoritos (RF18). El back sabe de quién
+  // son por el token, así que no lleva el id de la cuenta
+  direccionesFavoritas() {
+    return this.http.get<DireccionFavorita[]>(`${this.url}/direcciones-favoritas`);
   }
 
   // Top 10 de los destinos más buscados, filtrado por fechas (RF25). Solo manda las fechas que tienen algo

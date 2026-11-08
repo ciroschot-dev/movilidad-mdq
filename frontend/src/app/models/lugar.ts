@@ -6,3 +6,14 @@ export interface Lugar {
   lat: number;
   lng: number;
 }
+
+// Una dirección guardada en Favoritos (igual a DireccionFavoritaResponse, RF18). El back la guarda al marcar
+// un viaje con la ⭐; el nombre queda vacío hasta que el usuario lo renombra (RF27)
+export interface DireccionFavorita {
+  id: number;
+  nombre: string | null;
+  direccion: string;
+  placeId: string | null;
+  lat: number | null;
+  lng: number | null;
+}
