@@ -1,0 +1,91 @@
+/* Mismo ancho que Cotizar, así las pestañas se ven parejas */
+.historial {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.titulo {
+  margin-top: 0;
+}
+
+/* La tarjeta del viaje frecuente se distingue de las del historial con el borde del color principal */
+.frecuente {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  background-color: var(--color-superficie);
+  border: 2px solid var(--color-primario);
+  border-radius: 8px;
+}
+
+/* Una tarjeta por viaje, separadas entre sí */
+.viaje {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+
+.viaje p {
+  margin: 0 0 0.25rem;
+}
+
+/* La fecha a la izquierda y el botón Borrar a la derecha */
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Botón de peligro chico: borde y texto en rojo, como "Eliminar cuenta" pero sin ocupar todo el ancho */
+.borrar {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--color-error);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.borrar:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.fecha {
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+}
+
+.ruta {
+  font-weight: bold;
+}
+
+.dato {
+  color: var(--color-texto-suave);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+/* Los tres precios en columnas iguales; entran juntos también en el celular */
+.precios {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+}
+
+.precios dt {
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+}
+
+.precios dd {
+  margin: 0;
+  font-weight: bold;
+}

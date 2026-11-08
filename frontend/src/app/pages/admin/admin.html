@@ -68,4 +68,55 @@
       {{ guardando() ? 'GUARDANDO…' : 'GUARDAR TARIFA' }}
     </button>
   </form>
+
+  <!-- Destinos populares (RF25): el top 10 de lo más buscado, filtrado por fechas -->
+  <h2 class="subtitulo">Destinos populares</h2>
+
+  <form class="filtro" [formGroup]="filtroForm" (ngSubmit)="verDestinos()">
+    <label class="campo">
+      Desde
+      <input type="date" formControlName="desde" />
+    </label>
+    <label class="campo">
+      Hasta
+      <input type="date" formControlName="hasta" />
+    </label>
+
+    <!-- Bloqueado mientras espera al back, así no se pide dos veces -->
+    <button class="boton" type="submit" [disabled]="cargandoDestinos()">
+      {{ cargandoDestinos() ? 'BUSCANDO…' : 'FILTRAR' }}
+    </button>
+  </form>
+
+  @if (errorDestinos()) {
+    <p class="error">{{ errorDestinos() }}</p>
+  }
+
+  <!-- Hasta que no se filtra no se muestra la tabla: solo el aviso de la historia -->
+  @if (destinos(); as lista) {
+    @if (lista.length) {
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Destino</th>
+            <th>Búsquedas</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (destino of lista; track destino.destino; let posicion = $index) {
+            <tr>
+              <td>{{ posicion + 1 }}</td>
+              <td>{{ destino.destino }}</td>
+              <td>{{ destino.cantidad }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="dato">No hay búsquedas para ese filtro.</p>
+    }
+  } @else if (!errorDestinos()) {
+    <p class="dato">Aplica un filtro para ver estadísticas.</p>
+  }
 </section>

@@ -19,6 +19,39 @@ export interface CalculoViaje extends BusquedaForm {
   destinoLng: number;
 }
 
+// Un viaje del historial (los campos de ViajeHistorialResponse que muestra la pantalla Historial, RF13)
+export interface ViajeHistorial {
+  id: number;
+  origen: string;
+  destino: string;
+  distanciaEnMetros: number;
+  tiempoEstimadoMin: number;
+  // Los precios de aquel momento; null si esa app no se pudo cotizar
+  precioTaxi: number | null;
+  precioUber: number | null;
+  precioDidi: number | null;
+  fechaHora: string; // llega como aaaa-mm-ddThh:mm:ss
+}
+
+// El viaje que el usuario más repite (igual a ViajeFrecuenteResponse, RF15). El back lo da desde 3 veces
+export interface ViajeFrecuente {
+  origen: string;
+  destino: string;
+  cantidad: number;
+}
+
+// Un destino del ranking de los más buscados (igual a DestinoPopularResponse): el lugar y cuántas veces se buscó
+export interface DestinoPopular {
+  destino: string;
+  cantidad: number;
+}
+
+// Lo que se completa en el filtro del ranking (RF25): las dos fechas. Son opcionales
+export interface FiltroDestinos {
+  desde: string; // llegan como aaaa-mm-dd desde el input de fecha
+  hasta: string;
+}
+
 // Una de las opciones que devuelve el back al cotizar (igual a OpcionTransporteResponse)
 export interface OpcionTransporte {
   viajeId: number | null; // id del viaje guardado; null si el back no pudo guardarlo
