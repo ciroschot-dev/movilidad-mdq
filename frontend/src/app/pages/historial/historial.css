@@ -1,0 +1,58 @@
+/* Mismo ancho que Cotizar, así las pestañas se ven parejas */
+.historial {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.titulo {
+  margin-top: 0;
+}
+
+/* Una tarjeta por viaje, separadas entre sí */
+.viaje {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+
+.viaje p {
+  margin: 0 0 0.25rem;
+}
+
+.fecha {
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+}
+
+.ruta {
+  font-weight: bold;
+}
+
+.dato {
+  color: var(--color-texto-suave);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+/* Los tres precios en columnas iguales; entran juntos también en el celular */
+.precios {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+}
+
+.precios dt {
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+}
+
+.precios dd {
+  margin: 0;
+  font-weight: bold;
+}
