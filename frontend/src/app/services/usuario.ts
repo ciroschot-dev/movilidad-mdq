@@ -25,6 +25,11 @@ export class UsuarioService {
     return this.http.get<ViajeHistorial[]>(`${this.url}/${id}/historial`);
   }
 
+  // DELETE /usuarios/:id/historial/:viajeId → borra ese viaje del historial (RF14); no devuelve nada (void)
+  borrarViaje(id: number, viajeId: number) {
+    return this.http.delete<void>(`${this.url}/${id}/historial/${viajeId}`);
+  }
+
   // GET /usuarios/buscar?query=… → el usuario con ese nombre o email (si no existe, el back da 404)
   buscar(query: string) {
     return this.http.get<Usuario>(`${this.url}/buscar`, { params: { query } });
