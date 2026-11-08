@@ -7,6 +7,14 @@
   } @else if (error()) {
     <p class="error">{{ error() }}</p>
   } @else {
+    <!-- Viaje frecuente (RF15): arriba de la lista y solo si tiene uno -->
+    @if (frecuente(); as frecuente) {
+      <p class="frecuente">
+        <strong>Viaje frecuente:</strong> {{ frecuente.origen }} → {{ frecuente.destino }}. Lo
+        hiciste {{ frecuente.cantidad }} veces
+      </p>
+    }
+
     @for (viaje of viajes(); track viaje.id) {
       <article class="viaje">
         <!-- La fecha y, en la misma línea a la derecha, el botón para borrar este viaje (RF14) -->
