@@ -26,10 +26,22 @@
 
     @for (viaje of viajes(); track viaje.id) {
       <article class="viaje">
-        <!-- La fecha y, en la misma línea a la derecha, los botones para repetir (RF16) y borrar (RF14) -->
+        <!-- La fecha y, en la misma línea a la derecha, la ⭐ (RF17) y los botones para repetir (RF16) y borrar (RF14) -->
         <div class="cabecera">
           <p class="fecha">{{ formatearFecha(viaje.fechaHora) }}</p>
           <div class="acciones">
+            <!-- Llena si es favorito y vacía si no; el aria-label le dice al lector de pantalla qué hace -->
+            <button
+              class="estrella"
+              type="button"
+              [class.llena]="viaje.favorito"
+              [attr.aria-label]="viaje.favorito ? 'Quitar de favoritos' : 'Marcar como favorito'"
+              [attr.aria-pressed]="viaje.favorito"
+              [disabled]="marcando() === viaje.id"
+              (click)="alternarFavorito(viaje)"
+            >
+              {{ viaje.favorito ? '★' : '☆' }}
+            </button>
             <!-- Solo si el viaje tiene los datos de Google que Cotizar necesita -->
             @if (sePuedeRepetir(viaje)) {
               <button class="repetir" type="button" (click)="repetir(viaje)">Repetir</button>

@@ -33,6 +33,7 @@ export interface ViajeHistorial {
   precioUber: number | null;
   precioDidi: number | null;
   fechaHora: string; // llega como aaaa-mm-ddThh:mm:ss
+  favorito: boolean; // si tiene la ⭐ (RF17)
   // Los datos de Google de cada dirección, para repetir la búsqueda (RF16). Un viaje viejo puede no tenerlos
   origenPlaceId: string | null;
   origenLat: number | null;

@@ -65,6 +65,26 @@
   gap: 0.5rem;
 }
 
+/* La estrella de favorito: sin borde ni fondo, solo el símbolo, vacía en gris y llena en amarillo */
+.estrella {
+  padding: 0 0.25rem;
+  border: none;
+  background-color: transparent;
+  color: var(--color-texto-suave);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.estrella.llena {
+  color: #f5b301;
+}
+
+.estrella:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* Botón chico con el color principal, del mismo tamaño que Borrar */
 .repetir {
   padding: 0.25rem 0.75rem;
