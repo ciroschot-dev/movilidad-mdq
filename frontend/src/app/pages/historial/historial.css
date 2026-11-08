@@ -9,13 +9,33 @@
   margin-top: 0;
 }
 
-/* La tarjeta del viaje frecuente se distingue de las del historial con el borde del color principal */
+/* La tarjeta del viaje frecuente se distingue de las del historial con el borde del color principal.
+   Es un botón (se toca para repetirlo), así que se le sacan los estilos de botón del navegador */
 .frecuente {
+  display: block;
+  width: 100%;
   margin: 0 0 1rem;
   padding: 1rem;
   background-color: var(--color-superficie);
   border: 2px solid var(--color-primario);
   border-radius: 8px;
+  color: var(--color-texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Si no se puede repetir, la tarjeta se ve igual pero no parece tocable */
+.frecuente:disabled {
+  cursor: default;
+}
+
+/* Aviso de que la tarjeta se toca, abajo del texto y en el color principal */
+.frecuente .accion {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-primario);
 }
 
 /* Una tarjeta por viaje, separadas entre sí */
@@ -37,6 +57,23 @@
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Los dos botones de cada viaje, juntos a la derecha */
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Botón chico con el color principal, del mismo tamaño que Borrar */
+.repetir {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--color-primario);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--color-primario);
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 
 /* Botón de peligro chico: borde y texto en rojo, como "Eliminar cuenta" pero sin ocupar todo el ancho */

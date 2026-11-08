@@ -7,28 +7,43 @@
   } @else if (error()) {
     <p class="error">{{ error() }}</p>
   } @else {
-    <!-- Viaje frecuente (RF15): arriba de la lista y solo si tiene uno -->
+    <!-- Viaje frecuente (RF15): arriba de la lista y solo si tiene uno. Toda la tarjeta es un botón que lo
+         vuelve a cotizar (RF16); queda bloqueada si en la lista no hay un viaje así con los datos de Google -->
     @if (frecuente(); as frecuente) {
-      <p class="frecuente">
+      <button
+        class="frecuente"
+        type="button"
+        [disabled]="!viajeDelFrecuente()"
+        (click)="repetir(viajeDelFrecuente()!)"
+      >
         <strong>Viaje frecuente:</strong> {{ frecuente.origen }} → {{ frecuente.destino }}. Lo
         hiciste {{ frecuente.cantidad }} veces
-      </p>
+        @if (viajeDelFrecuente()) {
+          <span class="accion">Tocá para repetirlo</span>
+        }
+      </button>
     }
 
     @for (viaje of viajes(); track viaje.id) {
       <article class="viaje">
-        <!-- La fecha y, en la misma línea a la derecha, el botón para borrar este viaje (RF14) -->
+        <!-- La fecha y, en la misma línea a la derecha, los botones para repetir (RF16) y borrar (RF14) -->
         <div class="cabecera">
           <p class="fecha">{{ formatearFecha(viaje.fechaHora) }}</p>
-          <!-- Bloqueado mientras el back borra este viaje, así no se manda dos veces -->
-          <button
-            class="borrar"
-            type="button"
-            [disabled]="borrando() === viaje.id"
-            (click)="borrar(viaje)"
-          >
-            {{ borrando() === viaje.id ? 'Borrando…' : 'Borrar' }}
-          </button>
+          <div class="acciones">
+            <!-- Solo si el viaje tiene los datos de Google que Cotizar necesita -->
+            @if (sePuedeRepetir(viaje)) {
+              <button class="repetir" type="button" (click)="repetir(viaje)">Repetir</button>
+            }
+            <!-- Bloqueado mientras el back borra este viaje, así no se manda dos veces -->
+            <button
+              class="borrar"
+              type="button"
+              [disabled]="borrando() === viaje.id"
+              (click)="borrar(viaje)"
+            >
+              {{ borrando() === viaje.id ? 'Borrando…' : 'Borrar' }}
+            </button>
+          </div>
         </div>
         <p class="ruta">{{ viaje.origen }} → {{ viaje.destino }}</p>
         <p class="dato">

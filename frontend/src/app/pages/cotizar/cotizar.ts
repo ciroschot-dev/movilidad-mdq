@@ -1,9 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Mapa } from '../../components/mapa/mapa';
 import { Lugar } from '../../models/lugar';
-import { CalculoViaje, OpcionTransporte } from '../../models/viaje';
+import { CalculoViaje, OpcionTransporte, ViajeARepetir } from '../../models/viaje';
 import { LugarService } from '../../services/lugares';
 import { ViajeService } from '../../services/viaje';
 
@@ -22,6 +23,7 @@ export class Cotizar {
   private readonly viajes = inject(ViajeService);
   private readonly lugares = inject(LugarService);
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
 
   // Lo que devolvió el back: una tarjeta por opción (RF09)
   protected readonly opciones = signal<OpcionTransporte[]>([]);
@@ -50,6 +52,15 @@ export class Cotizar {
   protected readonly ruta = signal<google.maps.DirectionsResult | null>(null);
 
   constructor() {
+    // Si se llegó desde "Repetir" en el historial (RF16), vienen las dos direcciones: se cotiza ese viaje
+    // y no se pide la ubicación, que pisaría el origen del viaje que se quiere repetir
+    const repetir = this.router.currentNavigation()?.extras.state?.['repetir'] as
+      ViajeARepetir | undefined;
+    if (repetir) {
+      this.repetir(repetir);
+      return;
+    }
+
     // Al abrir la pantalla, si el navegador ya tiene el permiso de ubicación dado, el origen se completa solo (RF26).
     // Si al usuario todavía no se lo pidió, acá no se pide: los navegadores no muestran el cartel de permiso
     // sin un toque del usuario, así que en ese caso queda el link "Usar mi ubicación" debajo del campo
@@ -160,6 +171,15 @@ export class Cotizar {
       // Un navegador que bloquea la ubicación puede fallar en el acto: se destraba el botón
       this.ubicando.set(false);
     }
+  }
+
+  // Carga las dos direcciones del viaje a repetir como si se hubieran elegido de la lista y cotiza (RF16)
+  private repetir({ origen, destino }: ViajeARepetir) {
+    this.busquedaForm.setValue({ origen: origen.direccion, destino: destino.direccion });
+    this.origen.set(origen);
+    this.destino.set(destino);
+    this.trazarRuta();
+    this.calcular();
   }
 
   // Al salir del campo se esconde la lista (por eso las sugerencias se eligen con mousedown, que llega antes)
