@@ -1,0 +1,21 @@
+<!-- Pantalla Favoritos: una tarjeta por dirección guardada, con su nombre y la dirección completa -->
+<section class="favoritos">
+  <h1 class="titulo">Favoritos</h1>
+
+  @if (cargando()) {
+    <p class="dato">Cargando…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    @for (direccion of direcciones(); track direccion.id) {
+      <article class="direccion">
+        <!-- Hasta que se le pone un nombre ("Casa", "Trabajo") se ve "Sin nombre", como pide RF27 -->
+        <p class="nombre">{{ direccion.nombre || 'Sin nombre' }}</p>
+        <p class="dato">{{ direccion.direccion }}</p>
+      </article>
+    } @empty {
+      <p class="dato">No tenés direcciones favoritas.</p>
+      <p class="ayuda">Marcá un viaje con la ⭐ en Historial y sus direcciones aparecen acá.</p>
+    }
+  }
+</section>

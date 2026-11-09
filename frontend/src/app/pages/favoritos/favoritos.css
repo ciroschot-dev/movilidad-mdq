@@ -1,0 +1,41 @@
+/* Mismo ancho que Historial y Cotizar, así las pestañas se ven parejas */
+.favoritos {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.titulo {
+  margin-top: 0;
+}
+
+/* Una tarjeta por dirección, igual que las del historial */
+.direccion {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+
+.direccion p {
+  margin: 0 0 0.25rem;
+}
+
+.nombre {
+  font-weight: bold;
+}
+
+.dato {
+  color: var(--color-texto-suave);
+}
+
+/* Pista de cómo cargar favoritos, más chica que el mensaje */
+.ayuda {
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+}
+
+.error {
+  color: var(--color-error);
+}
