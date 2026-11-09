@@ -1,12 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { switchMap, tap } from 'rxjs';
-import { ViajeFrecuente, ViajeHistorial } from '../../models/viaje';
+import { ViajeARepetir, ViajeFrecuente, ViajeHistorial } from '../../models/viaje';
 import { AvisoService } from '../../services/avisos';
 import { UsuarioService } from '../../services/usuario';
 
-// Pantalla Historial: los viajes que cotizó el usuario, del más reciente al más viejo (RF13), borrarlos (RF14)
-// y el viaje que más repite (RF15)
+// Pantalla Historial: los viajes que cotizó el usuario, del más reciente al más viejo (RF13), borrarlos (RF14),
+// el viaje que más repite (RF15) y volver a cotizar cualquiera de ellos (RF16)
 @Component({
   selector: 'app-historial',
   imports: [],
@@ -16,6 +17,7 @@ import { UsuarioService } from '../../services/usuario';
 export class Historial {
   private readonly usuarios = inject(UsuarioService);
   private readonly avisos = inject(AvisoService);
+  private readonly router = inject(Router);
 
   // Los viajes que devolvió el back
   protected readonly viajes = signal<ViajeHistorial[]>([]);
@@ -27,6 +29,23 @@ export class Historial {
   protected readonly borrando = signal<number | null>(null);
   // El viaje que más repite; null = no tiene ninguno, y la tarjeta no aparece
   protected readonly frecuente = signal<ViajeFrecuente | null>(null);
+  // El back manda el frecuente solo con el texto, sin los datos de Google: para repetirlo se usa el viaje
+  // más reciente de la lista con ese mismo origen y destino. null = no hay ninguno que se pueda repetir
+  protected readonly viajeDelFrecuente = computed(() => {
+    const frecuente = this.frecuente();
+    if (!frecuente) {
+      return null;
+    }
+    // La lista ya viene del más reciente al más viejo, así que el primero que coincide es el último que hizo
+    return (
+      this.viajes().find(
+        (viaje) =>
+          viaje.origen === frecuente.origen &&
+          viaje.destino === frecuente.destino &&
+          this.sePuedeRepetir(viaje),
+      ) ?? null
+    );
+  });
 
   // El id de la cuenta, que el back pide en la dirección para traer y para borrar viajes
   private id = 0;
@@ -72,6 +91,42 @@ export class Historial {
         this.avisos.mostrar(respuesta.error?.message ?? 'No se pudo borrar el viaje.', 'error');
       },
     });
+  }
+
+  // Un viaje guardado antes de que el back anotara los datos de Google no se puede volver a cotizar:
+  // Cotizar necesita el lugar exacto de cada dirección, no solo el texto
+  protected sePuedeRepetir(viaje: ViajeHistorial) {
+    return (
+      viaje.origenPlaceId !== null &&
+      viaje.origenLat !== null &&
+      viaje.origenLng !== null &&
+      viaje.destinoPlaceId !== null &&
+      viaje.destinoLat !== null &&
+      viaje.destinoLng !== null
+    );
+  }
+
+  // Vuelve a cotizar el viaje (RF16): lleva a Cotizar con las dos direcciones, y Cotizar calcula solo
+  protected repetir(viaje: ViajeHistorial) {
+    const repetir: ViajeARepetir = {
+      origen: {
+        // El back guarda la dirección completa; el nombre corto es su primer pedazo ("Güemes 23")
+        nombre: viaje.origen.split(',')[0],
+        direccion: viaje.origen,
+        placeId: viaje.origenPlaceId!,
+        lat: viaje.origenLat!,
+        lng: viaje.origenLng!,
+      },
+      destino: {
+        nombre: viaje.destino.split(',')[0],
+        direccion: viaje.destino,
+        placeId: viaje.destinoPlaceId!,
+        lat: viaje.destinoLat!,
+        lng: viaje.destinoLng!,
+      },
+    };
+    // Las direcciones viajan en el estado de la navegación, no en la URL: no hace falta que se vean
+    this.router.navigate(['/cotizar'], { state: { repetir } });
   }
 
   // Pide el viaje frecuente (RF15). Si falla no se avisa: es un extra y el historial se ve igual
