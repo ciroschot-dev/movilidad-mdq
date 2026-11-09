@@ -39,3 +39,60 @@
 .error {
   color: var(--color-error);
 }
+
+/* El campo del nombre, igual que en Perfil */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-texto-suave);
+}
+
+.campo input {
+  padding: 0.5rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 6px;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-size: 1rem;
+}
+
+/* Los botones de cada tarjeta. flex-wrap: en un celular angosto bajan de renglón en vez de cortarse */
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.boton,
+.boton-borde {
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.boton {
+  border: 1px solid var(--color-primario);
+  background-color: var(--color-primario);
+  color: var(--color-superficie);
+}
+
+.boton-borde {
+  border: 1px solid var(--color-borde);
+  background-color: transparent;
+  color: var(--color-texto);
+}
+
+/* Quitar va en el color de error, como Borrar en el historial */
+.boton-borde.quitar {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.boton:disabled,
+.boton-borde:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
