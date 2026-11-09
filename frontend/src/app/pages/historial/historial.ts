@@ -5,9 +5,10 @@ import { switchMap, tap } from 'rxjs';
 import { ViajeARepetir, ViajeFrecuente, ViajeHistorial } from '../../models/viaje';
 import { AvisoService } from '../../services/avisos';
 import { UsuarioService } from '../../services/usuario';
+import { ViajeService } from '../../services/viaje';
 
 // Pantalla Historial: los viajes que cotizó el usuario, del más reciente al más viejo (RF13), borrarlos (RF14),
-// el viaje que más repite (RF15) y volver a cotizar cualquiera de ellos (RF16)
+// el viaje que más repite (RF15), volver a cotizar cualquiera de ellos (RF16) y marcarlos como favoritos (RF17)
 @Component({
   selector: 'app-historial',
   imports: [],
@@ -18,6 +19,7 @@ export class Historial {
   private readonly usuarios = inject(UsuarioService);
   private readonly avisos = inject(AvisoService);
   private readonly router = inject(Router);
+  private readonly viajesApi = inject(ViajeService);
 
   // Los viajes que devolvió el back
   protected readonly viajes = signal<ViajeHistorial[]>([]);
@@ -27,6 +29,8 @@ export class Historial {
   protected readonly error = signal('');
   // El id del viaje que se está borrando, para bloquear su botón y no mandarlo dos veces
   protected readonly borrando = signal<number | null>(null);
+  // El id del viaje al que se le está poniendo o sacando la ⭐, para no mandarlo dos veces
+  protected readonly marcando = signal<number | null>(null);
   // El viaje que más repite; null = no tiene ninguno, y la tarjeta no aparece
   protected readonly frecuente = signal<ViajeFrecuente | null>(null);
   // El back manda el frecuente solo con el texto, sin los datos de Google: para repetirlo se usa el viaje
@@ -89,6 +93,30 @@ export class Historial {
       error: (respuesta: HttpErrorResponse) => {
         this.borrando.set(null);
         this.avisos.mostrar(respuesta.error?.message ?? 'No se pudo borrar el viaje.', 'error');
+      },
+    });
+  }
+
+  // Pone o saca la ⭐ (RF17). Recién cuando el back confirma cambia la estrella, así no miente si falló
+  protected alternarFavorito(viaje: ViajeHistorial) {
+    this.marcando.set(viaje.id);
+    this.viajesApi.alternarFavorito(viaje.id).subscribe({
+      next: () => {
+        this.viajes.update((viajes) =>
+          viajes.map((v) => (v.id === viaje.id ? { ...v, favorito: !v.favorito } : v)),
+        );
+        this.marcando.set(null);
+        // Al marcarlo, el back guardó sus direcciones: se avisa dónde encontrarlas
+        if (!viaje.favorito) {
+          this.avisos.mostrar('Guardado en Favoritos.');
+        }
+      },
+      error: (respuesta: HttpErrorResponse) => {
+        this.marcando.set(null);
+        this.avisos.mostrar(
+          respuesta.error?.message ?? 'No se pudo actualizar el favorito.',
+          'error',
+        );
       },
     });
   }

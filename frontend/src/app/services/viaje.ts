@@ -19,6 +19,12 @@ export class ViajeService {
     return this.http.put<void>(`${this.url}/${viajeId}/opcion-elegida`, { tipo });
   }
 
+  // PUT /viajes/:viajeId/favorito → pone o saca la ⭐ (RF17). Al ponerla, el back guarda las dos direcciones
+  // en Favoritos. No devuelve nada (void): el estado nuevo es el contrario al que tenía
+  alternarFavorito(viajeId: number) {
+    return this.http.put<void>(`${this.url}/${viajeId}/favorito`, null);
+  }
+
   // Top 10 de los destinos más buscados, filtrado por fechas (RF25). Solo manda las fechas que tienen algo
   destinosPopulares(filtro: FiltroDestinos) {
     let params = new HttpParams();
