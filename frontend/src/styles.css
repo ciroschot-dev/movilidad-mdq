@@ -8,6 +8,8 @@
   --color-borde: #d9e2ec;
   --color-error: #c62828;
   --color-exito: #2e7d32;
+  /* La estrella de favoritos se ve bien en los dos temas, por eso html.dark no la redefine */
+  --color-estrella: #f5b301;
 }
 
 /* Tema oscuro: el servicio de tema agrega la clase dark al <html> */

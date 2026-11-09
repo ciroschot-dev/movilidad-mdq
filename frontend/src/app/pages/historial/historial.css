@@ -77,7 +77,7 @@
 }
 
 .estrella.llena {
-  color: #f5b301;
+  color: var(--color-estrella);
 }
 
 .estrella:disabled {
