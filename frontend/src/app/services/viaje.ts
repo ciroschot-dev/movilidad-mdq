@@ -32,6 +32,16 @@ export class ViajeService {
     return this.http.get<DireccionFavorita[]>(`${this.url}/direcciones-favoritas`);
   }
 
+  // PUT /viajes/direcciones-favoritas/{id} → le cambia el nombre a una dirección guardada (RF27)
+  renombrarDireccion(id: number, nombre: string) {
+    return this.http.put<void>(`${this.url}/direcciones-favoritas/${id}`, { nombre });
+  }
+
+  // DELETE /viajes/direcciones-favoritas/{id} → saca una dirección de Favoritos (RF27)
+  quitarDireccion(id: number) {
+    return this.http.delete<void>(`${this.url}/direcciones-favoritas/${id}`);
+  }
+
   // Top 10 de los destinos más buscados, filtrado por fechas (RF25). Solo manda las fechas que tienen algo
   destinosPopulares(filtro: FiltroDestinos) {
     let params = new HttpParams();

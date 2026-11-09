@@ -158,8 +158,8 @@ export class Cotizar {
     this.ruta.set(null);
     this.busquedaForm.controls[campo].setValue(favorita.direccion);
     this.lugar(campo).set({
-      // Si todavía no se le puso nombre ("Casa"), el nombre corto es el primer pedazo de la dirección
-      nombre: favorita.nombre || favorita.direccion.split(',')[0],
+      // Este nombre viaja a Uber como la calle, así que va el primer pedazo de la dirección y no "Casa"
+      nombre: favorita.direccion.split(',')[0],
       direccion: favorita.direccion,
       placeId: favorita.placeId!,
       lat: favorita.lat!,

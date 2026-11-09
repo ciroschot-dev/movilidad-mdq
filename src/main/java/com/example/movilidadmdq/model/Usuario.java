@@ -75,6 +75,11 @@ public class Usuario implements UserDetails
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Viaje> viajes;
 
+    // Igual que los viajes: si el usuario se elimina, sus direcciones favoritas también.
+    // Sin esto, la base no deja borrar la cuenta de quien tiene alguna guardada.
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DireccionFavorita> direcciones;
+
     // === Integración con Spring Security ===
 
     /**
