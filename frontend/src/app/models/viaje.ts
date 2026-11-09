@@ -1,3 +1,5 @@
+import { Lugar } from './lugar';
+
 // Lo que se carga en el formulario de cotizar (los dos campos obligatorios de CalculoViajeRequest del back)
 export interface BusquedaForm {
   origen: string;
@@ -31,6 +33,20 @@ export interface ViajeHistorial {
   precioUber: number | null;
   precioDidi: number | null;
   fechaHora: string; // llega como aaaa-mm-ddThh:mm:ss
+  favorito: boolean; // si tiene la ⭐ (RF17)
+  // Los datos de Google de cada dirección, para repetir la búsqueda (RF16). Un viaje viejo puede no tenerlos
+  origenPlaceId: string | null;
+  origenLat: number | null;
+  origenLng: number | null;
+  destinoPlaceId: string | null;
+  destinoLat: number | null;
+  destinoLng: number | null;
+}
+
+// Lo que el historial le pasa a Cotizar al tocar "Repetir" (RF16): las dos direcciones ya elegidas
+export interface ViajeARepetir {
+  origen: Lugar;
+  destino: Lugar;
 }
 
 // El viaje que el usuario más repite (igual a ViajeFrecuenteResponse, RF15). El back lo da desde 3 veces

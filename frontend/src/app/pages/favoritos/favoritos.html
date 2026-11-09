@@ -1,0 +1,63 @@
+<!-- Pantalla Favoritos: una tarjeta por dirección guardada, con su nombre y la dirección completa -->
+<section class="favoritos">
+  <h1 class="titulo">Favoritos</h1>
+
+  @if (cargando()) {
+    <p class="dato">Cargando…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    @for (direccion of direcciones(); track direccion.id) {
+      <article class="direccion">
+        @if (editando() === direccion.id) {
+          <!-- Modo renombrar: el campo aparece en la misma tarjeta, sin ir a otra pantalla -->
+          <form class="renombrar" [formGroup]="nombreForm" (ngSubmit)="guardar(direccion)">
+            <label class="campo">
+              Nombre
+              <input type="text" formControlName="nombre" placeholder="Casa" />
+            </label>
+            @if (mostrarError('nombre')) {
+              <p class="error">Escribí un nombre de hasta 100 caracteres.</p>
+            }
+            <p class="dato">{{ direccion.direccion }}</p>
+            <div class="acciones">
+              <button
+                class="boton"
+                type="submit"
+                [disabled]="nombreForm.invalid || ocupada() === direccion.id"
+              >
+                Guardar
+              </button>
+              <button class="boton-borde" type="button" (click)="cancelar()">Cancelar</button>
+            </div>
+          </form>
+        } @else {
+          <!-- Hasta que se le pone un nombre ("Casa", "Trabajo") se ve "Sin nombre", como pide RF27 -->
+          <p class="nombre">{{ direccion.nombre || 'Sin nombre' }}</p>
+          <p class="dato">{{ direccion.direccion }}</p>
+          <div class="acciones">
+            <button
+              class="boton-borde"
+              type="button"
+              [disabled]="ocupada() === direccion.id"
+              (click)="empezarARenombrar(direccion)"
+            >
+              Renombrar
+            </button>
+            <button
+              class="boton-borde quitar"
+              type="button"
+              [disabled]="ocupada() === direccion.id"
+              (click)="confirmarQuitar(direccion)"
+            >
+              Quitar
+            </button>
+          </div>
+        }
+      </article>
+    } @empty {
+      <p class="dato">No tenés direcciones favoritas.</p>
+      <p class="ayuda">Marcá un viaje con la ⭐ en Historial y sus direcciones aparecen acá.</p>
+    }
+  }
+</section>

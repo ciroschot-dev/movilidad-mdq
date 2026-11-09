@@ -1,9 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Mapa } from '../../components/mapa/mapa';
-import { Lugar } from '../../models/lugar';
-import { CalculoViaje, OpcionTransporte } from '../../models/viaje';
+import { DireccionFavorita, Lugar } from '../../models/lugar';
+import { CalculoViaje, OpcionTransporte, ViajeARepetir } from '../../models/viaje';
 import { LugarService } from '../../services/lugares';
 import { ViajeService } from '../../services/viaje';
 
@@ -22,6 +23,7 @@ export class Cotizar {
   private readonly viajes = inject(ViajeService);
   private readonly lugares = inject(LugarService);
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
 
   // Lo que devolvió el back: una tarjeta por opción (RF09)
   protected readonly opciones = signal<OpcionTransporte[]>([]);
@@ -48,8 +50,30 @@ export class Cotizar {
   protected readonly campoActivo = signal<Campo | null>(null);
   // El camino entre las dos direcciones; el mapa lo dibuja cuando no es null
   protected readonly ruta = signal<google.maps.DirectionsResult | null>(null);
+  // Las direcciones favoritas del usuario (RF08), para elegirlas en origen o destino sin escribirlas.
+  // Solo las que tienen los datos de Google, que el mapa y el back necesitan
+  private readonly favoritas = signal<DireccionFavorita[]>([]);
 
   constructor() {
+    // Las favoritas se piden una sola vez al abrir la pantalla. Si falla no se avisa: se cotiza igual,
+    // solo que escribiendo las direcciones
+    this.viajes.direccionesFavoritas().subscribe({
+      next: (favoritas) =>
+        this.favoritas.set(
+          favoritas.filter((f) => f.placeId !== null && f.lat !== null && f.lng !== null),
+        ),
+      error: () => {},
+    });
+
+    // Si se llegó desde "Repetir" en el historial (RF16), vienen las dos direcciones: se cotiza ese viaje
+    // y no se pide la ubicación, que pisaría el origen del viaje que se quiere repetir
+    const repetir = this.router.currentNavigation()?.extras.state?.['repetir'] as
+      ViajeARepetir | undefined;
+    if (repetir) {
+      this.repetir(repetir);
+      return;
+    }
+
     // Al abrir la pantalla, si el navegador ya tiene el permiso de ubicación dado, el origen se completa solo (RF26).
     // Si al usuario todavía no se lo pidió, acá no se pide: los navegadores no muestran el cartel de permiso
     // sin un toque del usuario, así que en ese caso queda el link "Usar mi ubicación" debajo del campo
@@ -106,6 +130,44 @@ export class Cotizar {
     }
   }
 
+  // Al entrar a un campo se muestran las favoritas, así se pueden elegir sin escribir nada
+  protected abrir(campo: Campo) {
+    this.campoActivo.set(campo);
+  }
+
+  // Las favoritas que coinciden con lo escrito en el campo (por nombre o por dirección); con el campo vacío,
+  // todas. Hasta 5, para que la lista no tape el mapa
+  protected favoritasPara(campo: Campo) {
+    const texto = this.busquedaForm.controls[campo].value.trim().toLowerCase();
+    return this.favoritas()
+      .filter(
+        (f) =>
+          !texto ||
+          f.direccion.toLowerCase().includes(texto) ||
+          !!f.nombre?.toLowerCase().includes(texto),
+      )
+      .slice(0, 5);
+  }
+
+  // Al tocar una favorita: completa el campo como si se hubiera elegido de Google, sin pedirle nada (RF08)
+  protected elegirFavorita(campo: Campo, favorita: DireccionFavorita) {
+    this.cerrarSugerencias();
+    this.error.set('');
+    // Los precios y la ruta que hubiera eran de la dirección anterior
+    this.opciones.set([]);
+    this.ruta.set(null);
+    this.busquedaForm.controls[campo].setValue(favorita.direccion);
+    this.lugar(campo).set({
+      // Este nombre viaja a Uber como la calle, así que va el primer pedazo de la dirección y no "Casa"
+      nombre: favorita.direccion.split(',')[0],
+      direccion: favorita.direccion,
+      placeId: favorita.placeId!,
+      lat: favorita.lat!,
+      lng: favorita.lng!,
+    });
+    this.trazarRuta();
+  }
+
   // Al tocar una sugerencia: completa el campo, guarda la dirección y, si ya están las dos, arma la ruta
   protected async elegir(campo: Campo, prediccion: google.maps.places.PlacePrediction) {
     this.cerrarSugerencias();
@@ -160,6 +222,15 @@ export class Cotizar {
       // Un navegador que bloquea la ubicación puede fallar en el acto: se destraba el botón
       this.ubicando.set(false);
     }
+  }
+
+  // Carga las dos direcciones del viaje a repetir como si se hubieran elegido de la lista y cotiza (RF16)
+  private repetir({ origen, destino }: ViajeARepetir) {
+    this.busquedaForm.setValue({ origen: origen.direccion, destino: destino.direccion });
+    this.origen.set(origen);
+    this.destino.set(destino);
+    this.trazarRuta();
+    this.calcular();
   }
 
   // Al salir del campo se esconde la lista (por eso las sugerencias se eligen con mousedown, que llega antes)

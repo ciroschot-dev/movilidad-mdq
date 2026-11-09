@@ -63,6 +63,13 @@
   background-color: var(--color-fondo);
 }
 
+/* La favorita muestra el nombre arriba y la dirección completa abajo, más chica y suave */
+.sugerencias .favorita .direccion {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+}
+
 .error {
   margin: 0;
   font-size: 0.875rem;

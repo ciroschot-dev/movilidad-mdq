@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { DireccionFavorita } from '../models/lugar';
 import { CalculoViaje, DestinoPopular, FiltroDestinos, OpcionTransporte } from '../models/viaje';
 
 // Junta los pedidos al back que tienen que ver con viajes (/viajes)
@@ -17,6 +18,28 @@ export class ViajeService {
   // Le avisa al back qué opción tocó el usuario, para que quede en el historial (RF10)
   elegir(viajeId: number, tipo: OpcionTransporte['tipo']) {
     return this.http.put<void>(`${this.url}/${viajeId}/opcion-elegida`, { tipo });
+  }
+
+  // PUT /viajes/:viajeId/favorito → pone o saca la ⭐ (RF17). Al ponerla, el back guarda las dos direcciones
+  // en Favoritos. No devuelve nada (void): el estado nuevo es el contrario al que tenía
+  alternarFavorito(viajeId: number) {
+    return this.http.put<void>(`${this.url}/${viajeId}/favorito`, null);
+  }
+
+  // GET /viajes/direcciones-favoritas → las direcciones guardadas en Favoritos (RF18). El back sabe de quién
+  // son por el token, así que no lleva el id de la cuenta
+  direccionesFavoritas() {
+    return this.http.get<DireccionFavorita[]>(`${this.url}/direcciones-favoritas`);
+  }
+
+  // PUT /viajes/direcciones-favoritas/{id} → le cambia el nombre a una dirección guardada (RF27)
+  renombrarDireccion(id: number, nombre: string) {
+    return this.http.put<void>(`${this.url}/direcciones-favoritas/${id}`, { nombre });
+  }
+
+  // DELETE /viajes/direcciones-favoritas/{id} → saca una dirección de Favoritos (RF27)
+  quitarDireccion(id: number) {
+    return this.http.delete<void>(`${this.url}/direcciones-favoritas/${id}`);
   }
 
   // Top 10 de los destinos más buscados, filtrado por fechas (RF25). Solo manda las fechas que tienen algo

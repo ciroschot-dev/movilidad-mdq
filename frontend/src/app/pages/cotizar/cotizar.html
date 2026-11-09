@@ -15,14 +15,24 @@
           autocomplete="off"
           formControlName="origen"
           (input)="escribir('origen')"
+          (focus)="abrir('origen')"
           (blur)="cerrarSugerencias()"
         />
       </label>
-      <!-- Sugerencias de Google: solo debajo del campo que se está escribiendo -->
-      @if (campoActivo() === 'origen' && sugerencias().length > 0) {
+      <!-- Debajo del campo activo: primero las favoritas que coinciden (RF08) y después las sugerencias de Google -->
+      @if (
+        campoActivo() === 'origen' &&
+        (favoritasPara('origen').length > 0 || sugerencias().length > 0)
+      ) {
         <ul class="sugerencias">
-          @for (sugerencia of sugerencias(); track sugerencia.placeId) {
+          @for (favorita of favoritasPara('origen'); track favorita.id) {
             <!-- mousedown y no click: llega antes que el blur del campo, que cierra la lista -->
+            <li class="favorita" (mousedown)="elegirFavorita('origen', favorita)">
+              ⭐ <strong>{{ favorita.nombre || 'Sin nombre' }}</strong>
+              <span class="direccion">{{ favorita.direccion }}</span>
+            </li>
+          }
+          @for (sugerencia of sugerencias(); track sugerencia.placeId) {
             <li (mousedown)="elegir('origen', sugerencia)">{{ sugerencia.text.text }}</li>
           }
         </ul>
@@ -47,11 +57,23 @@
           autocomplete="off"
           formControlName="destino"
           (input)="escribir('destino')"
+          (focus)="abrir('destino')"
           (blur)="cerrarSugerencias()"
         />
       </label>
-      @if (campoActivo() === 'destino' && sugerencias().length > 0) {
+      <!-- Debajo del campo activo: primero las favoritas que coinciden (RF08) y después las sugerencias de Google -->
+      @if (
+        campoActivo() === 'destino' &&
+        (favoritasPara('destino').length > 0 || sugerencias().length > 0)
+      ) {
         <ul class="sugerencias">
+          @for (favorita of favoritasPara('destino'); track favorita.id) {
+            <!-- mousedown y no click: llega antes que el blur del campo, que cierra la lista -->
+            <li class="favorita" (mousedown)="elegirFavorita('destino', favorita)">
+              ⭐ <strong>{{ favorita.nombre || 'Sin nombre' }}</strong>
+              <span class="direccion">{{ favorita.direccion }}</span>
+            </li>
+          }
           @for (sugerencia of sugerencias(); track sugerencia.placeId) {
             <li (mousedown)="elegir('destino', sugerencia)">{{ sugerencia.text.text }}</li>
           }
@@ -93,7 +115,9 @@
           <p class="precio">{{ formatearPrecio(opcion.precio) }}</p>
           <p class="minutos">{{ opcion.tiempoMinutos }} min</p>
           <!-- Avisa qué pasa al tocarla, así se entiende que la tarjeta se puede tocar -->
-          <p class="accion">{{ opcion.tipo === 'TAXI' ? 'Llamar' : 'Abrir ' + nombres[opcion.tipo] }}</p>
+          <p class="accion">
+            {{ opcion.tipo === 'TAXI' ? 'Llamar' : 'Abrir ' + nombres[opcion.tipo] }}
+          </p>
         </a>
       }
     </div>
