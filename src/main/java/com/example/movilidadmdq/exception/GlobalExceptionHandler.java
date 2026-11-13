@@ -64,7 +64,12 @@ public class GlobalExceptionHandler
         List<String> detalles = ex.getBindingResult().getFieldErrors().stream()
                 .map(this::formatearError)
                 .toList();
-        return construir(HttpStatus.BAD_REQUEST, "Datos inválidos", req, detalles);
+        // El mensaje principal es el del primer campo que falló (ej.: "El nombre no puede estar vacío"),
+        // así el front lo muestra tal cual; el detalle de todos los campos sigue en "errores"
+        String mensaje = ex.getBindingResult().getFieldErrors().isEmpty()
+                ? "Datos inválidos"
+                : ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        return construir(HttpStatus.BAD_REQUEST, mensaje, req, detalles);
     }
 
     /** El cuerpo del pedido no es un JSON válido → 400 Bad Request. */
