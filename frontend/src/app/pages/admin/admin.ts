@@ -45,13 +45,14 @@ export class Admin {
     query: ['', Validators.required],
   });
 
-  // Los cinco valores de la tarifa del taxi (MDQ-37); arrancan en cero y se llenan con lo que manda el back
+  // Los cinco valores de la tarifa del taxi (MDQ-37); arrancan en cero y se llenan con lo que manda el back.
+  // required: un campo vacío viaja como null y el back lo deja como estaba sin avisar, así que se frena acá
   protected readonly tarifaForm = this.fb.nonNullable.group({
-    bajadaBanderaDia: [0, Validators.min(0)],
-    bajadaBanderaNoche: [0, Validators.min(0)],
-    valorFichaDia: [0, Validators.min(0)],
-    valorFichaNoche: [0, Validators.min(0)],
-    metrosPorFicha: [0, Validators.min(1)],
+    bajadaBanderaDia: [0, [Validators.required, Validators.min(0)]],
+    bajadaBanderaNoche: [0, [Validators.required, Validators.min(0)]],
+    valorFichaDia: [0, [Validators.required, Validators.min(0)]],
+    valorFichaNoche: [0, [Validators.required, Validators.min(0)]],
+    metrosPorFicha: [0, [Validators.required, Validators.min(1)]],
   });
 
   // Filtro de los destinos populares (RF25): las dos fechas. Son opcionales
@@ -141,7 +142,7 @@ export class Admin {
         // Sin permiso el back lo dice con su propio texto; si no respondió, queda el aviso de la historia
         error: (err: HttpErrorResponse) =>
           this.avisos.mostrar(
-            err.error?.message ?? 'No se pudo actualizar la tarifa. Verifica tus permisos.',
+            err.error?.message ?? 'No se pudo actualizar la tarifa. Verificá tus permisos.',
             'error',
           ),
       });
