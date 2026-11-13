@@ -35,5 +35,9 @@
     <button class="boton" type="submit" [disabled]="loginForm.invalid || cargando()">ENTRAR</button>
   </form>
 
+  <!-- Entrar con Google (RF03): es un link al back, que manda a Google y después vuelve a la app -->
+  <p class="separador">o</p>
+  <a class="google" [href]="auth.urlGoogle">Continuar con Google</a>
+
   <p class="pie">¿No tenés cuenta? <a routerLink="/registro">Registrate</a></p>
 </section>

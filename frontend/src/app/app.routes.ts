@@ -5,6 +5,7 @@ import { Cotizar } from './pages/cotizar/cotizar';
 import { Favoritos } from './pages/favoritos/favoritos';
 import { Historial } from './pages/historial/historial';
 import { Login } from './pages/login/login';
+import { Oauth2Redirect } from './pages/oauth2-redirect/oauth2-redirect';
 import { Perfil } from './pages/perfil/perfil';
 import { Registro } from './pages/registro/registro';
 
@@ -14,6 +15,8 @@ export const routes: Routes = [
   { path: '', redirectTo: 'cotizar', pathMatch: 'full' },
   { path: 'login', component: Login, canActivate: [soloInvitados] },
   { path: 'registro', component: Registro, canActivate: [soloInvitados] },
+  // Adonde vuelve el back después de entrar con Google (RF03), con el token en la URL
+  { path: 'oauth2/redirect', component: Oauth2Redirect },
   { path: 'cotizar', component: Cotizar, canActivate: [soloLogueados] },
   { path: 'historial', component: Historial, canActivate: [soloLogueados] },
   { path: 'favoritos', component: Favoritos, canActivate: [soloLogueados] },
