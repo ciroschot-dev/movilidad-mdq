@@ -39,7 +39,7 @@ export class Oauth2Redirect {
 
   // Vuelve al login con el aviso de la historia, también sin dejar la dirección con el token en el historial
   private fallar() {
-    this.avisos.mostrar('No se pudo completar el inicio con Google.', 'error');
+    this.avisos.mostrar('No se pudo completar el inicio con Google. Probá de nuevo.', 'error');
     this.router.navigate(['/login'], { replaceUrl: true });
   }
 }
