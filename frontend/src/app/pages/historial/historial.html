@@ -26,22 +26,45 @@
 
     @for (viaje of viajes(); track viaje.id) {
       <article class="viaje">
-        <!-- La fecha y, en la misma línea a la derecha, la ⭐ (RF17) y los botones para repetir (RF16) y borrar (RF14) -->
+        <!-- La fecha a la izquierda y la ⭐ (RF17) en la esquina de arriba a la derecha -->
         <div class="cabecera">
           <p class="fecha">{{ formatearFecha(viaje.fechaHora) }}</p>
+          <!-- Llena si es favorito y vacía si no; el aria-label le dice al lector de pantalla qué hace -->
+          <button
+            class="estrella"
+            type="button"
+            [class.llena]="viaje.favorito"
+            [attr.aria-label]="viaje.favorito ? 'Quitar de favoritos' : 'Marcar como favorito'"
+            [attr.aria-pressed]="viaje.favorito"
+            [disabled]="marcando() === viaje.id"
+            (click)="alternarFavorito(viaje)"
+          >
+            {{ viaje.favorito ? '★' : '☆' }}
+          </button>
+        </div>
+        <p class="ruta">{{ viaje.origen }} → {{ viaje.destino }}</p>
+        <p class="dato">
+          {{ viaje.tiempoEstimadoMin }} min · {{ formatearKm(viaje.distanciaEnMetros) }}
+        </p>
+
+        <!-- Abajo: los precios a la izquierda y los botones para repetir (RF16) y borrar (RF14) en la esquina de abajo a la derecha -->
+        <div class="pie">
+          <!-- Los precios de aquel momento, uno al lado del otro y juntos para compararlos -->
+          <dl class="precios">
+            <div>
+              <dt>Taxi</dt>
+              <dd>{{ formatearPrecio(viaje.precioTaxi) }}</dd>
+            </div>
+            <div>
+              <dt>Uber</dt>
+              <dd>{{ formatearPrecio(viaje.precioUber) }}</dd>
+            </div>
+            <div>
+              <dt>Didi</dt>
+              <dd>{{ formatearPrecio(viaje.precioDidi) }}</dd>
+            </div>
+          </dl>
           <div class="acciones">
-            <!-- Llena si es favorito y vacía si no; el aria-label le dice al lector de pantalla qué hace -->
-            <button
-              class="estrella"
-              type="button"
-              [class.llena]="viaje.favorito"
-              [attr.aria-label]="viaje.favorito ? 'Quitar de favoritos' : 'Marcar como favorito'"
-              [attr.aria-pressed]="viaje.favorito"
-              [disabled]="marcando() === viaje.id"
-              (click)="alternarFavorito(viaje)"
-            >
-              {{ viaje.favorito ? '★' : '☆' }}
-            </button>
             <!-- Solo si el viaje tiene los datos de Google que Cotizar necesita -->
             @if (sePuedeRepetir(viaje)) {
               <button class="repetir" type="button" (click)="repetir(viaje)">Repetir</button>
@@ -57,26 +80,6 @@
             </button>
           </div>
         </div>
-        <p class="ruta">{{ viaje.origen }} → {{ viaje.destino }}</p>
-        <p class="dato">
-          {{ viaje.tiempoEstimadoMin }} min · {{ formatearKm(viaje.distanciaEnMetros) }}
-        </p>
-
-        <!-- Los precios de aquel momento, uno al lado del otro para compararlos -->
-        <dl class="precios">
-          <div>
-            <dt>Taxi</dt>
-            <dd>{{ formatearPrecio(viaje.precioTaxi) }}</dd>
-          </div>
-          <div>
-            <dt>Uber</dt>
-            <dd>{{ formatearPrecio(viaje.precioUber) }}</dd>
-          </div>
-          <div>
-            <dt>Didi</dt>
-            <dd>{{ formatearPrecio(viaje.precioDidi) }}</dd>
-          </div>
-        </dl>
       </article>
     } @empty {
       <p class="dato">Todavía no tenés viajes guardados.</p>
