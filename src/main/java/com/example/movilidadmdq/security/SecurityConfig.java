@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import com.example.movilidadmdq.config.JwtAuthFilter;
 import com.example.movilidadmdq.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 
@@ -46,6 +47,7 @@ import java.math.BigDecimal;
  * deja cargados el admin inicial y las tarifas base.
  */
 @Configuration
+@Slf4j
 @EnableWebSecurity
 @EnableMethodSecurity // Permite usar @PreAuthorize en los controladores.
 @RequiredArgsConstructor
@@ -62,6 +64,10 @@ public class SecurityConfig
     private List<String> allowedOrigins;
 
     // Credenciales del admin principal cargadas de forma segura desde el archivo .env.
+    // A dónde vuelve la persona si el login con Google falla: la misma pantalla del front que recibe el token
+    @Value("${app.oauth2.redirect-uri:http://localhost:4200/oauth2/redirect}")
+    private String redirectUri;
+
     @Value("${app.admin.username:}")
     private String adminUsername;
 
@@ -139,6 +145,13 @@ public class SecurityConfig
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
+                        // Si Google falla (ej.: se reinició el servidor en el medio), se anota el motivo y
+                        // se vuelve al front con ?error, que muestra el aviso, en vez de un JSON de 401
+                        .failureHandler((request, response, exception) ->
+                        {
+                            log.warn("Falló el login con Google: {}", exception.getMessage());
+                            response.sendRedirect(redirectUri + "?error=google");
+                        })
                 );
 
         return http.build();
